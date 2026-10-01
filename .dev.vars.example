@@ -1,0 +1,8 @@
+# Kopieren nach .dev.vars fuer lokale Entwicklung (wird nicht eingecheckt)
+DEV_ADMIN_EMAIL=bela@example.com
+AGENT_API_TOKEN=lokal-test-token
+ENCRYPTION_KEY=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+META_APP_ID=
+META_APP_SECRET=
+LINKEDIN_CLIENT_ID=
+LINKEDIN_CLIENT_SECRET=
