@@ -24,9 +24,11 @@ Dort erscheint er unter "Freigabe" als Entwurf. Veröffentlicht wird erst, wenn 
 | `image_base64` + `image_type` | nein | Bild als Base64, `image/jpeg` (empfohlen, Instagram nimmt nur JPEG) oder `image/png`, max. 8 MB |
 | `image_url` | nein | Alternativ eine öffentliche https URL zum Bild |
 | `scheduled_at` | nein | Vorschlag für den Termin (ISO 8601). Gilt erst nach Freigabe |
-| `notes` | nein | Hinweis an die Admins, z. B. Content Säule oder Quelle |
+| `images` | nein | Eigenes Bild je Kanal, z. B. `{ "linkedin": { "base64": "...", "type": "image/jpeg" } }` oder `{ "linkedin": { "url": "https://..." } }`. Laut Plan: LinkedIn 1200 x 1200, Instagram und Facebook 1080 x 1350 als Hauptbild |
+| `plan_nr` | nein | Nummer des Eintrags im Redaktionsplan (Spalte "Nr"). Verknüpft den Post mit dem Plan; ohne `scheduled_at` wird der Plantermin um 09:00 Uhr übernommen |
+| `notes` | nein | Hinweis an die Admins, z. B. offene Punkte aus dem Plan |
 
-Instagram braucht immer ein Bild. Grenzen: Instagram 2.200 Zeichen und 30 Hashtags, LinkedIn 3.000 Zeichen.
+Instagram braucht immer ein Bild. Texte mit Platzhaltern wie `[DATUM]` oder `[ZEITEN]` werden angenommen, lassen sich aber erst freigeben, wenn der Platzhalter ersetzt ist. Grenzen: Instagram 2.200 Zeichen und 30 Hashtags, LinkedIn 3.000 Zeichen.
 
 Beispiel:
 
@@ -54,7 +56,9 @@ Antwort `201`: `{ "id": "...", "status": "draft", "review_url": "https://.../#fr
 
 ## Anweisung für den Agent (zum Einfügen ins Claude Projekt)
 
-> Erstelle dienstags und donnerstags je einen Post nach dem Social Media Plan (Abruf über
-> `GET /api/agent/summary`). Halte dich an das Zipperwalls Brand Kit. Liefere den Post per
-> `POST /api/agent/posts` ein, mit Bild (JPEG), Hashtags und, wenn sinnvoll, einer eigenen LinkedIn Variante.
-> Veröffentliche nie selbst. Die Freigabe erfolgt im Dashboard durch Bela oder Darien.
+> Hole mit `GET /api/agent/summary` den Redaktionsplan. Nimm den nächsten Eintrag (Dienstag oder Donnerstag),
+> zu dem `post` noch leer ist. Erstelle die Grafiken nach dem Zipperwalls Brand Kit (Instagram und Facebook
+> 1080 x 1350 mit dem Bildtext aus dem Plan, LinkedIn 1200 x 1200) und liefere den Post per
+> `POST /api/agent/posts` ein: `plan_nr`, `title`, `body`, `variants` mit den drei Plantexten, `hashtags`,
+> Hauptbild als `image_base64` (JPEG) und LinkedIn Bild unter `images.linkedin`. Offene Punkte aus dem Plan
+> in `notes`. Veröffentliche nie selbst. Die Freigabe erfolgt im Dashboard durch Bela oder Darien.

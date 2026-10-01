@@ -4,17 +4,31 @@ import { publishFacebook, insightsFacebook } from './publishers/facebook.js';
 import { publishInstagram, insightsInstagram } from './publishers/instagram.js';
 import { publishLinkedIn, insightsLinkedIn } from './publishers/linkedin.js';
 
-export const publicImageUrl = (env, post) =>
-  post.image_key ? `${env.PUBLIC_BASE_URL}/media/${encodeURIComponent(post.image_key)}` : post.image_url || null;
+const mediaUrl = (env, key) => `${env.PUBLIC_BASE_URL}/media/${encodeURIComponent(key)}`;
 
-async function imageBytes(env, post) {
-  if (post.image_key) {
-    const obj = await env.MEDIA.get(post.image_key);
+// Bild je Kanal: eigenes Kanalbild (z. B. LinkedIn 1200x1200), sonst das Hauptbild
+export function imageSource(post, channel) {
+  const own = JSON.parse(post.channel_images || '{}')[channel];
+  if (own) return own.startsWith('https://') ? { url: own } : { key: own };
+  if (post.image_key) return { key: post.image_key };
+  if (post.image_url) return { url: post.image_url };
+  return null;
+}
+
+export function publicImageUrl(env, post, channel) {
+  const src = imageSource(post, channel);
+  return src ? src.url || mediaUrl(env, src.key) : null;
+}
+
+async function imageBytes(env, post, channel) {
+  const src = imageSource(post, channel);
+  if (src?.key) {
+    const obj = await env.MEDIA.get(src.key);
     if (!obj) throw new Error('Bild nicht mehr vorhanden.');
     return { bytes: await obj.arrayBuffer(), type: obj.httpMetadata?.contentType };
   }
-  if (post.image_url) {
-    const res = await fetch(post.image_url);
+  if (src?.url) {
+    const res = await fetch(src.url);
     if (!res.ok) throw new Error(`Bild nicht abrufbar (HTTP ${res.status}).`);
     return { bytes: await res.arrayBuffer(), type: res.headers.get('content-type') };
   }
@@ -23,13 +37,13 @@ async function imageBytes(env, post) {
 
 async function publishOne(env, post, channel) {
   const text = composeText(post, channel);
-  const imageUrl = publicImageUrl(env, post);
+  const imageUrl = publicImageUrl(env, post, channel);
   const problem = validate(channel, text, !!imageUrl);
   if (problem) throw new Error(problem);
   const token = await loadToken(env, channel);
   if (channel === 'facebook') return publishFacebook(env, { token, text, imageUrl });
   if (channel === 'instagram') return publishInstagram(env, { token, text, imageUrl });
-  const img = await imageBytes(env, post);
+  const img = await imageBytes(env, post, channel);
   return publishLinkedIn(env, { token, text, imageBytes: img.bytes, imageType: img.type });
 }
 

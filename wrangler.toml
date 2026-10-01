@@ -24,7 +24,7 @@ crons = ["*/5 * * * *", "0 4 * * *"]
 
 [vars]
 # Komma getrennte Liste der Admins (muss mit Cloudflare Access uebereinstimmen)
-ADMIN_EMAILS = "bela@beispiel.de,darien@beispiel.de"
+ADMIN_EMAILS = "info@bedatrax.de,info@darienpfirrmann.de"
 # Oeffentliche URL des Dashboards ohne Slash am Ende, z. B. https://social.zipperwalls.de
 PUBLIC_BASE_URL = "https://social.zipperwalls.de"
 # Cloudflare Access: Team-Domain (xyz.cloudflareaccess.com) und Application AUD Tag

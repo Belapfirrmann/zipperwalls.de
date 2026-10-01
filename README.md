@@ -11,12 +11,26 @@ Login über Cloudflare Access. Kein Build Schritt.
 
 Einrichtung: `docs/SETUP-APIS.md`
 
+## Redaktionsplan aktualisieren
+
+Der Plan liegt als Excel in `plans/` und wird mit einem Skript in `src/redaktionsplan.js` übersetzt:
+
+```bash
+pip install openpyxl
+python3 scripts/import_plan.py plans/Redaktionsplan_Social_Media_Q1_2027.xlsx
+npm test && npm run deploy
+```
+
+Im Dashboard kann jeder Planeintrag mit "Als Entwurf anlegen" direkt in die Freigabe übernommen werden
+(Texte je Kanal, Hashtags, Termin 09:00 Uhr). Grafiken dann unter "Freigabe" hochladen.
+
 | Pfad | Inhalt |
 |---|---|
 | `src/worker.js` | Router, Admin API, Agent API |
 | `src/publish.js` | Veröffentlichen, Wiederholen ohne Doppelpost, Cron, Kennzahlen |
 | `src/publishers/` | Facebook, Instagram, LinkedIn |
 | `src/oauth.js` | Verbinden der Konten |
-| `src/plan.js` | Platzhalter Plan und Vorlagen der Abhakeliste |
+| `src/redaktionsplan.js` | Redaktionsplan (erzeugt aus `plans/*.xlsx`) |
+| `src/plan.js` | Vorlagen der Abhakeliste |
 | `public/` | Dashboard |
 | `test/` | Tests (`npm test`) |

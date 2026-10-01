@@ -8,7 +8,7 @@ import { saveToken } from '../src/tokens.js';
 // Minimaler D1 Ersatz auf Basis von node:sqlite
 function d1() {
   const db = new DatabaseSync(':memory:');
-  db.exec(readFileSync(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8'));
+  for (const f of ['0001_init.sql', '0002_plan_und_kanalbilder.sql']) db.exec(readFileSync(new URL('../migrations/' + f, import.meta.url), 'utf8'));
   const stmt = (sql, args = []) => ({
     bind: (...a) => stmt(sql, a),
     run: async () => ({ meta: { changes: Number(db.prepare(sql).run(...args).changes) } }),
@@ -79,4 +79,24 @@ test('Cron sendet nur faellige geplante Posts', async () => {
   await runDuePosts(e);
   assert.equal(calls, 1);
   assert.equal((await e.DB.prepare('SELECT status FROM posts').first()).status, 'published');
+});
+
+test('LinkedIn nutzt eigenes Kanalbild, Instagram das Hauptbild', async () => {
+  const { publicImageUrl } = await import('../src/publish.js');
+  const post = { image_key: 'haupt.jpg', channel_images: JSON.stringify({ linkedin: 'li.jpg' }) };
+  const e = { PUBLIC_BASE_URL: 'https://s.example' };
+  assert.equal(publicImageUrl(e, post, 'linkedin'), 'https://s.example/media/li.jpg');
+  assert.equal(publicImageUrl(e, post, 'instagram'), 'https://s.example/media/haupt.jpg');
+});
+
+test('Platzhalter im Text verhindert Veroeffentlichung', async () => {
+  const e = env();
+  await saveToken(e, 'facebook', { accessToken: 'FB', meta: { pageId: '1' } });
+  const t = new Date().toISOString();
+  await e.DB.prepare(`INSERT INTO posts (id,title,body,channels,status,created_at,updated_at) VALUES ('p1','T','Bestellschluss ist der [DATUM].','["facebook"]','approved',?,?)`).bind(t, t).run();
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return Response.json({}); };
+  assert.equal(await publishPost(e, 'p1'), 'failed');
+  assert.equal(calls, 0);
+  assert.match((await e.DB.prepare('SELECT error FROM post_results').first()).error, /\[DATUM\]/);
 });

@@ -12,7 +12,7 @@ const STATUS = {
   failed: ['Fehlgeschlagen', ''],
   rejected: ['Abgelehnt', 'grey'],
 };
-const PILLAR_COLORS = ['#FFCC20', '#1F2725', '#808285', '#EFB800', '#4B4F58', '#C9CCD0'];
+const PILLAR_COLORS = ['#FFCC20', '#1F2725', '#808285', '#EFB800', '#4B4F58', '#C9CCD0', '#000000'];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -38,38 +38,70 @@ async function api(path, opts = {}) {
 }
 
 // ---------- Plan ----------
+const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey', Verschoben: 'grey' };
+let planFilter = 'alle';
 async function viewPlan() {
   const plan = await api('/api/plan');
   const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
   const on = new Set(plan.rhythm?.days || []);
   const pillars = plan.pillars || [];
-  const total = pillars.reduce((s, p) => s + (p.share || 0), 0) || 1;
+  const total = pillars.reduce((s, p) => s + p.count, 0) || 1;
+  const color = (name) => PILLAR_COLORS[Math.max(0, pillars.findIndex((p) => p.name === name)) % PILLAR_COLORS.length];
+  const darkText = (c) => ['#FFCC20', '#EFB800', '#C9CCD0'].includes(c);
+  const today = new Date().toISOString().slice(0, 10);
+  const entries = plan.entries.filter((e) => planFilter === 'alle' || (planFilter === 'offen' ? !!e.note : planFilter === 'kommend' ? e.date >= today : e.pillar === planFilter));
+  const counts = {};
+  for (const e of plan.entries) counts[e.liveStatus] = (counts[e.liveStatus] || 0) + 1;
+  const next = plan.entries.find((e) => e.date >= today && e.liveStatus !== 'Gepostet' && e.liveStatus !== 'Gestrichen');
+  const byKw = {};
+  for (const e of entries) (byKw[e.kw] ??= []).push(e);
+  const fmtDay = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+
   main.innerHTML = `
-    <div class="head"><span class="label">Stand ${esc(plan.stand || '')}</span><h1>${esc(plan.title)}</h1></div>
-    ${plan.placeholder ? `<div class="notice"><strong>Platzhalter.</strong> Das ist eine Beispielstruktur. Sobald Sie Ihren Social Media Plan im Chat einfügen, wird er hier eingesetzt.</div>` : ''}
-    <section class="section"><h2>Ziele</h2>
-      <div class="grid g3">${(plan.goals || []).map((g, i) => `<div class="card">${i === 0 ? '<span class="badge">Hauptziel</span>' : '<span class="label">Ziel ' + (i + 1) + '</span>'}<h3 style="margin:12px 0 8px">${esc(g.title)}</h3><p>${esc(g.text)}</p></div>`).join('')}</div>
-    </section>
-    <section class="section grid g2">
-      <div class="card"><h2>Rhythmus</h2>
-        <p style="margin-top:10px"><strong>${esc(plan.rhythm?.postsPerWeek)} Posts pro Woche</strong>, jeweils ${esc(plan.rhythm?.time || '')} Uhr</p>
+    <div class="head"><span class="label">Quelle ${esc(plan.source)} · ${plan.entries.length} Posts</span><h1>${esc(plan.title)}</h1><p>${esc(plan.intro || '')}</p></div>
+    <section class="section grid g3">
+      <div class="card kpi"><span class="label">Nächster Post</span>${next ? `<div class="num" style="font-size:34px">${esc(next.day)} ${fmtDay(next.date)}</div><p style="margin-top:8px">${esc(next.topic)}</p>` : '<p>Kein offener Termin.</p>'}</div>
+      <div class="card kpi"><span class="label">Status</span>
+        <div style="margin-top:10px;display:grid;gap:6px">${Object.entries(counts).map(([k, v]) => `<div class="row" style="justify-content:space-between"><span>${esc(k)}</span><strong>${v}</strong></div>`).join('')}</div></div>
+      <div class="card"><span class="label">Rhythmus</span>
         <div class="week">${days.map((d) => `<div class="${on.has(d) ? 'on' : ''}" title="${d}">${d.slice(0, 2)}</div>`).join('')}</div>
-        <p style="margin-top:14px;color:var(--grau)">${esc(plan.rhythm?.approval || '')}</p>
-      </div>
-      <div class="card"><h2>Content Säulen</h2>
-        <div class="pillars" role="img" aria-label="Anteile der Content Säulen">${pillars.map((p, i) => `<div style="width:${(p.share / total) * 100}%;background:${PILLAR_COLORS[i % 6]};color:${i % 6 === 0 || i % 6 === 3 || i % 6 === 5 ? '#1D1D1B' : '#fff'}">${p.share}%</div>`).join('')}</div>
-        <div class="pillar-legend">${pillars.map((p, i) => `<div><span class="swatch" style="background:${PILLAR_COLORS[i % 6]}"></span><span><strong>${esc(p.name)}</strong> ${esc(p.text || '')}</span></div>`).join('')}</div>
-      </div>
+        <p style="margin-top:12px;font-size:15px;color:var(--grau)">Geplant ${esc(plan.rhythm?.time)} Uhr. ${esc(plan.rhythm?.window || '')}</p></div>
     </section>
-    <section class="section"><h2>Kanäle</h2>
-      <div class="grid g3">${(plan.channels || []).map((c) => `<div class="card"><h3>${esc(c.name)}</h3><p style="margin-top:8px">${esc(c.role)}</p><span class="label">${esc(c.frequency || '')}</span></div>`).join('')}</div>
+    <section class="section card">
+      <h2>Pillars</h2>
+      <div class="pillars" role="img" aria-label="Verteilung der Posts nach Pillar">${pillars.map((p) => `<div style="width:${(p.count / total) * 100}%;background:${color(p.name)};color:${darkText(color(p.name)) ? '#1D1D1B' : '#fff'}" title="${esc(p.name)}: ${p.count}">${p.count}</div>`).join('')}</div>
+      <div class="row" style="gap:18px">${pillars.map((p) => `<span class="row" style="gap:8px"><span class="swatch" style="background:${color(p.name)};margin:0"></span>${esc(p.name)} <strong>${Math.round((p.count / total) * 100)} %</strong></span>`).join('')}</div>
+      <p style="margin-top:14px;font-size:15px;color:var(--grau)">${esc(plan.formats || '')}</p>
     </section>
-    <section class="section"><h2>Fahrplan</h2>
-      <div class="card"><div class="timeline">${(plan.phases || []).map((ph) => `<div class="phase"><span class="label">${esc(ph.period)}</span><h3 style="margin-top:6px">${esc(ph.name)}</h3><ul>${(ph.items || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div></div>
-    </section>
-    <section class="section"><h2>Zielwerte</h2>
-      <div class="card tablewrap"><table><thead><tr><th>Kennzahl</th><th class="n">Ziel</th></tr></thead><tbody>${(plan.kpis || []).map((k) => `<tr><td>${esc(k.name)}</td><td class="n"><strong>${esc(k.target)}</strong></td></tr>`).join('')}</tbody></table></div>
+    <section class="section">
+      <div class="row" style="justify-content:space-between;margin-bottom:14px"><h2>Redaktionskalender</h2>
+        <div class="row">${['alle', 'kommend', 'offen'].map((k) => `<button class="btn small ${planFilter === k ? 'dark' : 'ghost'}" data-pf="${k}">${{ alle: 'Alle', kommend: 'Kommend', offen: 'Mit offenen Punkten' }[k]}</button>`).join('')}</div></div>
+      ${Object.keys(byKw).length ? Object.entries(byKw).map(([kw, list]) => `
+        <div class="kw"><div class="kw-label"><span class="label">KW</span><strong>${esc(kw)}</strong></div>
+          <div class="grid" style="gap:12px">${list.map((e) => `
+            <article class="card entry ${e.date < today && !e.post ? 'past' : ''}">
+              <div class="entry-date"><strong>${esc(e.day)}</strong> ${fmtDay(e.date)}</div>
+              <div>
+                <div class="row" style="gap:8px;margin-bottom:6px"><span class="pill-tag" style="border-color:${color(e.pillar)}">${esc(e.pillar)}</span><span class="badge ${PLAN_BADGE[e.liveStatus] ?? 'grey'}">${esc(e.liveStatus)}</span></div>
+                <h3>${esc(e.topic)}</h3>
+                <p style="margin:4px 0 0;color:var(--grau);font-size:15px">${esc(e.format)}${e.headline ? ` · Bildtext: „${esc(e.headline)}“` : ''}</p>
+                ${e.note ? `<p class="open-point"><strong>Offen:</strong> ${esc(e.note)}</p>` : ''}
+                <details><summary>Texte ansehen</summary>${['instagram', 'facebook', 'linkedin'].map((c) => e[c] ? `<div style="margin-top:10px"><span class="label">${CH[c]}</span><div class="pre">${esc(e[c])}</div></div>` : '').join('')}
+                  <p style="margin-top:8px;font-size:14px;color:var(--grau)">${esc(e.hashtags.join(' '))}</p></details>
+              </div>
+              <div class="entry-act">${e.post ? `<a class="btn ghost small" href="#freigabe">Zum Post</a>` : `<button class="btn small" data-draft="${e.nr}">Als Entwurf anlegen</button>`}</div>
+            </article>`).join('')}</div></div>`).join('') : '<div class="card empty">Keine Einträge für diesen Filter.</div>'}
     </section>`;
+  main.querySelectorAll('[data-pf]').forEach((b) => (b.onclick = () => { planFilter = b.dataset.pf; viewPlan(); }));
+  main.querySelectorAll('[data-draft]').forEach((b) => (b.onclick = async () => {
+    b.disabled = true;
+    try {
+      await api(`/api/plan/entries/${b.dataset.draft}/draft`, { method: 'POST' });
+      toast('Entwurf angelegt. Bitte unter „Freigabe“ die Grafiken hochladen.');
+      refreshCount();
+    } catch (e) { toast(e.message); }
+    viewPlan();
+  }));
 }
 
 // ---------- Freigabe ----------
@@ -82,6 +114,9 @@ async function viewFreigabe() {
     geplant: posts.filter((p) => ['approved', 'scheduled', 'publishing'].includes(p.status)),
     erledigt: posts.filter((p) => ['published', 'rejected'].includes(p.status)),
   };
+  const byDate = (a, b) => (a.scheduled_at || a.created_at).localeCompare(b.scheduled_at || b.created_at);
+  groups.offen.sort(byDate);
+  groups.geplant.sort(byDate);
   updateCount(groups.offen.length);
   const list = groups[filter];
   main.innerHTML = `
@@ -108,19 +143,24 @@ function postCard(p, connected) {
   return `
   <article class="card post" data-id="${p.id}">
     <div>
-      ${p.image ? `<img class="img" src="${esc(p.image)}" alt="Bild zum Post">` : `<div class="img">Kein Bild</div>`}
-      ${editable ? `<label class="btn ghost small" style="margin-top:10px">Bild tauschen<input type="file" accept="image/jpeg,image/png" data-act="image" hidden></label>` : ''}
+      <span class="label">Instagram und Facebook (4:5)</span>
+      ${p.image ? `<img class="img" src="${esc(p.image)}" alt="Bild für Instagram und Facebook">` : `<div class="img">Kein Bild</div>`}
+      ${editable ? `<label class="btn ghost small" style="margin-top:8px">Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-channel="" hidden></label>` : ''}
+      <span class="label" style="display:block;margin-top:16px">LinkedIn (1:1)</span>
+      ${p.channel_images.linkedin ? `<img class="img sq" src="${esc(p.images.linkedin)}" alt="Bild für LinkedIn">` : `<p style="font-size:14px;color:var(--grau);margin:4px 0">Nutzt das Bild oben.</p>`}
+      ${editable ? `<label class="btn ghost small" style="margin-top:8px">LinkedIn Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-channel="linkedin" hidden></label>` : ''}
       <p style="margin-top:12px;font-size:14px;color:var(--grau)">Erstellt ${fmtDate(p.created_at)}${p.approved_by ? `<br>Freigegeben von ${esc(p.approved_by)}` : ''}${p.scheduled_at && p.status !== 'draft' ? `<br>Termin ${fmtDate(p.scheduled_at)}` : ''}</p>
     </div>
     <div>
       <div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="badge ${cls}">${label}</span></div>
-      ${p.notes ? `<p style="color:var(--grau);font-size:15px"><strong>Hinweis vom Agent:</strong> ${esc(p.notes)}</p>` : ''}
+      ${p.notes ? `<p style="color:var(--grau);font-size:15px;white-space:pre-line"><strong>${p.source === 'plan' ? 'Aus dem Redaktionsplan' : 'Hinweis vom Agent'}:</strong>\n${esc(p.notes)}</p>` : ''}
       <div class="field"><span class="label">Titel (intern)</span><input type="text" data-f="title" value="${esc(p.title)}" ${editable ? '' : 'disabled'}></div>
-      <div class="field"><span class="label">Text</span><textarea data-f="body" ${editable ? '' : 'disabled'}>${esc(p.body)}</textarea></div>
-      <div class="field"><span class="label">Hashtags (mit Leerzeichen getrennt)</span><input type="text" data-f="hashtags" value="${esc(p.hashtags.join(' '))}" ${editable ? '' : 'disabled'}></div>
-      <details><summary>Vorschau je Kanal</summary>
-        ${Object.keys(CH).map((c) => `<div style="margin-top:12px"><span class="label">${CH[c]}</span><div class="counter ${p.preview[c].length > LIMITS[c] ? 'over' : ''}">${p.preview[c].length} / ${LIMITS[c]} Zeichen</div><div style="white-space:pre-wrap;background:var(--hg-blau);padding:12px;font-size:15px">${esc(p.preview[c])}</div></div>`).join('')}
-      </details>
+      ${p.placeholder ? `<p class="open-point"><strong>Platzhalter ${esc(p.placeholder)}</strong> im Text ersetzen, sonst ist keine Freigabe möglich.</p>` : ''}
+      <div class="tabs" role="tablist">${Object.keys(CH).map((c, i) => `<button type="button" role="tab" class="tab ${i === 0 ? 'on' : ''}" data-tab="${c}">${CH[c]}</button>`).join('')}</div>
+      ${Object.keys(CH).map((c, i) => `<div class="field" data-pane="${c}" ${i ? 'hidden' : ''}>
+        <textarea data-v="${c}" aria-label="Text ${CH[c]}" ${editable ? '' : 'disabled'}>${esc(p.variants[c] || p.body)}</textarea>
+        <div class="counter ${p.preview[c].length > LIMITS[c] ? 'over' : ''}">mit Hashtags ${p.preview[c].length} / ${LIMITS[c]} Zeichen</div></div>`).join('')}
+      <div class="field"><span class="label">Hashtags (mit Leerzeichen getrennt, werden angehängt)</span><input type="text" data-f="hashtags" value="${esc(p.hashtags.join(' '))}" ${editable ? '' : 'disabled'}></div>
       <div class="row" style="margin-bottom:14px">
         ${Object.keys(CH).map((c) => {
           const r = resultFor(c);
@@ -142,10 +182,15 @@ function postCard(p, connected) {
 }
 
 function bindPost(el, p) {
+  el.querySelectorAll('[data-tab]').forEach((t) => (t.onclick = () => {
+    el.querySelectorAll('[data-tab]').forEach((x) => x.classList.toggle('on', x === t));
+    el.querySelectorAll('[data-pane]').forEach((x) => (x.hidden = x.dataset.pane !== t.dataset.tab));
+  }));
   const val = (f) => el.querySelector(`[data-f="${f}"]`)?.value;
   const collect = () => ({
     title: val('title'),
-    body: val('body'),
+    variants: Object.fromEntries([...el.querySelectorAll('[data-v]')].map((t) => [t.dataset.v, t.value])),
+    body: el.querySelector('[data-v="facebook"]')?.value,
     hashtags: (val('hashtags') || '').split(/[\s,]+/).filter(Boolean),
     channels: [...el.querySelectorAll('[data-ch]:checked')].map((x) => x.dataset.ch),
   });
@@ -164,7 +209,8 @@ function bindPost(el, p) {
       btn.onchange = () => run(btn, async () => {
         const file = btn.files[0];
         if (!file) return;
-        await api(`/api/posts/${p.id}/image`, { method: 'POST', body: file, headers: { 'Content-Type': file.type } });
+        const ch = btn.dataset.channel ? `?channel=${btn.dataset.channel}` : '';
+        await api(`/api/posts/${p.id}/image${ch}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type } });
         toast('Bild gespeichert.');
       });
       return;
@@ -343,5 +389,8 @@ async function route() {
 }
 window.addEventListener('hashchange', route);
 api('/api/me').then((me) => (document.getElementById('who').textContent = me.email)).catch(() => {});
-api('/api/posts?status=draft').then((p) => updateCount(p.length)).catch(() => {});
+function refreshCount() {
+  api('/api/posts').then((p) => updateCount(p.filter((x) => ['draft', 'failed', 'partial'].includes(x.status)).length)).catch(() => {});
+}
+refreshCount();
 route();

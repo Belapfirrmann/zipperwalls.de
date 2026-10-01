@@ -28,6 +28,8 @@ export function composeText(post, channel) {
 // Gibt eine Fehlermeldung (Deutsch) oder null zurueck
 export function validate(channel, text, hasImage) {
   if (!text) return 'Kein Text vorhanden.';
+  const placeholder = findPlaceholder(text);
+  if (placeholder) return `Platzhalter ${placeholder} im Text noch ersetzen.`;
   if (text.length > LIMITS[channel]) return `Text zu lang (${text.length} von ${LIMITS[channel]} Zeichen).`;
   if (channel === 'instagram') {
     if (!hasImage) return 'Instagram braucht ein Bild.';
@@ -63,4 +65,26 @@ export function isoWeek(date = new Date()) {
   const yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
   const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
   return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+// Platzhalter wie [DATUM] oder [ZEITEN] aus dem Redaktionsplan duerfen nie veroeffentlicht werden
+export function findPlaceholder(text) {
+  const m = /\[[A-ZÄÖÜ][A-ZÄÖÜ _-]{2,}\]/.exec(text || '');
+  return m ? m[0] : null;
+}
+
+// Ortszeit Berlin (z. B. "2026-10-06", "09:00") in UTC ISO umrechnen, Sommer und Winterzeit beachtet
+export function berlinToUtc(date, time = '09:00') {
+  const [y, mo, d] = date.split('-').map(Number);
+  const [h, mi] = time.split(':').map(Number);
+  const guess = Date.UTC(y, mo - 1, d, h, mi);
+  const offset = (ts) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+        .formatToParts(new Date(ts))
+        .map((x) => [x.type, x.value]),
+    );
+    return Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute) - ts;
+  };
+  return new Date(guess - offset(guess - offset(guess))).toISOString();
 }

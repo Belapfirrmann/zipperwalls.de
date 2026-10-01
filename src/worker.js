@@ -1,6 +1,6 @@
 import { authenticateAdmin, authenticateAgent, sameOrigin } from './auth.js';
-import { CHANNELS, composeText, normalizeHashtags, isoWeek, LIMITS } from './text.js';
-import { DEFAULT_PLAN, WEEKLY_TEMPLATE, SETUP_TEMPLATE } from './plan.js';
+import { CHANNELS, composeText, normalizeHashtags, isoWeek, LIMITS, berlinToUtc, findPlaceholder } from './text.js';
+import { PLAN, WEEKLY_TEMPLATE, SETUP_TEMPLATE } from './plan.js';
 import { publishPost, runDuePosts, refreshMetrics, publicImageUrl } from './publish.js';
 import { listConnections } from './tokens.js';
 import { metaStart, metaCallback, linkedinStart, linkedinCallback } from './oauth.js';
@@ -25,7 +25,10 @@ function hydrate(env, row, results = []) {
     hashtags: JSON.parse(row.hashtags || '[]'),
     variants: JSON.parse(row.variants || '{}'),
     channels: JSON.parse(row.channels || '[]'),
-    image: publicImageUrl(env, row),
+    channel_images: JSON.parse(row.channel_images || '{}'),
+    images: Object.fromEntries(CHANNELS.map((c) => [c, publicImageUrl(env, row, c)])),
+    image: publicImageUrl(env, row, 'instagram'),
+    placeholder: findPlaceholder([row.body, ...Object.values(JSON.parse(row.variants || '{}'))].join(' ')),
     results: results.map((r) => ({ ...r, stats: r.stats ? JSON.parse(r.stats) : null })),
     preview: Object.fromEntries(CHANNELS.map((c) => [c, composeText(row, c)])),
   };
@@ -52,36 +55,73 @@ function cleanChannels(list) {
   return c.length ? [...new Set(c)] : CHANNELS;
 }
 
+// Bildangabe aus der Agent API: { base64, type } oder { url }
+async function imageFromInput(env, input) {
+  if (!input) return null;
+  if (input.base64) {
+    const bin = Uint8Array.from(atob(input.base64), (c) => c.charCodeAt(0));
+    return { key: await storeImage(env, bin, input.type || 'image/jpeg') };
+  }
+  if (input.url) {
+    if (!/^https:\/\//.test(input.url)) throw new Error('Bild URL muss mit https:// beginnen.');
+    return { url: input.url };
+  }
+  return null;
+}
+
+async function insertPost(env, { title, body, hashtags, variants, channels, image, channelImages, notes, scheduledAt, planNr, source }) {
+  const id = crypto.randomUUID();
+  const t = nowIso();
+  await env.DB.prepare(
+    `INSERT INTO posts (id,title,body,hashtags,variants,channels,image_key,image_url,channel_images,notes,status,scheduled_at,plan_nr,source,created_at,updated_at)
+     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,'draft',?11,?12,?13,?14,?14)`,
+  )
+    .bind(
+      id,
+      String(title).slice(0, 200),
+      String(body),
+      JSON.stringify(normalizeHashtags(hashtags)),
+      JSON.stringify(variants && typeof variants === 'object' ? variants : {}),
+      JSON.stringify(cleanChannels(channels)),
+      image?.key || null,
+      image?.url || null,
+      JSON.stringify(channelImages || {}),
+      notes ? String(notes).slice(0, 2000) : null,
+      scheduledAt,
+      Number.isInteger(planNr) ? planNr : null,
+      source,
+      t,
+    )
+    .run();
+  return id;
+}
+
 // ---------- Agent API (Bearer Token) ----------
 async function agentCreatePost(env, request) {
   const b = await readBody(request);
   if (!b || !b.title || !b.body) return fail('title und body sind Pflicht.');
-  let imageKey = null;
-  let imageUrl = null;
-  if (b.image_base64) {
-    try {
-      const bin = Uint8Array.from(atob(b.image_base64), (c) => c.charCodeAt(0));
-      imageKey = await storeImage(env, bin, b.image_type || 'image/jpeg');
-    } catch (e) {
-      return fail(e.message);
+  let image = null;
+  const channelImages = {};
+  try {
+    image = await imageFromInput(env, b.image_base64 ? { base64: b.image_base64, type: b.image_type } : b.image_url ? { url: b.image_url } : null);
+    for (const [c, input] of Object.entries(b.images && typeof b.images === 'object' ? b.images : {})) {
+      if (!CHANNELS.includes(c)) continue;
+      const img = await imageFromInput(env, input);
+      if (img) channelImages[c] = img.key || img.url;
     }
-  } else if (b.image_url) {
-    if (!/^https:\/\//.test(b.image_url)) return fail('image_url muss mit https:// beginnen.');
-    imageUrl = b.image_url;
+  } catch (e) {
+    return fail(e.message);
   }
-  let scheduled = null;
+  let scheduledAt = null;
   if (b.scheduled_at) {
     if (Number.isNaN(Date.parse(b.scheduled_at))) return fail('scheduled_at ist kein gültiges Datum (ISO 8601).');
-    scheduled = new Date(b.scheduled_at).toISOString();
+    scheduledAt = new Date(b.scheduled_at).toISOString();
   }
-  const id = crypto.randomUUID();
-  const t = nowIso();
-  await env.DB.prepare(
-    `INSERT INTO posts (id,title,body,hashtags,variants,channels,image_key,image_url,notes,status,scheduled_at,source,created_at,updated_at)
-     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,'draft',?10,'agent',?11,?11)`,
-  )
-    .bind(id, String(b.title).slice(0, 200), String(b.body), JSON.stringify(normalizeHashtags(b.hashtags)), JSON.stringify(b.variants && typeof b.variants === 'object' ? b.variants : {}), JSON.stringify(cleanChannels(b.channels)), imageKey, imageUrl, b.notes ? String(b.notes).slice(0, 2000) : null, scheduled, t)
-    .run();
+  const planNr = b.plan_nr == null ? null : Number(b.plan_nr);
+  if (planNr != null && !PLAN.entries.some((e) => e.nr === planNr)) return fail(`plan_nr ${b.plan_nr} gibt es im Redaktionsplan nicht.`);
+  const entry = PLAN.entries.find((e) => e.nr === planNr);
+  if (!scheduledAt && entry?.date) scheduledAt = berlinToUtc(entry.date, PLAN.rhythm.time);
+  const id = await insertPost(env, { ...b, image, channelImages, scheduledAt, planNr, source: 'agent' });
   return json({ id, status: 'draft', review_url: `${env.PUBLIC_BASE_URL}/#freigabe` }, 201);
 }
 
@@ -93,14 +133,50 @@ async function agentSummary(env) {
     ).all()
   ).results.map((r) => ({ title: r.title, channel: r.channel, stats: JSON.parse(r.stats) }));
   const metrics = (await env.DB.prepare(`SELECT channel,date,metric,value FROM metrics ORDER BY date DESC LIMIT 200`).all()).results;
-  const plan = await loadPlan(env);
-  return json({ plan, recent_posts: posts, post_stats: best, metrics });
+  return json({ plan: await planWithStatus(env), recent_posts: posts, post_stats: best, metrics });
 }
 
 // ---------- Plan, Checkliste ----------
-async function loadPlan(env) {
-  const row = await env.DB.prepare(`SELECT value FROM settings WHERE key='plan'`).first();
-  return row ? JSON.parse(row.value) : DEFAULT_PLAN;
+const PLAN_STATUS = { draft: 'Im Dashboard', scheduled: 'Freigegeben', approved: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
+
+// Plan plus Live Status: Ist zu einem Eintrag schon ein Post im Dashboard?
+async function planWithStatus(env) {
+  const rows = (await env.DB.prepare(`SELECT id, plan_nr, status, scheduled_at FROM posts WHERE plan_nr IS NOT NULL ORDER BY created_at`).all()).results;
+  const byNr = {};
+  for (const r of rows) if (!byNr[r.plan_nr] || byNr[r.plan_nr].status === 'rejected') byNr[r.plan_nr] = r;
+  return {
+    ...PLAN,
+    entries: PLAN.entries.map((e) => {
+      const post = byNr[e.nr];
+      return { ...e, post: post ? { id: post.id, status: post.status, scheduled_at: post.scheduled_at } : null, liveStatus: post ? PLAN_STATUS[post.status] : e.status };
+    }),
+  };
+}
+
+// Plan Eintrag als Entwurf ins Dashboard uebernehmen (Texte je Kanal, Hashtags, Termin Di/Do 09:00 Berlin)
+async function draftFromPlan(env, nr) {
+  const e = PLAN.entries.find((x) => x.nr === nr);
+  if (!e) return fail('Eintrag nicht im Redaktionsplan.', 404);
+  const existing = await env.DB.prepare(`SELECT id FROM posts WHERE plan_nr=? AND status != 'rejected'`).bind(nr).first();
+  if (existing) return fail('Zu diesem Eintrag gibt es schon einen Post im Dashboard.', 409);
+  const notes = [
+    `Plan Nr. ${e.nr}, KW ${e.kw}, ${e.pillar}. Format: ${e.format}.`,
+    e.headline ? `Bildtext: ${e.headline}` : null,
+    e.files?.length ? `Grafiken: ${e.files.join(', ')}` : null,
+    e.note ? `Offen: ${e.note}` : null,
+  ].filter(Boolean).join('\n');
+  const id = await insertPost(env, {
+    title: `#${e.nr} ${e.topic}`,
+    body: e.facebook || e.instagram || e.linkedin,
+    hashtags: e.hashtags,
+    variants: { instagram: e.instagram, facebook: e.facebook, linkedin: e.linkedin },
+    channels: CHANNELS,
+    notes,
+    scheduledAt: e.date ? berlinToUtc(e.date, PLAN.rhythm.time) : null,
+    planNr: e.nr,
+    source: 'plan',
+  });
+  return json({ id }, 201);
 }
 
 async function ensureChecklist(env, week) {
@@ -128,15 +204,8 @@ async function adminApi(request, env, ctx, url, email) {
 
   if (p === '/api/me') return json({ email });
 
-  if (p === '/api/plan') {
-    if (m === 'GET') return json(await loadPlan(env));
-    if (m === 'PUT') {
-      const b = await readBody(request);
-      if (!b || typeof b !== 'object' || !b.title) return fail('Ungültiger Plan.');
-      await env.DB.prepare(`INSERT INTO settings (key,value) VALUES ('plan',?1) ON CONFLICT(key) DO UPDATE SET value=?1`).bind(JSON.stringify({ ...b, placeholder: false })).run();
-      return json({ ok: true });
-    }
-  }
+  if (p === '/api/plan' && m === 'GET') return json(await planWithStatus(env));
+  if ((r = /^\/api\/plan\/entries\/(\d+)\/draft$/.exec(p)) && m === 'POST') return await draftFromPlan(env, Number(r[1]));
 
   if (p === '/api/posts' && m === 'GET') {
     const status = url.searchParams.get('status');
@@ -180,7 +249,13 @@ async function adminApi(request, env, ctx, url, email) {
     const type = (request.headers.get('Content-Type') || '').split(';')[0];
     try {
       const key = await storeImage(env, await request.arrayBuffer(), type);
-      await env.DB.prepare(`UPDATE posts SET image_key=?2, image_url=NULL, updated_at=?3 WHERE id=?1`).bind(post.id, key, nowIso()).run();
+      const channel = url.searchParams.get('channel');
+      if (channel && CHANNELS.includes(channel)) {
+        const ci = { ...post.channel_images, [channel]: key };
+        await env.DB.prepare(`UPDATE posts SET channel_images=?2, updated_at=?3 WHERE id=?1`).bind(post.id, JSON.stringify(ci), nowIso()).run();
+      } else {
+        await env.DB.prepare(`UPDATE posts SET image_key=?2, image_url=NULL, updated_at=?3 WHERE id=?1`).bind(post.id, key, nowIso()).run();
+      }
     } catch (e) {
       return fail(e.message);
     }
@@ -197,6 +272,8 @@ async function adminApi(request, env, ctx, url, email) {
     }
     if (!['draft', 'rejected', 'scheduled', 'failed', 'partial'].includes(post.status)) return fail('Dieser Post ist bereits freigegeben oder veröffentlicht.', 409);
     const b = (await readBody(request)) || {};
+    const ph = post.channels.map((c) => findPlaceholder(post.preview[c])).find(Boolean);
+    if (ph) return fail(`Platzhalter ${ph} im Text noch ersetzen, dann freigeben.`, 409);
     const connected = new Set((await listConnections(env)).filter((c) => c.connected).map((c) => c.channel));
     if (!post.channels.some((c) => connected.has(c))) return fail('Keiner der gewählten Kanäle ist verbunden. Bitte unter "Verbindungen" verbinden.', 409);
     let when = nowIso();
