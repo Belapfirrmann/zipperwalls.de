@@ -1,7 +1,7 @@
-# Einrichtung (ohne Cloudflare)
+# Einrichtung
 
-Alles läuft in Claude: Das Dashboard ist ein Claude Artefakt, gepostet wird von Claude Routinen.
-Einmalig nötig sind nur die Zugänge bei Meta und LinkedIn. Diese Schritte stehen auch in der Abhakeliste des Dashboards.
+Das Dashboard ist ein Claude Artefakt, gepostet wird von Claude Routinen. Einmalig nötig sind nur die Zugänge
+bei Meta und LinkedIn. Die Werte tragt ihr in `docs/Zugangsdaten-Vorlage.txt` ein und fügt sie dann in Claude ein (Schritt 3).
 
 ## 1. Facebook und Instagram
 
@@ -32,12 +32,11 @@ und mit der Facebook Seite verknüpft (Meta Business Suite > Einstellungen > Kon
 
 ## 3. Zugangsdaten in Claude eintragen
 
-In der Claude Code Sitzung oben im Titel auf die Cloud Umgebung > Bearbeiten:
-- **Umgebungsvariablen**: `META_PAGE_TOKEN`, `META_PAGE_ID`, `IG_USER_ID`, `LINKEDIN_TOKEN`, `LINKEDIN_TOKEN_EXPIRES`
-  (optional `LINKEDIN_AUTHOR`). Tokens nie in den Chat kopieren.
-- **Netzwerkzugriff**: diese Adressen erlauben: `graph.facebook.com`, `api.linkedin.com`, `www.linkedin.com`.
-
-Prüfen: In einer neuen Sitzung `node scripts/social.js check` ausführen lassen. Das Ergebnis erscheint im Dashboard unter "Verbindungen".
+1. `docs/Zugangsdaten-Vorlage.txt` in einem Editor öffnen und hinter jedes `=` den Wert schreiben.
+2. In der Claude Code Sitzung oben auf die Cloud Umgebung klicken > Bearbeiten > **Umgebungsvariablen**: den ganzen Text einfügen.
+3. Im selben Fenster unter **Netzwerkzugriff** diese Adressen erlauben: `graph.facebook.com`, `api.linkedin.com`, `www.linkedin.com`.
+4. Ausgefüllte Datei löschen. Tokens nie in den Chat kopieren.
+5. Claude Bescheid geben. Claude prüft die Zugänge, das Ergebnis erscheint im Dashboard unter "Verbindungen".
 
 ## 4. Routinen
 

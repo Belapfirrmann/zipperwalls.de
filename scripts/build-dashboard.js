@@ -4,13 +4,25 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { REDAKTIONSPLAN } from '../src/redaktionsplan.js';
 import { WEEKLY_TEMPLATE, SETUP_TEMPLATE } from '../src/plan.js';
+import { SETUP_STEPS } from '../src/setup-steps.js';
 
 const root = new URL('..', import.meta.url);
 const read = (p) => readFileSync(new URL(p, root), 'utf8');
 const stripModule = (src) => src.replace(/^import .*$/gm, '').replace(/^export /gm, '');
 
 const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
-const logo = read('dashboard/assets/logo-weiss.svg').replace(/<\?xml[^>]*>\s*/, '');
+// Logo aus dem Brandkit: CSS Klassen in fill Attribute umschreiben, damit nichts global ins Dashboard wirkt
+function inlineSvg(src) {
+  const fills = {};
+  for (const m of src.matchAll(/\.(cls-\d+)\s*\{\s*fill:\s*([^;]+);\s*\}/g)) fills[m[1]] = m[2].trim();
+  return src
+    .replace(/<\?xml[^>]*>\s*/, '')
+    .replace(/<defs>[\s\S]*?<\/defs>\s*/, '')
+    .replace(/ (id|data-name)="[^"]*"/g, '')
+    .replace(/class="(cls-\d+)"/g, (_, c) => `fill="${fills[c] || '#fff'}"`)
+    .replace('<svg ', '<svg role="img" aria-label="Zipperwalls" ');
+}
+const logo = inlineSvg(read('dashboard/assets/logo-weiss.svg'));
 
 const html = `<title>Zipperwalls Social Media</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +33,7 @@ ${read('dashboard/style.css')}
 </style>
 <div class="shell">
   <aside class="side">
-    <div class="logo" aria-label="Zipperwalls">${logo}</div>
+    <div class="logo">${logo}</div>
     <nav id="nav">
       <a href="#plan" data-view="plan">Plan</a>
       <a href="#freigabe" data-view="freigabe">Freigabe <span class="count" id="count-freigabe" hidden></span></a>
@@ -43,6 +55,7 @@ ${read('dashboard/style.css')}
 const PLAN = ${json(REDAKTIONSPLAN)};
 const WEEKLY_TEMPLATE = ${json(WEEKLY_TEMPLATE)};
 const SETUP_TEMPLATE = ${json(SETUP_TEMPLATE)};
+const SETUP_STEPS = ${json(SETUP_STEPS)};
 ${stripModule(read('src/text.js'))}
 ${read('dashboard/app.js')}
 </script>

@@ -1,0 +1,24 @@
+# Zipperwalls Social Media: Zugangsdaten
+#
+# So geht's:
+# 1. Hinter jedes Gleichheitszeichen den Wert schreiben (ohne Leerzeichen, ohne Anführungszeichen).
+# 2. Den ganzen Text kopieren und in Claude einfügen unter:
+#    Claude Code Sitzung > oben auf die Cloud Umgebung klicken > Bearbeiten > Umgebungsvariablen.
+# 3. Die ausgefüllte Datei danach löschen. Nicht in den Chat kopieren, nicht ins Repository legen.
+#
+# Zeilen mit # sind nur Erklärungen und dürfen mit eingefügt werden.
+
+# Facebook Seiten-Token (Graph API Explorer > me/accounts > access_token der Zipperwalls Seite)
+META_PAGE_TOKEN=
+
+# ID der Zipperwalls Facebook Seite (gleiche Zeile, Feld "id")
+META_PAGE_ID=
+
+# ID des Instagram Business Kontos (gleiche Zeile, Feld "instagram_business_account" > "id")
+IG_USER_ID=
+
+# LinkedIn Token (LinkedIn Developer Portal > OAuth Token Tools, Scopes: openid profile w_member_social)
+LINKEDIN_TOKEN=
+
+# Ablaufdatum des LinkedIn Tokens, 60 Tage nach Erstellung, Format JJJJ-MM-TT, z. B. 2026-12-01
+LINKEDIN_TOKEN_EXPIRES=

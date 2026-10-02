@@ -461,7 +461,12 @@ function viewVerbindungen() {
         <p style="margin:6px 0">${s?.ok ? `<span class="badge">Verbunden</span> ${esc(s.label || '')}` : s ? `<span class="badge dark">Fehler</span> ${esc(s.error || '')}` : '<span class="badge grey">Nicht eingerichtet</span>'}</p>
         <p class="muted small" style="max-width:60ch">${info[c][0]}${s?.days_left != null ? `<br>${warn ? '<strong>' : ''}Token gültig noch ${s.days_left} Tage${warn ? '. Bitte erneuern.</strong>' : ''}` : ''}${s?.checked_at ? `<br>Geprüft ${fmtDate(s.checked_at)}` : ''}</p>
         <p class="muted small">Umgebungsvariablen: <code>${info[c][1]}</code></p></div></div>`;
-    }).join('')}</div>`;
+    }).join('')}</div>
+    <details class="card setup" ${CHANNEL_KEYS.some((c) => conn[c]?.ok) ? '' : 'open'}>
+      <summary><h2>So richten Sie die Zugänge ein</h2></summary>
+      <p class="muted small" style="margin-top:12px">Einmalig, etwa 30 bis 60 Minuten. Ausführlich in docs/SETUP.md im Repository.</p>
+      ${SETUP_STEPS.map((g) => `<h3 style="margin-top:22px">${esc(g.title)}</h3><ol>${g.steps.map((t) => `<li>${esc(t)}</li>`).join('')}</ol>`).join('')}
+    </details>`;
 }
 
 // ---------- Rahmen ----------

@@ -161,3 +161,12 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 }
 @media (prefers-reduced-motion: reduce) { .toast, .btn { transition: none; } }
 .head .label { display: block; overflow-wrap: anywhere; }
+.side { padding-top: 32px; }
+.logo { padding: 4px 0 8px; }
+.setup { margin-top: 20px; }
+.setup summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+.setup summary::-webkit-details-marker { display: none; }
+.setup summary::after { content: '+'; font-size: 28px; font-weight: 900; margin-left: auto; color: var(--grau); }
+.setup[open] summary::after { content: '\2212'; }
+.setup ol { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 8px; max-width: 75ch; overflow-wrap: anywhere; }
+[hidden] { display: none !important; }
