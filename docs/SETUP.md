@@ -19,10 +19,12 @@ hat und die Berechtigung dort hinzugefügt wurde. Deshalb zuerst die Anwendungsf
 3. Anwendungsfall **„Nachrichten und Inhalte auf Instagram verwalten“** (*Manage messaging & content on Instagram*) hinzufügen >
    Variante **„API-Einrichtung mit Facebook-Login“** wählen (nicht „mit Instagram-Login“) > Berechtigungen hinzufügen:
    `instagram_basic`, `instagram_content_publish` und für die Zahlen `instagram_manage_insights`.
-4. Graph API Explorer öffnen (https://developers.facebook.com/tools/explorer), oben die App wählen, „User Token“ erzeugen und im
-   Dropdown diese Rechte anhaken (jetzt werden sie angeboten):
+4. Graph API Explorer öffnen (https://developers.facebook.com/tools/explorer).
+   **Wichtig: Rechts oben im Feld „Meta-App“ eure eigene App auswählen, nicht „Graph API Explorer“.** Sonst bietet der
+   Explorer die Rechte eurer App nicht an. Darunter bei „Benutzer oder Seite“ den **Benutzer-Token** wählen.
+   Dann im Berechtigungen-Dropdown diese Rechte anhaken (zum Finden z. B. „pages_“ eintippen):
    `pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic, instagram_content_publish, instagram_manage_insights`
-   Im folgenden Facebook Fenster die Zipperwalls Seite und das Instagram Konto auswählen.
+   „Generate Access Token“ klicken und im Facebook Fenster die Zipperwalls Seite und das Instagram Konto auswählen.
 5. Token verlängern: Info Symbol neben dem Token > „Im Access Token Tool öffnen“ > „Zugriffsschlüssel verlängern“. Den langen Token im Explorer einsetzen.
 6. Im Explorer abfragen: `me/accounts?fields=id,name,access_token,instagram_business_account`
    Aus der Zeile der Zipperwalls Seite:
