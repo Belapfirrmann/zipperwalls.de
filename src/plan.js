@@ -10,14 +10,13 @@ export const WEEKLY_TEMPLATE = [
 
 export const SETUP_TEMPLATE = [
   'Instagram Konto @zipperwalls.de anlegen, Facebook Infos (Adresse, Telefon, Öffnungszeiten) korrigieren',
-  'Cloudflare Access einrichten (Login für Bela und Darien)',
-  'Worker Secrets setzen (Agent Token, Verschlüsselungsschlüssel)',
-  'Instagram auf Business oder Creator Konto umstellen und mit der Facebook Seite verknüpfen',
-  'Meta Developer App anlegen und Secrets eintragen',
-  'Facebook und Instagram im Dashboard verbinden',
-  'LinkedIn Developer App anlegen, Produkt "Share on LinkedIn" hinzufügen',
-  'LinkedIn im Dashboard verbinden',
-  'Optional: Community Management API bei LinkedIn beantragen (für Unternehmensseite und Zahlen)',
-  'Agent Token im Claude Projekt hinterlegen (docs/AGENT-API.md)',
+  'Instagram auf Business Konto umstellen und mit der Facebook Seite verknüpfen',
+  'Meta Developer App anlegen (Bela und Darien als Admin)',
+  'Facebook Seiten-Token und IDs holen (Graph API Explorer)',
+  'LinkedIn Developer App anlegen, "Share on LinkedIn" und "Sign In with LinkedIn" hinzufügen',
+  'LinkedIn Token holen (Token Generator, gilt 60 Tage)',
+  'Zugangsdaten als Umgebungsvariablen in der Claude Umgebung eintragen',
+  'Netzwerkzugriff für Facebook und LinkedIn in der Claude Umgebung freigeben',
+  'Claude Routinen einrichten (Posten, Entwürfe, Zahlen)',
   'Testpost auf allen Kanälen freigeben',
 ];

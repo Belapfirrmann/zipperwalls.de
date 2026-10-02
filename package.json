@@ -4,13 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local",
-    "deploy": "wrangler deploy",
-    "db:migrate:local": "wrangler d1 migrations apply zipperwalls-social --local",
-    "db:migrate:remote": "wrangler d1 migrations apply zipperwalls-social --remote",
-    "test": "node --test test/*.test.js"
-  },
-  "devDependencies": {
-    "wrangler": "^4.0.0"
+    "build": "node scripts/build-dashboard.js",
+    "test": "node --test test/*.test.js",
+    "check": "node scripts/social.js check"
   }
 }

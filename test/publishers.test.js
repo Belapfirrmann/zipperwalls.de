@@ -16,14 +16,22 @@ function mockFetch(handler) {
   return calls;
 }
 
-test('Facebook: Bildpost geht an /photos mit caption', async () => {
+test('Facebook: Bildpost laedt Datei an /photos mit caption hoch', async () => {
   const calls = mockFetch(() => ({ body: { id: 'p1', post_id: '123_456' } }));
-  const r = await publishFacebook(env, { token: { accessToken: 'T', meta: { pageId: '123' } }, text: 'Hallo', imageUrl: 'https://x/a.jpg' });
+  const r = await publishFacebook(env, { token: { accessToken: 'T', meta: { pageId: '123' } }, text: 'Hallo', imageBytes: new Uint8Array([1, 2, 3]), imageType: 'image/jpeg' });
   assert.equal(calls[0].url, 'https://graph.facebook.com/v22.0/123/photos');
-  const body = new URLSearchParams(calls[0].opts.body);
+  const body = calls[0].opts.body;
+  assert.ok(body instanceof FormData);
   assert.equal(body.get('caption'), 'Hallo');
-  assert.equal(body.get('url'), 'https://x/a.jpg');
+  assert.equal(body.get('source').size, 3);
   assert.equal(r.externalId, '123_456');
+});
+
+test('Facebook: Textpost ohne Bild geht an /feed', async () => {
+  const calls = mockFetch(() => ({ body: { id: '123_9' } }));
+  await publishFacebook(env, { token: { accessToken: 'T', meta: { pageId: '123' } }, text: 'Nur Text' });
+  assert.equal(calls[0].url, 'https://graph.facebook.com/v22.0/123/feed');
+  assert.equal(new URLSearchParams(calls[0].opts.body).get('message'), 'Nur Text');
 });
 
 test('Facebook: API Fehler wird lesbar weitergegeben', async () => {

@@ -2,22 +2,45 @@ import { apiFetch } from './http.js';
 
 const base = (env) => `https://graph.facebook.com/${env.GRAPH_VERSION || 'v22.0'}`;
 
-export async function publishFacebook(env, { token, text, imageUrl }) {
+function photoForm(accessToken, imageBytes, imageType, fields) {
+  const form = new FormData();
+  form.append('access_token', accessToken);
+  for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  const ext = imageType === 'image/png' ? 'png' : 'jpg';
+  form.append('source', new Blob([imageBytes], { type: imageType || 'image/jpeg' }), `bild.${ext}`);
+  return form;
+}
+
+// Post auf die Facebook Seite. Bild wird als Datei hochgeladen (keine oeffentliche URL noetig).
+export async function publishFacebook(env, { token, text, imageBytes, imageType }) {
   const { accessToken, meta } = token;
   const pageId = meta.pageId;
-  const form = new URLSearchParams({ access_token: accessToken });
-  let path;
-  if (imageUrl) {
-    path = `/${pageId}/photos`;
-    form.set('url', imageUrl);
-    form.set('caption', text);
+  let res;
+  if (imageBytes) {
+    res = await apiFetch(`${base(env)}/${pageId}/photos`, { method: 'POST', body: photoForm(accessToken, imageBytes, imageType, { caption: text }) });
   } else {
-    path = `/${pageId}/feed`;
-    form.set('message', text);
+    res = await apiFetch(`${base(env)}/${pageId}/feed`, { method: 'POST', body: new URLSearchParams({ access_token: accessToken, message: text }) });
   }
-  const { data } = await apiFetch(base(env) + path, { method: 'POST', body: form });
-  const id = data.post_id || data.id;
+  const id = res.data.post_id || res.data.id;
   return { externalId: id, url: `https://www.facebook.com/${id}` };
+}
+
+// Instagram braucht eine oeffentliche Bild URL. Dafuer wird das Bild unveroeffentlicht auf der
+// Facebook Seite abgelegt; dessen Facebook CDN Adresse ist oeffentlich und immer JPEG.
+export async function uploadHiddenPhoto(env, { token, imageBytes, imageType }) {
+  const { accessToken, meta } = token;
+  const up = await apiFetch(`${base(env)}/${meta.pageId}/photos`, {
+    method: 'POST',
+    body: photoForm(accessToken, imageBytes, imageType, { published: 'false' }),
+  });
+  const info = await apiFetch(`${base(env)}/${up.data.id}?fields=images&access_token=${accessToken}`);
+  const best = [...(info.data.images || [])].sort((a, b) => b.width * b.height - a.width * a.height)[0];
+  if (!best?.source) throw new Error('Bildadresse von Facebook nicht erhalten.');
+  return { id: up.data.id, url: best.source };
+}
+
+export async function deletePhoto(env, { token, id }) {
+  await apiFetch(`${base(env)}/${id}?access_token=${token.accessToken}`, { method: 'DELETE' });
 }
 
 export async function insightsFacebook(env, { token, results }) {
