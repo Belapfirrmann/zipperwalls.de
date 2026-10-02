@@ -5,8 +5,11 @@ export const SETUP_STEPS = [
     title: 'Facebook und Instagram',
     steps: [
       'Instagram @zipperwalls.de als Business Konto führen und in der Meta Business Suite mit der Facebook Seite verknüpfen.',
-      'Auf developers.facebook.com eine App vom Typ „Business“ anlegen. Bela und Darien als Admin eintragen. Die App kann im Entwicklungsmodus bleiben.',
-      'Im Graph API Explorer die App wählen und ein User Token erzeugen mit: pages_show_list, pages_manage_posts, pages_read_engagement, instagram_basic, instagram_content_publish, instagram_manage_insights, business_management.',
+      'Auf developers.facebook.com eine App erstellen. Bela und Darien als Admin eintragen. Die App bleibt im Entwicklungsmodus, ein App Review ist nicht nötig.',
+      'Wichtig: Berechtigungen erscheinen im Graph API Explorer erst, wenn die App den passenden Anwendungsfall hat. Deshalb zuerst die nächsten zwei Schritte.',
+      'Anwendungsfall „Alles auf deiner Seite verwalten“ (Manage everything on your Page) hinzufügen > Anpassen > pages_manage_posts und pages_read_engagement hinzufügen.',
+      'Anwendungsfall „Nachrichten und Inhalte auf Instagram verwalten“ hinzufügen > „API-Einrichtung mit Facebook-Login“ wählen > instagram_basic, instagram_content_publish und instagram_manage_insights hinzufügen.',
+      'Im Graph API Explorer die App wählen, User Token erzeugen, alle diese Rechte anhaken und im Facebook Fenster die Zipperwalls Seite und das Instagram Konto auswählen.',
       'Token im Access Token Tool verlängern und den langen Token im Explorer einsetzen.',
       'Abfrage me/accounts?fields=id,name,access_token,instagram_business_account ausführen. Aus der Zeile der Zipperwalls Seite: access_token = META_PAGE_TOKEN, id = META_PAGE_ID, instagram_business_account.id = IG_USER_ID.',
     ],
