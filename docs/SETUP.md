@@ -16,14 +16,14 @@ hat und die Berechtigung dort hinzugefügt wurde. Deshalb zuerst die Anwendungsf
 2. Anwendungsfall **„Alles auf deiner Seite verwalten“** (englisch: *Manage everything on your Page*) hinzufügen > **Anpassen** >
    Berechtigungen hinzufügen: `pages_manage_posts`, `pages_read_engagement`.
    (`pages_show_list` und `business_management` sind automatisch dabei.)
-3. Anwendungsfall **„Nachrichten und Inhalte auf Instagram verwalten“** (*Manage messaging & content on Instagram*) hinzufügen >
-   Variante **„API-Einrichtung mit Facebook-Login“** wählen (nicht „mit Instagram-Login“) > Berechtigungen hinzufügen:
-   `instagram_basic`, `instagram_content_publish` und für die Zahlen `instagram_manage_insights`.
+3. Anwendungsfall **„Messaging und Content auf Instagram verwalten“** (*Manage messaging & content on Instagram*) hinzufügen >
+   im Bereich **„API-Einrichtung mit Facebook-Login“** (nicht „mit Instagram-Login“, deren Rechte heißen instagram_business_… und fehlen im Explorer) > Berechtigungen hinzufügen:
+   `instagram_basic`, `instagram_content_publish`. Optional, nur für die Instagram-Reichweite: `instagram_manage_insights` (wird nicht immer angeboten, dann weglassen).
 4. Graph API Explorer öffnen (https://developers.facebook.com/tools/explorer).
    **Wichtig: Rechts oben im Feld „Meta-App“ eure eigene App auswählen, nicht „Graph API Explorer“.** Sonst bietet der
    Explorer die Rechte eurer App nicht an. Darunter bei „Benutzer oder Seite“ den **Benutzer-Token** wählen.
    Dann im Berechtigungen-Dropdown diese Rechte anhaken (zum Finden z. B. „pages_“ eintippen):
-   `pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic, instagram_content_publish, instagram_manage_insights`
+   `pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic, instagram_content_publish` (falls angeboten zusätzlich `instagram_manage_insights`)
    „Generate Access Token“ klicken und im Facebook Fenster die Zipperwalls Seite und das Instagram Konto auswählen.
 5. Token verlängern: Info Symbol neben dem Token > „Im Access Token Tool öffnen“ > „Zugriffsschlüssel verlängern“. Den langen Token im Explorer einsetzen.
 6. Im Explorer abfragen: `me/accounts?fields=id,name,access_token,instagram_business_account`
