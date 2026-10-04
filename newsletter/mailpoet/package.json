@@ -1,0 +1,14 @@
+{
+  "name": "messepraxis-mailpoet-bloecke",
+  "private": true,
+  "scripts": {
+    "build": "node build-blocks.cjs",
+    "validate": "node validate-blocks.cjs messepraxis-vorlage.blocks.html && node validate-blocks.cjs messepraxis-01.blocks.html"
+  },
+  "dependencies": {
+    "@wordpress/block-library": "*",
+    "@wordpress/blocks": "*",
+    "global-jsdom": "*",
+    "jsdom": "*"
+  }
+}
