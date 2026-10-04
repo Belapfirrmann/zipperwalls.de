@@ -78,8 +78,17 @@ function stepsBox(steps) {
 }
 
 // n: Newsletter (Felder wie im Plan plus badge, headline, image_*, offer_*), opts: { logo, imageSrc, preview }
-export function renderNewsletter(n, opts = {}) {
-  const preview = !!opts.preview;
+// Öffentliche Bilder für echte Mails (WordPress-Mediathek, hochgeladen am 04.10.2026). Die Vorschau im Dashboard nutzt eingebettete Varianten.
+const UP = 'https://www.zipperwalls.de/wp-content/uploads/';
+export const EXPORT_ASSETS = {
+  logo: UP + 'standpunkt-logo-farbig.png',
+  logoLight: UP + 'standpunkt-logo-weiss.png',
+  icons: { Instagram: UP + 'standpunkt-icon-instagram.png', LinkedIn: UP + 'standpunkt-icon-linkedin.png', Facebook: UP + 'standpunkt-icon-facebook.png' },
+};
+
+export function renderNewsletter(n, optsIn = {}) {
+  const preview = !!optsIn.preview;
+  const opts = preview ? optsIn : { ...EXPORT_ASSETS, ...optsIn };
   const link = (key) => (preview ? '#' : MAILPOET[key]);
   const d = n.date ? new Date(n.date + 'T12:00:00Z') : null;
   const issue = `Ausgabe ${String(n.nr ?? '').padStart(2, '0')}${d ? ` · ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : ''}`;
@@ -212,7 +221,7 @@ ${preview ? '<base target="_blank">' : ''}
   <tr><td class="pad" style="${F}padding:32px 40px;background:#1F2725;font-size:13px;line-height:1.6;color:#C9CDD0;">
     <a href="https://www.zipperwalls.de/">${opts.logoLight ? `<img src="${H(opts.logoLight)}" width="170" alt="zipperwalls.de" style="width:170px;">` : `<span style="${F}font-size:22px;font-weight:900;font-style:italic;color:#FFFFFF;">zipperwalls.de</span>`}</a>
     <p style="margin:20px 0 10px;color:#FFFFFF;font-size:15px;font-weight:700;">Jeden Dienstag und Donnerstag ein neuer Tipp auf unseren Kanälen:</p>
-    <table role="presentation"><tr>${SOCIAL.map(([name, url, icon]) => `<td style="padding:0 10px 0 0;"><a href="${url}" title="${name}"><img src="${opts.icons === false ? '' : icon}" width="36" height="36" alt="${name}" style="width:36px;height:36px;"></a></td>`).join('')}</tr></table>
+    <table role="presentation"><tr>${SOCIAL.map(([name, url, icon]) => `<td style="padding:0 10px 0 0;"><a href="${url}" title="${name}"><img src="${H(opts.icons?.[name] || icon)}" width="36" height="36" alt="${name}" style="width:36px;height:36px;"></a></td>`).join('')}</tr></table>
     <p style="margin:22px 0 8px;">Sie erhalten diese E-Mail, weil Sie den Newsletter ${NL_NAME} von Zipperwalls abonniert haben.</p>
     <p style="margin:0;"><a href="${link('unsubscribe')}" style="color:#FFFFFF;">Abmelden</a> · <a href="${link('manage')}" style="color:#FFFFFF;">Einstellungen</a> · <a href="https://www.zipperwalls.de/impressum/" style="color:#FFFFFF;">Impressum</a> · <a href="https://www.zipperwalls.de/datenschutzerklaerung/" style="color:#FFFFFF;">Datenschutz</a></p>
   </td></tr>

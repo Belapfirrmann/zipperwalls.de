@@ -630,7 +630,7 @@ function viewFreigabeNewsletter() {
   groups.erledigt.reverse();
   const list = groups[nlFreigabeFilter];
   main.innerHTML = `
-    <div class="head"><h1>Freigabe</h1>${freigabeParts('newsletter')}<p>Die Vorschau zeigt den Newsletter so, wie er bei den Empfängern ankommt. Alle Links und Buttons sind klickbar, „Vollbild“ zeigt ihn groß als Desktop- oder Handy-Ansicht. Daneben lässt sich alles anpassen, die Vorschau ändert sich sofort. Dann freigeben (Darien), in MailPoet einplanen und hier abhaken.</p></div>
+    <div class="head"><h1>Freigabe</h1>${freigabeParts('newsletter')}<p>Die Vorschau zeigt den Newsletter so, wie er bei den Empfängern ankommt. Alle Links und Buttons sind klickbar, „Vollbild“ zeigt ihn groß als Desktop- oder Handy-Ansicht. Daneben lässt sich alles anpassen, die Vorschau ändert sich sofort. Dann freigeben (Darien). Alles Weitere läuft automatisch: Claude plant den Newsletter in MailPoet zeitgleich mit dem Post ein und meldet hier den Stand.</p></div>
     <div class="row" style="margin-bottom:22px">
       ${Object.keys(NL_GROUPS).map((k) => `<button class="btn small ${nlFreigabeFilter === k ? 'dark' : 'ghost'}" data-filter="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join('')}
     </div>
@@ -655,8 +655,6 @@ function nlCard(n) {
       : `<input id="n-${n.id}-${f}" type="text" data-nf="${f}" value="${esc(v)}" ${dis}>`;
     return `<div class="field"><label class="label" for="n-${n.id}-${f}">${label}</label>${input}${max ? `<div class="counter ${v.length > max ? 'over' : ''}" data-count="${f}">${v.length} / ${max} Zeichen</div>` : ''}</div>`;
   };
-  const copy = `<div class="row" style="margin-top:12px"><span class="label">Für MailPoet kopieren</span>
-      <button class="btn ghost small" data-copy="subject">Betreff</button><button class="btn ghost small" data-copy="preview">Vorschautext</button><button class="btn ghost small" data-copy="mail">Texte</button></div>`;
   const stamps = [['approved_at', 'Freigegeben'], ['planned_at', 'In MailPoet eingeplant'], ['sent_at', 'Versendet']].filter(([k]) => n[k]).map(([k, l]) => ` · ${l} ${fmtDate(n[k])}`).join('');
   let actions = '';
   if (editable) {
@@ -665,9 +663,9 @@ function nlCard(n) {
         <button class="btn ghost" data-act="nl-save">Speichern</button>
         <button class="btn ghost small" data-act="nl-drop">Streichen</button></div>`;
   } else if (n.status === 'Freigegeben') {
-    actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-planned">In MailPoet eingeplant</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button></div>`;
+    actions = `<div class="row" style="margin-top:16px"><button class="btn ghost small" data-act="nl-reopen">Freigabe zurückziehen</button></div>`;
   } else if (n.status === 'In MailPoet eingeplant') {
-    actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-sent">Als versendet markieren</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button></div>`;
+    actions = `<div class="row" style="margin-top:16px"><button class="btn ghost small" data-act="nl-reopen">Versand stoppen und zurück zu Entwurf</button></div>`;
   } else if (n.status === 'Versendet') {
     actions = `<div class="kpis"><span class="label">Kennzahlen aus MailPoet (nach etwa 7 Tagen)</span>
         <div class="row">${NL_KPI.map(([k, l]) => `<label class="kpi-in"><span class="small muted">${l}</span><input type="text" inputmode="decimal" id="n-${n.id}-${k}" data-kpi="${k}" value="${esc(n[k] ?? '')}"></label>`).join('')}
@@ -694,10 +692,12 @@ function nlCard(n) {
       <button class="btn dark" type="button" data-act="nl-full">Vollbild ansehen</button>
       </div>
     </div>
-    ${{ Entwurf: `<p class="nl-next">Nach der Freigabe muss der Newsletter noch in MailPoet für diesen Termin eingeplant werden. Automatisch geht er erst raus, sobald die Verbindung zu MailPoet steht.</p>`,
+    ${n.mp_error ? `<p class="nl-next warn"><strong>MailPoet:</strong> ${esc(n.mp_error)}</p>` : ''}
+    ${{ Entwurf: `<p class="nl-next">Nach der Freigabe plant Claude den Newsletter automatisch in MailPoet ein, zeitgleich mit dem Post. Sie müssen in MailPoet nichts tun.</p>`,
         Verschoben: `<p class="nl-next">Verschoben. Neuen Termin mit dem Post abstimmen, dann freigeben.</p>`,
-        Freigegeben: `<p class="nl-next warn"><strong>Noch nicht eingeplant:</strong> Bitte in MailPoet für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr einplanen und dann „In MailPoet eingeplant“ klicken.</p>`,
-        'In MailPoet eingeplant': `<p class="nl-next">In MailPoet eingeplant für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</p>` }[n.status] || ''}
+        Freigegeben: `<p class="nl-next">Freigegeben. Claude plant den Newsletter beim nächsten Lauf (spätestens in etwa 60 Minuten) in MailPoet ein für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</p>`,
+        'In MailPoet eingeplant': `<p class="nl-next">In MailPoet eingeplant für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr${n.mailpoet_id ? ` (MailPoet-Nr. ${esc(n.mailpoet_id)})` : ''}. Geht automatisch raus.</p>`,
+        Versendet: `<p class="nl-next">Versendet${n.sent_at ? ` am ${fmtDate(n.sent_at)}` : ''}.</p>` }[n.status] || ''}
     ${n.note ? `<p class="open-point"><strong>Offen:</strong> ${esc(n.note)}</p>` : ''}
     ${problem ? `<p class="open-point"><strong>Vor der Freigabe:</strong> ${esc(problem)}</p>` : ''}
     ${warning ? `<p class="open-point"><strong>Hinweis:</strong> ${esc(warning)}</p>` : ''}
@@ -785,12 +785,10 @@ function bindNl(el, n) {
         const data = collect();
         const problem = nlProblem({ ...n, ...data });
         if (problem) return toast(problem);
-        return confirmClick(btn, `Für ${n.day.slice(0, 2)} ${fmtDayLong(n.date)}, ${n.time} Uhr freigeben?`, () => run(btn, () => saveNl(n, { ...data, status: 'Freigegeben', approved_at: nowIso() }), `Freigegeben. Jetzt in MailPoet für ${fmtDayLong(n.date)}, ${n.time} Uhr einplanen.`));
+        return confirmClick(btn, `Für ${n.day.slice(0, 2)} ${fmtDayLong(n.date)}, ${n.time} Uhr freigeben?`, () => run(btn, () => saveNl(n, { ...data, status: 'Freigegeben', approved_at: nowIso(), mp_error: null }), `Freigegeben. Geht automatisch am ${fmtDayLong(n.date)} um ${n.time} Uhr raus.`));
       }
       if (act === 'nl-drop') return confirmClick(btn, 'Wirklich streichen?', () => run(btn, () => saveNl(n, { ...collect(), status: 'Gestrichen' }), 'Gestrichen.'));
-      if (act === 'nl-planned') return run(btn, () => saveNl(n, { status: 'In MailPoet eingeplant', planned_at: nowIso() }), 'Als in MailPoet eingeplant markiert.');
-      if (act === 'nl-sent') return confirmClick(btn, 'Wirklich versendet?', () => run(btn, () => saveNl(n, { status: 'Versendet', sent_at: nowIso() }), 'Als versendet markiert. Kennzahlen bitte nach etwa 7 Tagen eintragen.'));
-      if (act === 'nl-reopen') return run(btn, () => saveNl(n, { status: 'Entwurf', approved_at: null, planned_at: null }), 'Wieder als Entwurf offen.');
+      if (act === 'nl-reopen') return confirmClick(btn, 'Wirklich zurück zu Entwurf?', () => run(btn, () => saveNl(n, { status: 'Entwurf', approved_at: null, mp_error: null }), n.mailpoet_id ? 'Zurück auf Entwurf. Claude nimmt die Einplanung in MailPoet beim nächsten Lauf zurück.' : 'Wieder als Entwurf offen.'));
       if (act === 'nl-kpi') {
         const vals = Object.fromEntries([...el.querySelectorAll('[data-kpi]')].map((i) => {
           const v = i.value.trim().replace(',', '.');
