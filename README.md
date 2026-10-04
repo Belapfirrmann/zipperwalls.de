@@ -41,7 +41,7 @@ Social Media und Newsletter. Newsletter-Ablauf: Entwurf prüfen und freigeben (D
 Änderungen und Status liegen in der Artefakt-Datenbank, Collection `newsletters`, Dokument `nl-<Nr>`
 (Felder wie im Plan plus `status`, `approved_at`, `planned_at`, `sent_at`, `open_rate`, `click_rate`, `unsubscribes`).
 Status-Werte wie in der Tabelle: Entwurf, Verschoben, Freigegeben, In MailPoet eingeplant, Versendet, Gestrichen.
-In der Freigabe erscheinen nur angelegte Entwürfe, mit gestalteter Vorschau (Design „Messepraxis“, `src/newsletter-render.js`),
+In der Freigabe erscheinen nur angelegte Entwürfe, mit gestalteter Vorschau (Newsletter „Standpunkt“, `src/newsletter-render.js`),
 Vollbild als Desktop- oder Handy-Ansicht und klickbaren Links. Wie Claude einen Entwurf anlegt: `docs/routinen/newsletter-entwuerfe.md`.
 
 Neuen Newsletter-Plan einspielen:

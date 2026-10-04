@@ -383,7 +383,7 @@ const improveBlock = (id, placeholder) => `
 // ---------- Newsletter ----------
 // Plan kommt aus dem Newsletter-Plan (xlsx, scripts/import_newsletter.py). Entwürfe liegen in Collection "newsletters"
 // (Dokument nl-<Nr>) und werden einzeln angelegt (Claude, siehe docs/routinen/newsletter-entwuerfe.md). Nur sie erscheinen in der Freigabe.
-// Gestaltet wird mit renderNewsletter aus src/newsletter-render.js (beim Bauen eingefügt).
+// Gestaltet wird mit renderNewsletter aus src/newsletter-render.js (beim Bauen eingefügt), Name des Newsletters: NL_NAME.
 const NL_STATUS = ['Entwurf', 'Verschoben', 'Freigegeben', 'In MailPoet eingeplant', 'Versendet', 'Gestrichen'];
 const NL_BADGE = { Entwurf: '', Verschoben: '', Freigegeben: 'dark', 'In MailPoet eingeplant': 'dark', Versendet: 'grey', Gestrichen: 'grey' };
 const NL_GROUPS = { offen: ['Entwurf', 'Verschoben'], geplant: ['Freigegeben', 'In MailPoet eingeplant'], erledigt: ['Versendet', 'Gestrichen'] };
@@ -396,6 +396,8 @@ const NL_SECTIONS = [
   ['Button', [['button_text', 'Button-Text'], ['button_link', 'Button-Link']]],
   ['Angebot', [['offer_label', 'Angebot Kennzeile'], ['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
   ['Zusatzblock', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
+  ['Produktempfehlungen (gelber Block)', [['products_label', 'Kennzeile'], ['products_title', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short'],
+    ...[1, 2, 3].flatMap((i) => [[`p${i}_name`, `Produkt ${i}: Name`], [`p${i}_text`, `Produkt ${i}: Kurztext`, 0, 'short'], [`p${i}_link`, `Produkt ${i}: Link`], [`p${i}_image_url`, `Produkt ${i}: Bild-Adresse (zipperwalls.de)`]])]],
 ];
 const NL_FIELDS = NL_SECTIONS.flatMap(([, fields]) => fields);
 const NL_KPI = [['open_rate', 'Öffnungsrate %'], ['click_rate', 'Klickrate %'], ['unsubscribes', 'Abmeldungen']];
@@ -423,7 +425,7 @@ function nlProblem(n) {
     const ph = findPlaceholder(v);
     if (ph) return `${label}: Platzhalter ${ph} noch ersetzen.`;
     if (max && v.length > max) return `${label} zu lang (${v.length} von ${max} Zeichen).`;
-    if ((f.endsWith('_link') || f === 'image_url') && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
+    if ((f.endsWith('_link') || f.endsWith('image_url')) && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
   }
   for (const [f, label] of [['subject', 'Betreff'], ['preview', 'Vorschautext'], ['text', 'Text']]) if (!n[f]) return `${label} fehlt.`;
   return null;
@@ -447,7 +449,11 @@ const nlMailText = (n) => [
 ].filter(Boolean).join('\n\n');
 
 // Vorschau: Bild aus den Dashboard-Assets (fremde Adressen sind im Artefakt gesperrt), Logo eingebettet
-const nlPreviewHtml = (n) => renderNewsletter(n, { preview: true, logo: LOGO_FARBIG, imageSrc: n.image_asset ? blobUrl(n.image_asset) : null });
+const nlPreviewHtml = (n) => renderNewsletter(n, {
+  preview: true, logo: LOGO_FARBIG, logoLight: LOGO_WEISS,
+  imageSrc: n.image_asset ? blobUrl(n.image_asset) : null,
+  productImages: [1, 2, 3].map((i) => (n[`p${i}_image_asset`] ? blobUrl(n[`p${i}_image_asset`]) : null)),
+});
 
 async function copyText(text, label) {
   try {

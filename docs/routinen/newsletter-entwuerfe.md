@@ -1,4 +1,4 @@
-# Newsletter-Entwürfe anlegen
+# Newsletter-Entwürfe anlegen („Standpunkt“)
 
 Ein Entwurf pro Ausgabe, erst wenn Bela oder Darien darum bitten oder der Versand näher rückt. Nur angelegte Entwürfe
 erscheinen unter Freigabe › Newsletter. Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
@@ -18,9 +18,15 @@ erscheinen unter Freigabe › Newsletter. Dashboard (Artefakt): https://claude.a
    text, button_text, button_link, offer_label, offer_title, offer_text, offer_button_text, offer_button_link, extra_title, extra_text,
    extra_link, source: "claude", notes, created_at, updated_at`.
    - `badge` und `headline` wie die Grafik des Social-Media-Posts (z. B. „Messe-Tipp #01“, „Frühjahrsmesse?\nJetzt planen.“).
-   - `text` aus dem Plan. Gliederung: Leerzeile = Absatz, Zeile in VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt,
+   - **Inhalt vor Werbung:** Der Leser soll danach etwas gelernt haben. Jeden Schritt ausführlich erklären (3 bis 5 Sätze: warum,
+     wie genau, worauf achten), dazu je eine Zeile „Tipp: …“ mit einem konkreten Praxistipp. Wo es passt, einen Zeitplan
+     („Mitte November: …“ je Zeile) oder eine Checkliste ergänzen. Nur belegte Fakten (Plan, Shop, Ratgeber, Druckvorgaben).
+   - `text` aus dem Plan als Grundlage, ausgebaut wie oben. Gliederung: Leerzeile = Absatz, Zeile in VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt,
      „Viele Grüße …“ = Grußformel, Telefon/E-Mail = Kontaktzeile. Grußformel ohne Ortsnamen („Viele Grüße“, nicht „aus Herxheim“).
    - Angebot: ein passendes, sachliches Angebot (Beratung, Grafikservice, Produkt) mit Button. Kein Rabatt-Ton.
+   - Produktempfehlungen (gelber Block über der Fußzeile): `products_label`, `products_title` und drei Produkte `p1_*` bis `p3_*`
+     (`name`, `text` mit einem belegten Nutzen, `link` auf die Produktseite, `image_url` aus dem Shop). Die Bilder zusätzlich als Assets
+     hochladen und als `p1_image_asset` usw. eintragen. Passend zum Thema der Ausgabe, z. B. drei Messewände für die Frühjahrsmessen.
    - Alle Links auf https://www.zipperwalls.de/ und vorher mit curl auf HTTP 200 prüfen.
    - Platzhalter wie [DATUM] nicht selbst ausfüllen, in `notes` melden.
 5. Nie freigeben. Das macht Darien im Dashboard.
