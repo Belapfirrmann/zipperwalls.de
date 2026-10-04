@@ -39,7 +39,7 @@ test('Berliner Ortszeit in UTC, Sommer und Winterzeit', () => {
 });
 
 test('Redaktionsplan Q4 2026 ist vollstaendig eingelesen', () => {
-  assert.equal(PLAN.entries.length, 24);
+  assert.equal(PLAN.entries.length, 25);
   for (const e of PLAN.entries) {
     assert.ok(e.date && e.topic && e.pillar, `Eintrag ${e.nr}`);
     assert.ok(e.instagram && e.facebook && e.linkedin, `Texte ${e.nr}`);

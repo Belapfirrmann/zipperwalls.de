@@ -48,6 +48,8 @@ def main(path):
         e['files'] = [f.strip() for f in (e.get('files') or '').splitlines() if f.strip()]
         entries.append(e)
 
+    entries.sort(key=lambda e: (e.get('date') or '', e.get('nr') or 0))
+
     legend = {}
     if 'Legende' in wb.sheetnames:
         for r in wb['Legende'].iter_rows(min_row=2, values_only=True):
