@@ -24,11 +24,7 @@ export const NEWSLETTERPLAN = {
   "types": [
     {
       "name": "gekoppelt",
-      "count": 12
-    },
-    {
-      "name": "eigenständig",
-      "count": 1
+      "count": 13
     }
   ],
   "entries": [
@@ -49,7 +45,7 @@ export const NEWSLETTERPLAN = {
       "button_text": "Messestände ansehen",
       "button_link": "https://www.zipperwalls.de/messestaende/",
       "extra_title": "Nächste Woche im Newsletter",
-      "extra_text": "Messekalender Frühjahr 2027: die wichtigsten Branchenmessen von Januar bis April und bis wann Sie bestellen sollten.",
+      "extra_text": "Von der Idee zur Messewand: wie eine Bestellung bei uns abläuft und an welchen Stellen Sie Zeit sparen können.",
       "extra_link": null,
       "image_idea": "Grafik aus Post 02 (Social_Media/2026/KW 41/post-02-instagram-facebook.png) oder Produktbild eines Messestand-Sets.",
       "note": "Erste Ausgabe nach langer Pause: Vor dem Versand Empfängerliste in MailPoet prüfen (nur Abonnenten mit Einwilligung).",
@@ -64,21 +60,21 @@ export const NEWSLETTERPLAN = {
       "date": "2026-10-13",
       "day": "Dienstag",
       "time": "09:00",
-      "type": "eigenständig",
-      "social": "kein direkter Bezug (Zusatzblock zu Post 03: Messewand EASE L)",
-      "rubric": "Termine & Planung",
-      "topic": "Messekalender Frühjahr 2027 mit Rückwärtsrechnung zum Bestellzeitpunkt",
-      "subject": "Messekalender Frühjahr 2027: 8 Termine im Überblick",
-      "subject_alt": "Bis wann Sie für BAU, ISH oder HANNOVER MESSE bestellen sollten",
-      "preview": "Von der BAU bis zur HANNOVER MESSE: Termine von Januar bis April und Ihr spätester Bestellzeitpunkt.",
-      "text": "Guten Tag,\n\nviele unserer Kunden stellen im ersten Quartal aus. Damit Sie Ihre Planung rückwärts rechnen können, haben wir wichtige Branchenmessen von Januar bis April 2027 zusammengestellt.\n\nMESSEKALENDER JANUAR BIS APRIL 2027\n\nBAU, München: 11. bis 15. Januar\nAmbiente, Frankfurt am Main: 29. Januar bis 2. Februar\nISM, Köln: 31. Januar bis 3. Februar\ndidacta, Hannover: 23. bis 27. Februar\nINTERNORGA, Hamburg: 12. bis 16. März\nISH, Frankfurt am Main: 15. bis 19. März\nLogiMAT, Stuttgart: 16. bis 18. März\nHANNOVER MESSE, Hannover: 5. bis 8. April\n\n(Stand Oktober 2026 laut Veranstaltern. Bitte prüfen Sie die Termine vor Ihrer Buchung beim jeweiligen Veranstalter.)\n\nSO RECHNEN SIE RÜCKWÄRTS\n\nUnsere Faustregel: Bestellung und Druckdaten etwa sechs Wochen vor der Messe, Probeaufbau etwa vier Wochen vorher. Für die BAU im Januar heißt das: Bestellung bis Ende November. Die Feiertage verkürzen die Produktionszeit, ein Puffer lohnt sich deshalb gerade für Januar-Messen.\n\nIhre Messe ist nicht dabei? Die Faustregel gilt für jede Veranstaltung. Schreiben Sie uns Ihren Messetermin, und wir sagen Ihnen, bis wann Ihre Bestellung bei uns sein sollte.\n\nViele Grüße aus Herxheim\nIhr Team von Zipperwalls\n\nTelefon +49 7276 4049970 (Montag bis Freitag, 8 bis 17 Uhr)\nkontakt@zipperwalls.de | www.zipperwalls.de",
-      "button_text": "Messetermin nennen und beraten lassen",
-      "button_link": "https://www.zipperwalls.de/kontakt/",
-      "extra_title": "Heute auf unseren Kanälen: Messewand EASE L",
-      "extra_text": "Aluminiumrahmen im Klicksystem, Stoffbezug mit Reißverschluss, Breiten von 240 bis 600 cm. Eine Person baut die Wand in wenigen Minuten auf, ganz ohne Werkzeug. Der Stoff ist B1-zertifiziert und bei 30 °C waschbar.",
-      "extra_link": "https://www.zipperwalls.de/messewand-ease-l/",
-      "image_idea": "Schlichte Kalender- oder Messehallen-Optik (ohne fremde Logos); für den Zusatzblock Grafik aus Post 03 (KW 42).",
-      "note": "Eigenständige Ausgabe ohne Ratgeber-Post in dieser Woche. Messetermine am 04.10.2026 bei den Veranstaltern geprüft (Quellen siehe Blatt Legende). Faustregel 6/4 Wochen entspricht Post 24.",
+      "type": "gekoppelt",
+      "social": "Post 25: Hinter den Kulissen: So läuft Ihre Bestellung ab (Zusatzblock zu Post 04: Kundenstimme)",
+      "rubric": "Hinter den Kulissen",
+      "topic": "Von der Idee zur Messewand: So läuft Ihre Bestellung ab, und wo Sie Zeit sparen",
+      "subject": "Von der Idee zur Messewand: So läuft Ihre Bestellung ab",
+      "subject_alt": "Vier Schritte bis zur fertigen Messewand",
+      "preview": "Was zwischen Bestellung und Lieferung passiert und wie Sie an jeder Stelle Zeit gewinnen.",
+      "text": "Guten Tag,\n\nwas passiert eigentlich zwischen Ihrer Bestellung und dem Moment, in dem die fertige Messewand bei Ihnen ankommt? Wir zeigen Ihnen die vier Schritte und an welchen Stellen Sie selbst Zeit gewinnen.\n\nVON DER IDEE ZUR MESSEWAND\n\n1. Produkt konfigurieren. Im Shop wählen Sie Größe, ein- oder beidseitigen Druck und die Transportlösung, zum Beispiel Tasche oder Trolley.\nTipp: Klären Sie vorher Standmaße und Standart. Dann wissen Sie, welche Breite und welche Druckseiten Sie brauchen.\n\n2. Druckdaten anlegen. Sie legen Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. Keine eigenen Daten? Unser Grafikservice gestaltet Ihr Layout oder passt vorhandene Dateien an.\nTipp: Bilder in Endgröße mit mindestens 120 dpi, Schriften in Pfade umwandeln, Farbraum CMYK und Überdrucken deaktivieren.\n\n3. Daten prüfen. Vor der Produktion werden Ihre Druckdaten geprüft, zum Beispiel auf Auflösung, Schriften und Farbraum.\nTipp: Planen Sie eine Korrekturschleife ein. Die Produktion startet erst nach Ihrer Freigabe.\n\n4. Produktion und Versand. Ihr Stoffdruck entsteht im Sublimationsverfahren, B1-zertifiziert und bei 30 °C waschbar. Danach geht alles fertig verpackt auf den Weg zu Ihnen.\n\nBei Fragen zu Größe oder Ausstattung beraten wir Sie persönlich, Montag bis Freitag von 8 bis 17 Uhr.\n\nViele Grüße\nIhr Team von Zipperwalls",
+      "button_text": "Messewände ansehen",
+      "button_link": "https://www.zipperwalls.de/messewaende/",
+      "extra_title": "Am Donnerstag auf unseren Kanälen",
+      "extra_text": "Was unsere Kunden an der Zusammenarbeit am häufigsten hervorheben: die persönliche Betreuung.",
+      "extra_link": null,
+      "image_idea": "Grafik aus Post 25 (KW 42) oder Produktfoto einer bedruckten Messewand aus dem Shop.",
+      "note": "Thema am 04.10.2026 geändert: statt Messekalender (Wunsch Bela/Darien) gekoppelt an Post 25. Messekalender nicht mehr verwenden.",
       "status": "Entwurf",
       "open_rate": null,
       "click_rate": null,
