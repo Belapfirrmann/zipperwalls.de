@@ -30,7 +30,8 @@ export const LINKEDIN_PAUSED = 'Pausiert: LinkedIn postet nur als Unternehmensse
 const imageFor = (images, channel) => (channel === 'linkedin' && images?.linkedin) || images?.main || null;
 
 /**
- * job: { post: {variants, body, hashtags, channels, results}, images: {main: {bytes,type}, linkedin: {bytes,type}} }
+ * job: { post: {variants, body, hashtags, channels, results}, images: {main, linkedin, slides: [...]} } (je {bytes,type})
+ * slides mit 2 bis 10 Bildern ergibt auf allen Kanälen ein Karussell (Bilder zum Durchwischen).
  * Kanaele, die in post.results schon status 'ok' haben, werden nie erneut gesendet.
  */
 export async function publishJob(env, job, { dryRun = false } = {}) {
@@ -48,26 +49,28 @@ export async function publishJob(env, job, { dryRun = false } = {}) {
       continue;
     }
     const text = composeText(post, channel);
-    const img = imageFor(job.images, channel);
+    const slides = job.images?.slides?.length >= 2 ? job.images.slides.slice(0, 10) : null;
+    const img = slides ? slides[0] : imageFor(job.images, channel);
     try {
       const problem = validate(channel, text, !!img);
       if (problem) throw new Error(problem);
       const token = tokens[channel];
       if (!token) throw new Error('Nicht verbunden: Zugangsdaten fehlen in der Claude Umgebung.');
       if (dryRun) {
-        results[channel] = { status: 'dry-run', at, chars: text.length, image: !!img };
+        results[channel] = { status: 'dry-run', at, chars: text.length, image: !!img, slides: slides?.length || 0 };
         continue;
       }
       let r;
       if (channel === 'facebook') {
-        r = await publishFacebook(env, { token, text, imageBytes: img?.bytes, imageType: img?.type });
+        r = await publishFacebook(env, { token, text, imageBytes: img?.bytes, imageType: img?.type, slides });
       } else if (channel === 'instagram') {
-        const hidden = await uploadHiddenPhoto(env, { token, imageBytes: img.bytes, imageType: img.type });
-        r = await publishInstagram(env, { token, text, imageUrl: hidden.url });
-        await deletePhoto(env, { token, id: hidden.id }).catch(() => {});
+        const hidden = [];
+        for (const sl of slides || [img]) hidden.push(await uploadHiddenPhoto(env, { token, imageBytes: sl.bytes, imageType: sl.type }));
+        r = await publishInstagram(env, { token, text, imageUrl: hidden[0].url, imageUrls: slides ? hidden.map((h) => h.url) : null });
+        for (const h of hidden) await deletePhoto(env, { token, id: h.id }).catch(() => {});
       } else {
         const author = await linkedinAuthor(token);
-        r = await publishLinkedIn(env, { token: { ...token, meta: { author } }, text, imageBytes: img?.bytes, imageType: img?.type });
+        r = await publishLinkedIn(env, { token: { ...token, meta: { author } }, text, imageBytes: img?.bytes, imageType: img?.type, slides });
       }
       results[channel] = { status: 'ok', external_id: r.externalId, url: r.url, at };
     } catch (e) {

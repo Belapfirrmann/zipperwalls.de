@@ -176,3 +176,6 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 .improve-row textarea { min-height: 64px; flex: 1 1 260px; }
 .improve-row .btn { align-self: flex-end; }
 .improve p { margin: 6px 0 0; }
+
+.slides { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; max-width: 100%; }
+.slides img { flex: 0 0 82%; max-width: 82%; aspect-ratio: 4 / 5; object-fit: cover; scroll-snap-align: start; border-radius: var(--r) 0 var(--r) 0; background: var(--flaeche); }

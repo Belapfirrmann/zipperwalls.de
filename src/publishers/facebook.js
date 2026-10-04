@@ -12,11 +12,20 @@ function photoForm(accessToken, imageBytes, imageType, fields) {
 }
 
 // Post auf die Facebook Seite. Bild wird als Datei hochgeladen (keine oeffentliche URL noetig).
-export async function publishFacebook(env, { token, text, imageBytes, imageType }) {
+// slides (2 oder mehr Bilder) ergibt einen Mehrbild-Post: Fotos unveröffentlicht hochladen, dann gemeinsam posten
+export async function publishFacebook(env, { token, text, imageBytes, imageType, slides }) {
   const { accessToken, meta } = token;
   const pageId = meta.pageId;
   let res;
-  if (imageBytes) {
+  if (slides?.length >= 2) {
+    const form = new URLSearchParams({ access_token: accessToken, message: text });
+    let i = 0;
+    for (const sl of slides) {
+      const up = await apiFetch(`${base(env)}/${pageId}/photos`, { method: 'POST', body: photoForm(accessToken, sl.bytes, sl.type, { published: 'false' }) });
+      form.set(`attached_media[${i++}]`, JSON.stringify({ media_fbid: up.data.id }));
+    }
+    res = await apiFetch(`${base(env)}/${pageId}/feed`, { method: 'POST', body: form });
+  } else if (imageBytes) {
     res = await apiFetch(`${base(env)}/${pageId}/photos`, { method: 'POST', body: photoForm(accessToken, imageBytes, imageType, { caption: text }) });
   } else {
     res = await apiFetch(`${base(env)}/${pageId}/feed`, { method: 'POST', body: new URLSearchParams({ access_token: accessToken, message: text }) });

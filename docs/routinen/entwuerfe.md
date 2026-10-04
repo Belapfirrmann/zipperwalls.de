@@ -26,6 +26,15 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
    - **Keine Herkunftsangaben**: nie Ortsnamen (insbesondere nie „Herxheim“), nie „aus Deutschland“, „Made in Germany“
      oder Ähnliches, weder im Bild noch im Text. Steht so etwas im Plan, nicht übernehmen, sondern in `notes` melden.
    - Bildtext = `headline` aus dem Plan, Barlow Black, Versalien, ein gelbes Signalelement.
+   - **Tipp-Posts (Pillar „Ratgeber“, Titel mit „Messe-Tipp“, Checklisten) und Posts mit mehreren Punkten immer als Karussell**
+     (Vorgabe Bela und Darien, 04.10.2026): 1080 x 1350 px je Slide, 3 bis 10 Slides.
+     Slide 1: Titelbild mit Headline und Foto. Danach **ein Slide pro Punkt**: Nummer, kurze Überschrift, zwei bis drei Sätze
+     Erklärung und ein passendes Foto. Letzter Slide: kurze Zusammenfassung oder Hinweis auf den Ratgeber.
+     Gleicher heller Stil auf allen Slides, kein Logo. Slides als Assets hochladen und die IDs in Reihenfolge in `slides` eintragen,
+     `image` = erste Slide, `image_linkedin` = null.
+   - **Texte bei Tipp-Posts: jeden Punkt im Text ausführen** (nummerierte Liste, je Punkt ein bis zwei Sätze Erklärung), nicht nur aufzählen.
+     Wenn es im Ratgeber auf zipperwalls.de/wissen einen passenden Beitrag gibt, am Ende darauf hinweisen (bei Instagram ohne Link,
+     „mehr im Ratgeber auf zipperwalls.de“). Fachlich nichts erfinden, nur Fakten aus dem Plan, dem Shop oder dem Ratgeber.
    Bilder als Assets ins Artefakt laden (Artifact Tool, `url` wie oben, `asset: true`, `file_path`). IDs merken.
 4. Dokument `posts/plan-<nr>` anlegen (`set`, ohne if_version):
    ```json
@@ -33,11 +42,11 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
      "title": "#<nr> <topic>", "plan_nr": <nr>, "status": "draft", "source": "claude",
      "body": <facebook Text>, "variants": { "instagram": ..., "facebook": ..., "linkedin": ... },
      "hashtags": <hashtags>, "channels": ["facebook","instagram","linkedin"],
-     "image": <Asset ID 4:5 oder null>, "image_linkedin": <Asset ID 1:1 oder null>,
+     "image": <Asset ID 4:5 oder null>, "image_linkedin": <Asset ID 1:1 oder null>, "slides": [<Asset IDs in Reihenfolge, nur bei Karussell>],
      "notes": "Plan Nr. <nr>, KW <kw>, <pillar>. Offen: <note>",
      "scheduled_at": <Datum 09:00 Uhr Berliner Zeit als UTC ISO>, "results": {},
      "created_at": <jetzt>, "updated_at": <jetzt>
    }
    ```
-   Texte unverändert aus dem Plan übernehmen. Platzhalter wie [DATUM] nicht selbst ausfüllen.
+   Texte aus dem Plan übernehmen; bei Tipp-Posts die Punkte wie oben beschrieben ausführen. Platzhalter wie [DATUM] nicht selbst ausfüllen.
 5. Nie freigeben oder posten. Das machen Bela oder Darien im Dashboard.

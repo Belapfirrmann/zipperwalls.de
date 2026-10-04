@@ -15,10 +15,12 @@ Nie Texte ändern, nie selbst freigeben, nie Entwürfe posten. Veröffentlicht w
    Davon nur die mit `scheduled_at` kleiner oder gleich jetzt (UTC). Keine fälligen: weiter mit Schritt 6.
 4. Für jeden fälligen Post (ältester zuerst, höchstens 5 pro Lauf):
    1. Sperre setzen: `update` mit `if_version` auf `{ "status": "publishing", "updated_at": <jetzt> }`. Schlägt das fehl, hat sich der Post geändert: überspringen.
-   2. Bilder laden: Für `image` und `image_linkedin` (falls gesetzt) das Asset mit dem Artifact Tool holen
+   2. Bilder laden: Hat der Post `slides` (Liste von Asset-IDs, Karussell), jedes davon in dieser Reihenfolge holen.
+      Sonst für `image` und `image_linkedin` (falls gesetzt) das Asset mit dem Artifact Tool holen
       (`action: "read"`, `url` wie oben, `path`: die Asset ID, `out_dir`: `tmp/`). Pfad merken.
    3. Job Datei `tmp/job-<id>.json` schreiben:
-      `{ "post": { "variants", "body", "hashtags", "channels", "results" aus dem Dokument }, "images": { "main": <Pfad image>, "linkedin": <Pfad image_linkedin oder weglassen> } }`
+      `{ "post": { "variants", "body", "hashtags", "channels", "results" aus dem Dokument }, "images": { "main": <Pfad image>, "linkedin": <Pfad image_linkedin oder weglassen>, "slides": [<Pfade der Slides in Reihenfolge>] } }`
+      (`slides` nur bei Karussell; dann werden alle Kanäle als Karussell gepostet)
    4. `node scripts/social.js publish tmp/job-<id>.json` ausführen. Ausgabe ist JSON `{ status, results }`.
    5. Zurückschreiben (`update`): `status` = Ausgabe status (published, partial oder failed),
       `results` = bisherige results zusammengeführt mit den neuen (Kanal für Kanal; ein neuer Eintrag ersetzt den alten des Kanals vollständig, ein altes `error` fällt also weg), `updated_at` = jetzt.

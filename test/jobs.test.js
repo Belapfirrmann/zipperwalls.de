@@ -102,3 +102,39 @@ test('LinkedIn ohne Unternehmensseite wird übersprungen, nie aufs persönliche 
   assert.equal(r.status, 'published');
   assert.ok(!state.calls.some((u) => u.includes('linkedin')), 'kein LinkedIn-Aufruf');
 });
+
+test('Karussell: Facebook Mehrbild, Instagram CAROUSEL, LinkedIn multiImage', async () => {
+  const seen = { fbFeed: null, igChildren: 0, igCarousel: null, liBody: null, hidden: 0 };
+  let n = 0;
+  globalThis.fetch = async (url, opts = {}) => {
+    url = String(url);
+    if (url.endsWith('/1/photos')) { seen.hidden++; return Response.json({ id: 'ph' + (++n) }); }
+    if (url.includes('?fields=images')) return Response.json({ images: [{ width: 1080, height: 1350, source: 'https://cdn/' + url.split('/').at(-1).split('?')[0] + '.jpg' }] });
+    if (opts.method === 'DELETE') return Response.json({ success: true });
+    if (url.endsWith('/1/feed')) { seen.fbFeed = new URLSearchParams(opts.body); return Response.json({ id: '1_99' }); }
+    if (url.endsWith('/9/media')) {
+      const b = opts.body;
+      if (b.get('is_carousel_item') === 'true') { seen.igChildren++; return Response.json({ id: 'child' + seen.igChildren }); }
+      if (b.get('media_type') === 'CAROUSEL') { seen.igCarousel = b; return Response.json({ id: 'car1' }); }
+    }
+    if (url.includes('fields=status_code')) return Response.json({ status_code: 'FINISHED' });
+    if (url.endsWith('/9/media_publish')) return Response.json({ id: 'm9' });
+    if (url.includes('fields=permalink')) return Response.json({ permalink: 'https://instagram.com/p/car' });
+    if (url.includes('initializeUpload')) return Response.json({ value: { uploadUrl: 'https://upload.example/x', image: 'urn:li:image:' + (++n) } });
+    if (url === 'https://upload.example/x') return new Response('', { status: 201 });
+    if (url.endsWith('/rest/posts')) { seen.liBody = JSON.parse(opts.body); return new Response('', { status: 201, headers: { 'x-restli-id': 'urn:li:share:9' } }); }
+    return Response.json({ error: { message: 'unerwartet ' + url } }, { status: 404 });
+  };
+  const slides = [img, img, img];
+  const r = await publishJob(ENV, { post: post(), images: { slides } });
+  assert.equal(r.status, 'published', JSON.stringify(r.results));
+  // Facebook: drei unveröffentlichte Fotos am Feed-Post
+  assert.ok(seen.fbFeed.get('attached_media[2]'));
+  assert.equal(JSON.parse(seen.fbFeed.get('attached_media[0]')).media_fbid.startsWith('ph'), true);
+  // Instagram: drei Kinder plus Karussell-Container mit Bildunterschrift
+  assert.equal(seen.igChildren, 3);
+  assert.equal(seen.igCarousel.get('children'), 'child1,child2,child3');
+  assert.equal(seen.igCarousel.get('caption').startsWith('IG Text'), true);
+  // LinkedIn: multiImage mit drei Bildern
+  assert.equal(seen.liBody.content.multiImage.images.length, 3);
+});

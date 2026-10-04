@@ -182,6 +182,9 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 .improve-row .btn { align-self: flex-end; }
 .improve p { margin: 6px 0 0; }
 
+.slides { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; max-width: 100%; }
+.slides img { flex: 0 0 82%; max-width: 82%; aspect-ratio: 4 / 5; object-fit: cover; scroll-snap-align: start; border-radius: var(--r) 0 var(--r) 0; background: var(--flaeche); }
+
 </style>
 <div class="shell">
   <aside class="side">
@@ -550,12 +553,15 @@ function postCard(p, connected) {
   return `
   <article class="card post" data-id="${esc(p.id)}">
     <div>
+      ${p.slides?.length >= 2 ? `<span class="label">Karussell: ${p.slides.length} Bilder (alle Kanäle)</span>
+      <div class="slides" tabindex="0" aria-label="Karussell-Bilder, seitlich scrollen">${p.slides.map((id, i) => `<img src="${blobUrl(id)}" alt="Bild ${i + 1} von ${p.slides.length}">`).join('')}</div>
+      <p class="muted small" style="margin:6px 0 0">Seitlich wischen, um alle Bilder zu sehen.</p>` : `
       <span class="label">Instagram und Facebook (4:5)</span>
       ${p.image ? `<img class="img" src="${blobUrl(p.image)}" alt="Bild für Instagram und Facebook">` : `<div class="img">Kein Bild</div>`}
       ${canUpload ? `<label class="btn ghost small" style="margin-top:8px">Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-field="image" hidden></label>` : ''}
       <span class="label" style="display:block;margin-top:16px">LinkedIn (1:1)</span>
       ${p.image_linkedin ? `<img class="img sq" src="${blobUrl(p.image_linkedin)}" alt="Bild für LinkedIn">` : `<p class="muted small" style="margin:4px 0">Nutzt das Bild oben.</p>`}
-      ${canUpload ? `<label class="btn ghost small" style="margin-top:8px">LinkedIn Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-field="image_linkedin" hidden></label>` : ''}
+      ${canUpload ? `<label class="btn ghost small" style="margin-top:8px">LinkedIn Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-field="image_linkedin" hidden></label>` : ''}`}
       <p class="muted small" style="margin-top:12px">Erstellt ${fmtDate(p.created_at)}${p.approved_at ? `<br>Freigegeben ${fmtDate(p.approved_at)}` : ''}${p.scheduled_at ? `<br>Termin ${fmtDate(p.scheduled_at)}` : ''}</p>
     </div>
     <div style="min-width:0">
@@ -629,7 +635,8 @@ function bindPost(el, p) {
     if (draft.placeholder) throw new Error(`Platzhalter ${draft.placeholder} im Text noch ersetzen.`);
     for (const c of data.channels) {
       if (draft.results?.[c]?.status === 'ok') continue;
-      const problem = validate(c, draft.preview[c], c === 'linkedin' ? !!(p.image_linkedin || p.image) : !!p.image);
+      const hasSlides = p.slides?.length >= 2;
+      const problem = validate(c, draft.preview[c], hasSlides || (c === 'linkedin' ? !!(p.image_linkedin || p.image) : !!p.image));
       if (problem) throw new Error(`${CH[c]}: ${problem}`);
     }
   };

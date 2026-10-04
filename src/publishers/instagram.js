@@ -3,23 +3,47 @@ import { apiFetch } from './http.js';
 const base = (env) => `https://graph.facebook.com/${env.GRAPH_VERSION || 'v22.0'}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function publishInstagram(env, { token, text, imageUrl }) {
-  const { accessToken, meta } = token;
-  const igId = meta.igUserId;
-  const create = await apiFetch(`${base(env)}/${igId}/media`, {
-    method: 'POST',
-    body: new URLSearchParams({ image_url: imageUrl, caption: text, access_token: accessToken }),
-  });
-  const creationId = create.data.id;
-  // Container muss fertig verarbeitet sein, bevor veroeffentlicht wird
-  for (let i = 0; i < 10; i++) {
-    const st = await apiFetch(`${base(env)}/${creationId}?fields=status_code,status&access_token=${accessToken}`);
-    if (st.data.status_code === 'FINISHED') break;
+// Container muss fertig verarbeitet sein, bevor er verwendet wird
+async function waitFinished(env, accessToken, id) {
+  for (let i = 0; i < 15; i++) {
+    const st = await apiFetch(`${base(env)}/${id}?fields=status_code,status&access_token=${accessToken}`);
+    if (st.data.status_code === 'FINISHED') return;
     if (st.data.status_code === 'ERROR' || st.data.status_code === 'EXPIRED') {
       throw new Error(`Instagram Verarbeitung fehlgeschlagen: ${st.data.status || st.data.status_code}`);
     }
     await sleep(2000);
   }
+}
+
+// imageUrls mit 2 bis 10 Einträgen ergibt ein Karussell, sonst ein Einzelbild
+export async function publishInstagram(env, { token, text, imageUrl, imageUrls }) {
+  const { accessToken, meta } = token;
+  const igId = meta.igUserId;
+  const urls = imageUrls?.length >= 2 ? imageUrls.slice(0, 10) : null;
+  let creationId;
+  if (urls) {
+    const children = [];
+    for (const url of urls) {
+      const c = await apiFetch(`${base(env)}/${igId}/media`, {
+        method: 'POST',
+        body: new URLSearchParams({ image_url: url, is_carousel_item: 'true', access_token: accessToken }),
+      });
+      await waitFinished(env, accessToken, c.data.id);
+      children.push(c.data.id);
+    }
+    const car = await apiFetch(`${base(env)}/${igId}/media`, {
+      method: 'POST',
+      body: new URLSearchParams({ media_type: 'CAROUSEL', children: children.join(','), caption: text, access_token: accessToken }),
+    });
+    creationId = car.data.id;
+  } else {
+    const create = await apiFetch(`${base(env)}/${igId}/media`, {
+      method: 'POST',
+      body: new URLSearchParams({ image_url: imageUrl, caption: text, access_token: accessToken }),
+    });
+    creationId = create.data.id;
+  }
+  await waitFinished(env, accessToken, creationId);
   const pub = await apiFetch(`${base(env)}/${igId}/media_publish`, {
     method: 'POST',
     body: new URLSearchParams({ creation_id: creationId, access_token: accessToken }),

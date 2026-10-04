@@ -28,7 +28,7 @@ async function uploadImage(env, { token, author, imageBytes, imageType }) {
   return image;
 }
 
-export async function publishLinkedIn(env, { token, text, imageBytes, imageType }) {
+export async function publishLinkedIn(env, { token, text, imageBytes, imageType, slides }) {
   const { accessToken, meta } = token;
   const author = meta.author;
   const body = {
@@ -39,7 +39,14 @@ export async function publishLinkedIn(env, { token, text, imageBytes, imageType 
     lifecycleState: 'PUBLISHED',
     isReshareDisabledByAuthor: false,
   };
-  if (imageBytes) {
+  if (slides?.length >= 2) {
+    const images = [];
+    for (const sl of slides.slice(0, 20)) {
+      const id = await uploadImage(env, { token: accessToken, author, imageBytes: sl.bytes, imageType: sl.type });
+      images.push({ id, altText: 'Zipperwalls Messewand' });
+    }
+    body.content = { multiImage: { images } };
+  } else if (imageBytes) {
     const id = await uploadImage(env, { token: accessToken, author, imageBytes, imageType });
     body.content = { media: { id, altText: 'Zipperwalls Messewand' } };
   }

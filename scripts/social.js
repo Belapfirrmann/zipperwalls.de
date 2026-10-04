@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Kommandozeile fuer die Claude Routine.
-//   node scripts/social.js publish job.json [--dry-run]   Post veroeffentlichen
+//   node scripts/social.js publish job.json [--dry-run]   Post veroeffentlichen (images.slides: Karussell)
 //   node scripts/social.js metrics job.json               Kennzahlen holen
 //   node scripts/social.js check                          Zugangsdaten pruefen
 // Ausgabe immer JSON auf stdout. Zugangsdaten nur aus Umgebungsvariablen.
@@ -30,7 +30,7 @@ try {
       out = await metricsJob(process.env, job);
     } else {
       const base = dirname(resolve(file));
-      const images = { main: loadImage(job.images?.main, base), linkedin: loadImage(job.images?.linkedin, base) };
+      const images = { main: loadImage(job.images?.main, base), linkedin: loadImage(job.images?.linkedin, base), slides: (job.images?.slides || []).map((p) => loadImage(p, base)) };
       out = await publishJob(process.env, { post: job.post, images }, { dryRun: flags.includes('--dry-run') });
     }
   } else {
