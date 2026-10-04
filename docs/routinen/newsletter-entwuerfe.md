@@ -23,7 +23,8 @@ erscheinen unter Freigabe › Newsletter. Dashboard (Artefakt): https://claude.a
      („Mitte November: …“ je Zeile) oder eine Checkliste ergänzen. Nur belegte Fakten (Plan, Shop, Ratgeber, Druckvorgaben).
    - `text` aus dem Plan als Grundlage, ausgebaut wie oben. Gliederung: Leerzeile = Absatz, Zeile in VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt,
      „Viele Grüße …“ = Grußformel, Telefon/E-Mail = Kontaktzeile. Grußformel ohne Ortsnamen („Viele Grüße“, nicht „aus Herxheim“).
-   - Angebot: ein passendes, sachliches Angebot (Beratung, Grafikservice, Produkt) mit Button. Kein Rabatt-Ton.
+   - Angebot (optional): nur Leistungen, die Zipperwalls wirklich anbietet (z. B. Grafikservice, Beratung zu Produkten). Keine Messeplanung
+     für Kunden anbieten („Wir planen Ihre Messe mit“ o. ä.), dabei helfen wir nicht (Vorgabe Bela und Darien, 04.10.2026). Kein Rabatt-Ton.
    - Produktempfehlungen (gelber Block über der Fußzeile): `products_label`, `products_title` und drei Produkte `p1_*` bis `p3_*`
      (`name`, `text` mit einem belegten Nutzen, `link` auf die Produktseite, `image_url` aus dem Shop). Die Bilder zusätzlich als Assets
      hochladen und als `p1_image_asset` usw. eintragen. Passend zum Thema der Ausgabe, z. B. drei Messewände für die Frühjahrsmessen.
