@@ -179,3 +179,22 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 
 .slides { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; max-width: 100%; }
 .slides img { flex: 0 0 82%; max-width: 82%; aspect-ratio: 4 / 5; object-fit: cover; scroll-snap-align: start; border-radius: var(--r) 0 var(--r) 0; background: var(--flaeche); }
+
+/* Freigabe: Umschalter Social Media / Newsletter */
+.parts { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 6px; }
+.part { flex: 1 1 200px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; background: var(--card); color: var(--text); text-decoration: none; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; font-size: 16px; border-radius: var(--r) 0 var(--r) 0; box-shadow: var(--shadow); }
+.part:hover { background: var(--flaeche); }
+.part.on { background: var(--gelb); color: var(--auf-gelb); }
+.part-n { font-weight: 700; font-size: 13px; letter-spacing: .04em; text-transform: none; color: inherit; opacity: .8; }
+
+/* Newsletter */
+.steps { margin: 12px 0 0; padding-left: 22px; display: grid; gap: 8px; max-width: 75ch; }
+.nl-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 0 14px; }
+.nl textarea { min-height: 260px; }
+.nl textarea.short { min-height: 90px; }
+.nl .improve textarea { min-height: 64px; }
+.extra-box { margin: 4px 0 0; padding: 12px 16px 2px; background: var(--flaeche); border-radius: var(--r) 0 var(--r) 0; }
+.extra-box summary { margin-bottom: 10px; }
+.kpis { margin-top: 18px; display: grid; gap: 8px; }
+.kpi-in { display: grid; gap: 4px; flex: 1 1 130px; }
+.kpis .row { align-items: flex-end; }

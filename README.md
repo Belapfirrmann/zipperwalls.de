@@ -1,6 +1,6 @@
 # Zipperwalls Social Media Dashboard
 
-Plan, Freigabe, Abhakeliste und Zahlen für Facebook, Instagram und LinkedIn. Läuft komplett in Claude, ohne eigenen Server.
+Plan, Freigabe, Abhakeliste und Zahlen für Facebook, Instagram und LinkedIn, dazu der Newsletter-Plan (MailPoet). Läuft komplett in Claude, ohne eigenen Server.
 
 - **Dashboard**: Claude Artefakt https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6 (privat). Daten in der Artefakt-Datenbank, Bilder als Artefakt-Assets.
 - **Posten**: Claude Routine, stündlich. Holt freigegebene Posts und veröffentlicht sie mit `scripts/social.js`.
@@ -19,7 +19,8 @@ Einrichtung: `docs/SETUP.md`. Anleitungen der Routinen: `docs/routinen/`.
 | `src/jobs.js` | Veröffentlichen, Wiederholen ohne Doppelpost, Kennzahlen, Verbindungsprüfung |
 | `src/publishers/` | Facebook, Instagram, LinkedIn |
 | `src/text.js` | Textregeln (Hashtags, Zeichengrenzen, Platzhalter), gemeinsam für Dashboard und Skript |
-| `src/redaktionsplan.js` | Redaktionsplan, erzeugt aus `plans/*.xlsx` |
+| `src/redaktionsplan.js` | Redaktionsplan, erzeugt aus `plans/Redaktionsplan_*.xlsx` |
+| `src/newsletterplan.js` | Newsletter-Plan, erzeugt aus `plans/Newsletter-Plan_*.xlsx` |
 | `test/` | Tests (`npm test`) |
 
 ## Redaktionsplan aktualisieren
@@ -30,6 +31,22 @@ python3 scripts/import_plan.py plans/Redaktionsplan_Social_Media_Q1_2027.xlsx
 npm test && npm run build
 ```
 Danach `dist/social-dashboard.html` von Claude auf dieselbe Artefakt-Adresse veröffentlichen lassen.
+
+## Newsletter
+
+Reiter **Newsletter-Plan** zeigt den Versandkalender aus dem Newsletter-Plan. Die **Freigabe** ist zweigeteilt:
+Social Media und Newsletter. Newsletter-Ablauf: Entwurf prüfen und freigeben (Darien) › in MailPoet einplanen und
+„In MailPoet eingeplant“ klicken › nach dem Versand „Als versendet markieren“ › nach etwa 7 Tagen Kennzahlen eintragen.
+Änderungen und Status liegen in der Artefakt-Datenbank, Collection `newsletters`, Dokument `nl-<Nr>`
+(Felder wie im Plan plus `status`, `approved_at`, `planned_at`, `sent_at`, `open_rate`, `click_rate`, `unsubscribes`).
+Status-Werte wie in der Tabelle: Entwurf, Verschoben, Freigegeben, In MailPoet eingeplant, Versendet, Gestrichen.
+
+Neuen Newsletter-Plan einspielen:
+
+```bash
+python3 scripts/import_newsletter.py plans/Newsletter-Plan_Q1_2027.xlsx
+npm test && npm run build
+```
 
 ## Merkliste für später
 

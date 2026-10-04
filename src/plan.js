@@ -4,6 +4,8 @@ export { REDAKTIONSPLAN as PLAN } from './redaktionsplan.js';
 export const WEEKLY_TEMPLATE = [
   'Entwurf 1 prüfen und freigeben',
   'Entwurf 2 prüfen und freigeben',
+  'Newsletter der Woche freigeben (Darien)',
+  'Newsletter in MailPoet einplanen',
   'Kommentare und Nachrichten beantworten',
   'Zahlen der Woche ansehen',
 ];

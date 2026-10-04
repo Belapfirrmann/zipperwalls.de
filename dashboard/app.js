@@ -1,7 +1,7 @@
 // Zipperwalls Social Media Dashboard als Claude Artefakt.
 // Daten liegen in der Artefakt-Datenbank (db), Bilder in den Artefakt-Assets.
 // Veroeffentlicht wird nicht von hier, sondern von der Claude Routine (scripts/social.js).
-// PLAN sowie composeText, findPlaceholder, normalizeHashtags, isoWeek, berlinToUtc, LIMITS
+// PLAN, NL (Newsletter-Plan) sowie composeText, findPlaceholder, normalizeHashtags, isoWeek, berlinToUtc, LIMITS
 // werden beim Bauen aus src/ eingefuegt (scripts/build-dashboard.js).
 
 const main = document.getElementById('main');
@@ -20,7 +20,7 @@ const STATUS = {
 const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
-const S = { db: null, assets: null, comments: null, posts: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -182,6 +182,7 @@ async function draftFromPlan(nr) {
 let filter = 'offen';
 const EDITABLE = ['draft', 'failed', 'partial', 'rejected'];
 function viewFreigabe() {
+  if (location.hash === '#freigabe-newsletter') return viewFreigabeNewsletter();
   const posts = S.posts.map(hydrate);
   const connected = new Set(CHANNEL_KEYS.filter((c) => S.status.connections?.[c]?.ok));
   const byDate = (a, b) => String(a.scheduled_at || a.created_at).localeCompare(String(b.scheduled_at || b.created_at));
@@ -192,7 +193,7 @@ function viewFreigabe() {
   };
   const list = groups[filter];
   main.innerHTML = `
-    <div class="head"><h1>Freigabe</h1><p>Zweimal pro Woche kommt ein Entwurf. Prüfen, bei Bedarf anpassen oder Claude unten um Änderungen bitten, dann „Freigeben“. Den Termin übernimmt Claude nach Redaktionsplan.</p></div>
+    <div class="head"><h1>Freigabe</h1>${freigabeParts('social')}<p>Zweimal pro Woche kommt ein Entwurf. Prüfen, bei Bedarf anpassen oder Claude unten um Änderungen bitten, dann „Freigeben“. Den Termin übernimmt Claude nach Redaktionsplan.</p></div>
     ${connected.size === 0 ? `<div class="notice">Noch kein Kanal verbunden. Gepostet werden kann erst, wenn die Zugangsdaten eingetragen sind (siehe <a href="#verbindungen">Verbindungen</a>).</div>` : ''}
     <div class="row" style="margin-bottom:22px">
       ${['offen', 'geplant', 'erledigt'].map((k) => `<button class="btn small ${filter === k ? 'dark' : 'ghost'}" data-filter="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join('')}
@@ -245,15 +246,7 @@ function postCard(p, connected) {
         <button class="btn" data-act="approve">${['failed', 'partial'].includes(p.status) ? 'Erneut freigeben' : 'Freigeben'}</button>
         <span class="muted small">${p.scheduled_at && new Date(p.scheduled_at) > new Date() ? `Geht am ${fmtDate(p.scheduled_at)} raus.` : 'Geht beim nächsten Lauf raus.'} Textänderungen werden beim Freigeben gespeichert.</span>
       </div>` : ''}
-      ${p.status !== 'published' ? `
-      <div class="improve">
-        <label class="label" for="imp-${esc(p.id)}">Mit Claude verbessern</label>
-        <div class="improve-row">
-          <textarea id="imp-${esc(p.id)}" data-imp rows="2" maxlength="3000" placeholder="Was soll anders werden? Zum Beispiel: Text kürzer, anderes Foto, Bild heller, LinkedIn sachlicher …"></textarea>
-          <button class="btn dark" data-act="improve">An Claude senden</button>
-        </div>
-        <p class="muted small" data-imp-hint>Geht direkt an Claude im Chat. Claude passt den Entwurf an und antwortet als Kommentar.</p>
-      </div>` : ''}
+      ${p.status !== 'published' ? improveBlock(p.id, 'Was soll anders werden? Zum Beispiel: Text kürzer, anderes Foto, Bild heller, LinkedIn sachlicher …') : ''}
     </div>
   </article>`;
 }
@@ -302,36 +295,7 @@ function bindPost(el, p) {
   el.querySelectorAll('[data-act]').forEach((btn) => {
     const act = btn.dataset.act;
     if (act === 'improve') {
-      btn.onclick = async () => {
-        const box = el.querySelector('[data-imp]');
-        const hint = el.querySelector('[data-imp-hint]');
-        const wish = box.value.trim();
-        if (!wish) return toast('Bitte erst beschreiben, was Claude ändern soll.');
-        if (!S.comments) return toast('Senden an Claude ist in dieser Ansicht nicht verfügbar. Bitte das Dashboard auf claude.ai öffnen.');
-        btn.disabled = true;
-        try {
-          const state = await S.comments.canSendToClaude();
-          if (state !== 'available') {
-            const why = {
-              no_session: 'Gerade hört keine Claude-Sitzung zu. Öffnen Sie die Claude-Sitzung zum Dashboard und versuchen Sie es erneut.',
-              writers_only: 'Senden an Claude ist nur für Bearbeiter dieses Dashboards möglich.',
-              off: 'Senden an Claude ist hier ausgeschaltet.',
-            };
-            throw new Error(why[state] || 'Senden an Claude ist gerade nicht möglich.');
-          }
-          const anchor = await S.comments.anchorFor(el);
-          const text = `Wunsch aus dem Dashboard zu Post „${p.title}“ (ID ${p.id}, Status ${p.status}):\n${wish}`.slice(0, 3900);
-          await S.comments.sendToClaude({ anchor, text });
-          box.value = '';
-          S.dirty.delete(p.id);
-          hint.textContent = 'Gesendet. Claude kümmert sich darum, die Änderung erscheint hier automatisch.';
-          toast('An Claude gesendet.');
-        } catch (e) {
-          const msg = { consent_required: 'Bitte erlauben Sie dem Dashboard einmalig, Kommentare zu schreiben, und senden Sie erneut.', forbidden: 'Kommentieren aus dem Dashboard ist hier ausgeschaltet.', rate_limited: 'Kurz warten, dann erneut senden.', claude_unavailable: 'Claude ist gerade nicht erreichbar. Ihr Text ist noch da, bitte später erneut senden.' }[e?.code];
-          toast(msg || e?.message || 'Senden fehlgeschlagen.');
-        }
-        btn.disabled = false;
-      };
+      btn.onclick = () => sendImprove(btn, el, `Wunsch aus dem Dashboard zu Post „${p.title}“ (ID ${p.id}, Status ${p.status})`, p.id);
       return;
     }
     if (act === 'image') {
@@ -369,6 +333,338 @@ function bindPost(el, p) {
         }
       } catch (e) {
         fail(e);
+      }
+    };
+  });
+}
+
+// Wunsch an Claude als Kommentar am Element (Post oder Newsletter)
+async function sendImprove(btn, el, intro, id) {
+  const box = el.querySelector('[data-imp]');
+  const hint = el.querySelector('[data-imp-hint]');
+  const wish = box.value.trim();
+  if (!wish) return toast('Bitte erst beschreiben, was Claude ändern soll.');
+  if (!S.comments) return toast('Senden an Claude ist in dieser Ansicht nicht verfügbar. Bitte das Dashboard auf claude.ai öffnen.');
+  btn.disabled = true;
+  try {
+    const state = await S.comments.canSendToClaude();
+    if (state !== 'available') {
+      const why = {
+        no_session: 'Gerade hört keine Claude-Sitzung zu. Öffnen Sie die Claude-Sitzung zum Dashboard und versuchen Sie es erneut.',
+        writers_only: 'Senden an Claude ist nur für Bearbeiter dieses Dashboards möglich.',
+        off: 'Senden an Claude ist hier ausgeschaltet.',
+      };
+      throw new Error(why[state] || 'Senden an Claude ist gerade nicht möglich.');
+    }
+    const anchor = await S.comments.anchorFor(el);
+    const text = `${intro}:\n${wish}`.slice(0, 3900);
+    await S.comments.sendToClaude({ anchor, text });
+    box.value = '';
+    S.dirty.delete(id);
+    hint.textContent = 'Gesendet. Claude kümmert sich darum, die Änderung erscheint hier automatisch.';
+    toast('An Claude gesendet.');
+  } catch (e) {
+    const msg = { consent_required: 'Bitte erlauben Sie dem Dashboard einmalig, Kommentare zu schreiben, und senden Sie erneut.', forbidden: 'Kommentieren aus dem Dashboard ist hier ausgeschaltet.', rate_limited: 'Kurz warten, dann erneut senden.', claude_unavailable: 'Claude ist gerade nicht erreichbar. Ihr Text ist noch da, bitte später erneut senden.' }[e?.code];
+    toast(msg || e?.message || 'Senden fehlgeschlagen.');
+  }
+  btn.disabled = false;
+}
+
+const improveBlock = (id, placeholder) => `
+      <div class="improve">
+        <label class="label" for="imp-${esc(id)}">Mit Claude verbessern</label>
+        <div class="improve-row">
+          <textarea id="imp-${esc(id)}" data-imp rows="2" maxlength="3000" placeholder="${esc(placeholder)}"></textarea>
+          <button class="btn dark" data-act="improve">An Claude senden</button>
+        </div>
+        <p class="muted small" data-imp-hint>Geht direkt an Claude im Chat. Claude passt den Entwurf an und antwortet als Kommentar.</p>
+      </div>`;
+
+// ---------- Newsletter ----------
+// Plan kommt aus dem Newsletter-Plan (xlsx, scripts/import_newsletter.py), Änderungen und Status liegen in Collection "newsletters"
+const NL_STATUS = ['Entwurf', 'Verschoben', 'Freigegeben', 'In MailPoet eingeplant', 'Versendet', 'Gestrichen'];
+const NL_BADGE = { Entwurf: '', Verschoben: '', Freigegeben: 'dark', 'In MailPoet eingeplant': 'dark', Versendet: 'grey', Gestrichen: 'grey' };
+const NL_GROUPS = { offen: ['Entwurf', 'Verschoben'], geplant: ['Freigegeben', 'In MailPoet eingeplant'], erledigt: ['Versendet', 'Gestrichen'] };
+const NL_FIELDS = [
+  ['subject', 'Betreff', 60], ['subject_alt', 'Betreff Alternative (A/B-Test)', 60], ['preview', 'Vorschautext', 120],
+  ['text', 'Text'], ['button_text', 'Button-Text'], ['button_link', 'Button-Link'],
+  ['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text'], ['extra_link', 'Zusatzblock Link'],
+];
+const NL_KPI = [['open_rate', 'Öffnungsrate %'], ['click_rate', 'Klickrate %'], ['unsubscribes', 'Abmeldungen']];
+const nlId = (nr) => `nl-${nr}`;
+const fmtDayLong = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+
+function nlEntries() {
+  const docs = Object.fromEntries(S.newsletters.map(({ id, ...d }) => [id, d]));
+  return NL.entries.map((e) => {
+    const doc = docs[nlId(e.nr)] || null;
+    return { ...e, ...(doc || {}), id: nlId(e.nr), doc, status: doc?.status || e.status || 'Entwurf' };
+  });
+}
+const nlDue = () => nlEntries().filter((n) => NL_GROUPS.offen.includes(n.status) && n.date <= inDays(14)).length;
+const socialOpen = () => S.posts.filter((p) => ['draft', 'failed', 'partial'].includes(p.status)).length;
+
+// Blockiert die Freigabe: Platzhalter, Längen, Links nicht auf zipperwalls.de, Pflichtfelder
+function nlProblem(n) {
+  for (const [f, label, max] of NL_FIELDS) {
+    const v = n[f] || '';
+    const ph = findPlaceholder(v);
+    if (ph) return `${label}: Platzhalter ${ph} noch ersetzen.`;
+    if (max && v.length > max) return `${label} zu lang (${v.length} von ${max} Zeichen).`;
+    if (f.endsWith('_link') && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
+  }
+  for (const [f, label] of [['subject', 'Betreff'], ['preview', 'Vorschautext'], ['text', 'Text']]) if (!n[f]) return `${label} fehlt.`;
+  return null;
+}
+
+// Nur Hinweis, blockiert nicht: Ortsnamen und Herkunftsangaben sind bei Social Media verboten (z. B. Grußformel „aus Herxheim“)
+function nlWarning(n) {
+  for (const [f, label] of NL_FIELDS) {
+    const bad = findForbidden(n[f] || '');
+    if (bad) return `${label} enthält „${bad}“. In Social-Media-Posts ist das nicht erlaubt, bitte prüfen.`;
+  }
+  return null;
+}
+
+// Alles, was in MailPoet in den Textblock gehört
+const nlMailText = (n) => [
+  n.text,
+  n.button_text ? `Button: ${n.button_text}\n${n.button_link || ''}` : null,
+  n.extra_title ? `${n.extra_title}\n${n.extra_text || ''}${n.extra_link ? `\n${n.extra_link}` : ''}` : null,
+].filter(Boolean).join('\n\n');
+
+async function copyText(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(`${label} kopiert.`);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    ta.remove();
+    toast(ok ? `${label} kopiert.` : 'Kopieren ist hier nicht möglich. Bitte den Text im Feld markieren und kopieren.');
+  }
+}
+
+async function saveNl(n, patch) {
+  const base = Object.fromEntries(NL_FIELDS.map(([f]) => [f, n[f] ?? null]));
+  await write((db) => db.collection('newsletters').doc(n.id).set({
+    ...(n.doc || {}), ...base, nr: n.nr, kw: n.kw, date: n.date, time: n.time, status: n.status,
+    created_at: n.doc?.created_at || nowIso(), ...patch, updated_at: nowIso(),
+  }));
+}
+
+let nlFilter = 'alle';
+function viewNewsletter() {
+  const all = nlEntries();
+  const today = new Date().toISOString().slice(0, 10);
+  const list = all.filter((e) => nlFilter === 'alle' || (nlFilter === 'offen' ? !!e.note : e.date >= today));
+  const counts = {};
+  for (const e of all) counts[e.status] = (counts[e.status] || 0) + 1;
+  const next = all.find((e) => e.date >= today && !['Versendet', 'Gestrichen'].includes(e.status));
+  const types = NL.types || [];
+  const total = types.reduce((s, t) => s + t.count, 0) || 1;
+  const byKw = {};
+  for (const e of list) (byKw[e.kw] ??= []).push(e);
+  const fmtDay = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+
+  main.innerHTML = `
+    <div class="head"><span class="label">Quelle ${esc(NL.source)} · ${NL.entries.length} Ausgaben</span><h1>${esc(NL.title)}</h1><p>${esc(NL.intro || '')}</p></div>
+    <section class="section grid g3">
+      <div class="card kpi"><span class="label">Nächster Newsletter</span>${next ? `<div class="num" style="font-size:34px">${esc(next.day.slice(0, 2))} ${fmtDay(next.date)}</div><p style="margin-top:8px">${esc(next.subject || next.topic)}</p>` : '<p>Kein offener Termin.</p>'}</div>
+      <div class="card kpi"><span class="label">Status</span>
+        <div class="statlist">${NL_STATUS.filter((k) => counts[k]).map((k) => `<div class="row" style="justify-content:space-between"><span>${esc(k)}</span><strong>${counts[k]}</strong></div>`).join('')}</div></div>
+      <div class="card"><span class="label">Mix</span>
+        <div class="pillars" role="img" aria-label="Verteilung gekoppelt und eigenständig">${types.map((t, i) => `<div class="p${i % 7}" style="width:${(t.count / total) * 100}%" title="${esc(t.name)}: ${t.count}">${t.count}</div>`).join('')}</div>
+        <div class="row" style="gap:16px">${types.map((t, i) => `<span class="row" style="gap:8px"><span class="swatch p${i % 7}"></span>${esc(t.name)}</span>`).join('')}</div>
+        <p class="muted small" style="margin-top:12px">Gekoppelt: vertieft den Social-Media-Post derselben Woche. Eigenständig: eigenes Thema.</p></div>
+    </section>
+    ${NL.steps?.length ? `<section class="section card"><h2>So arbeiten Sie mit dem Plan</h2><ol class="steps">${NL.steps.map((s) => `<li>${esc(s.replace(/^\d\.\s*/, ''))}</li>`).join('')}</ol>
+      <p class="muted small" style="margin-top:12px">Freigabe, Status und Kennzahlen pflegen Sie direkt hier unter <a href="#freigabe-newsletter">Freigabe › Newsletter</a>.</p></section>` : ''}
+    <section class="section">
+      <div class="row" style="justify-content:space-between;margin-bottom:14px"><h2>Versandkalender</h2>
+        <div class="row">${['alle', 'kommend', 'offen'].map((k) => `<button class="btn small ${nlFilter === k ? 'dark' : 'ghost'}" data-nlf="${k}">${{ alle: 'Alle', kommend: 'Kommend', offen: 'Mit offenen Punkten' }[k]}</button>`).join('')}</div></div>
+      ${Object.keys(byKw).length ? Object.entries(byKw).map(([kw, items]) => `
+        <div class="kw"><div class="kw-label"><span class="label">KW</span><strong>${esc(kw)}</strong></div>
+          <div class="grid" style="gap:12px">${items.map((e) => `
+            <article class="card entry ${e.date < today && NL_GROUPS.offen.includes(e.status) ? 'past' : ''}">
+              <div class="entry-date"><strong>${esc(e.day.slice(0, 2))}</strong> ${fmtDay(e.date)}<br><span class="muted small">${esc(e.time)} Uhr</span></div>
+              <div style="min-width:0">
+                <div class="row" style="gap:8px;margin-bottom:6px"><span class="pill-tag ${e.type === 'eigenständig' ? 'b1' : 'b0'}">${esc(e.type)}</span><span class="pill-tag b2">${esc(e.rubric || '')}</span><span class="badge ${NL_BADGE[e.status] ?? 'grey'}">${esc(e.status)}</span></div>
+                <h3>${esc(e.topic)}</h3>
+                <p class="small" style="margin:6px 0 0"><span class="muted">Betreff:</span> ${esc(e.subject || '')}</p>
+                <p class="muted small" style="margin:2px 0 0">Bezug: ${esc(e.social || 'keiner')}</p>
+                ${e.note ? `<p class="open-point"><strong>Offen:</strong> ${esc(e.note)}</p>` : ''}
+                <details><summary>Inhalt ansehen</summary>
+                  <div style="margin-top:10px"><span class="label">Vorschautext</span><div class="pre">${esc(e.preview || '')}</div></div>
+                  <div style="margin-top:10px"><span class="label">Text</span><div class="pre">${esc(e.text || '')}</div></div>
+                  ${e.button_text ? `<p class="small" style="margin-top:10px"><span class="label">Button</span><br>${esc(e.button_text)} · <a href="${esc(e.button_link || '#')}" target="_blank" rel="noopener">${esc(e.button_link || '')}</a></p>` : ''}
+                  ${e.extra_title ? `<div style="margin-top:10px"><span class="label">Zusatzblock</span><div class="pre"><strong>${esc(e.extra_title)}</strong>\n${esc(e.extra_text || '')}${e.extra_link ? `\n${esc(e.extra_link)}` : ''}</div></div>` : ''}
+                  ${e.image_idea ? `<p class="muted small" style="margin-top:10px"><strong>Bildidee:</strong> ${esc(e.image_idea)}</p>` : ''}
+                </details>
+              </div>
+              <div class="entry-act"><a class="btn ghost small" href="#freigabe-newsletter" data-goto="${esc(e.id)}">Zur Freigabe</a></div>
+            </article>`).join('')}</div></div>`).join('') : '<div class="card empty">Keine Ausgaben für diesen Filter.</div>'}
+    </section>
+    ${NL.sources?.length ? `<details class="card setup"><summary><h2>Quellen</h2></summary><ul class="steps">${NL.sources.map((s) => `<li>${esc(s)}</li>`).join('')}</ul></details>` : ''}`;
+  main.querySelectorAll('[data-nlf]').forEach((b) => (b.onclick = () => { nlFilter = b.dataset.nlf; render(); }));
+  main.querySelectorAll('[data-goto]').forEach((a) => (a.onclick = () => {
+    const n = all.find((x) => x.id === a.dataset.goto);
+    nlFreigabeFilter = Object.keys(NL_GROUPS).find((g) => NL_GROUPS[g].includes(n?.status)) || 'offen';
+    nlFocus = a.dataset.goto;
+  }));
+}
+
+// Umschalter oben auf der Freigabe-Seite
+function freigabeParts(active) {
+  const s = socialOpen();
+  const n = nlEntries().filter((x) => NL_GROUPS.offen.includes(x.status)).length;
+  return `<div class="parts" role="tablist" aria-label="Bereich der Freigabe">
+    <a role="tab" href="#freigabe" class="part ${active === 'social' ? 'on' : ''}" aria-selected="${active === 'social'}">Social Media <span class="part-n">${s} offen</span></a>
+    <a role="tab" href="#freigabe-newsletter" class="part ${active === 'newsletter' ? 'on' : ''}" aria-selected="${active === 'newsletter'}">Newsletter <span class="part-n">${n} offen</span></a>
+  </div>`;
+}
+
+let nlFreigabeFilter = 'offen';
+let nlFocus = null;
+function viewFreigabeNewsletter() {
+  const all = nlEntries();
+  const byDate = (a, b) => String(a.date).localeCompare(String(b.date));
+  const groups = Object.fromEntries(Object.entries(NL_GROUPS).map(([k, st]) => [k, all.filter((n) => st.includes(n.status)).sort(byDate)]));
+  groups.erledigt.reverse();
+  const list = groups[nlFreigabeFilter];
+  main.innerHTML = `
+    <div class="head"><h1>Freigabe</h1>${freigabeParts('newsletter')}<p>Jede Woche ein Newsletter, Versand zeitgleich mit dem passenden Post. Prüfen, bei Bedarf anpassen und freigeben (Darien). Danach in MailPoet einplanen und hier abhaken. Nach dem Versand die Kennzahlen aus MailPoet eintragen, die nächste Quartalsplanung wertet sie aus.</p></div>
+    <div class="row" style="margin-bottom:22px">
+      ${Object.keys(NL_GROUPS).map((k) => `<button class="btn small ${nlFreigabeFilter === k ? 'dark' : 'ghost'}" data-filter="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join('')}
+    </div>
+    <div id="posts">${list.length ? list.map(nlCard).join('') : `<div class="card empty">${nlFreigabeFilter === 'offen' ? 'Keine offenen Newsletter. Neue kommen mit dem nächsten Newsletter-Plan.' : 'Nichts vorhanden.'}</div>`}</div>`;
+  main.querySelectorAll('[data-filter]').forEach((b) => (b.onclick = () => { nlFreigabeFilter = b.dataset.filter; render(); }));
+  main.querySelectorAll('.nl').forEach((el) => bindNl(el, all.find((n) => n.id === el.dataset.id)));
+  if (nlFocus) {
+    main.querySelector(`[data-id="${nlFocus}"]`)?.scrollIntoView({ block: 'start' });
+    nlFocus = null;
+  }
+}
+
+function nlCard(n) {
+  const editable = NL_GROUPS.offen.includes(n.status);
+  const dis = editable ? '' : 'disabled';
+  const problem = editable ? nlProblem(n) : null;
+  const warning = editable ? nlWarning(n) : null;
+  const field = ([f, label, max]) => {
+    const v = n[f] || '';
+    const long = f === 'text' || f === 'extra_text';
+    const input = long
+      ? `<textarea id="n-${n.id}-${f}" data-nf="${f}" class="${f === 'extra_text' ? 'short' : ''}" ${dis}>${esc(v)}</textarea>`
+      : `<input id="n-${n.id}-${f}" type="text" data-nf="${f}" value="${esc(v)}" ${dis}>`;
+    return `<div class="field"><label class="label" for="n-${n.id}-${f}">${label}</label>${input}${max ? `<div class="counter ${v.length > max ? 'over' : ''}" data-count="${f}">${v.length} / ${max} Zeichen</div>` : ''}</div>`;
+  };
+  const copy = `<div class="row" style="margin-top:12px"><span class="label">Für MailPoet kopieren</span>
+      <button class="btn ghost small" data-copy="subject">Betreff</button><button class="btn ghost small" data-copy="preview">Vorschautext</button><button class="btn ghost small" data-copy="mail">Text mit Button und Zusatzblock</button></div>`;
+  const stamps = [['approved_at', 'Freigegeben'], ['planned_at', 'In MailPoet eingeplant'], ['sent_at', 'Versendet']].filter(([k]) => n[k]).map(([k, l]) => `<br>${l} ${fmtDate(n[k])}`).join('');
+  let actions = '';
+  if (editable) {
+    actions = `<div class="row" style="margin-top:16px">
+        <button class="btn" data-act="nl-approve">Freigeben</button>
+        <button class="btn ghost" data-act="nl-save">Speichern</button>
+        <button class="btn ghost small" data-act="nl-drop">Streichen</button>
+        <span class="muted small">Versand ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</span></div>`;
+  } else if (n.status === 'Freigegeben') {
+    actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-planned">In MailPoet eingeplant</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button>
+        <span class="muted small">In MailPoet einplanen für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</span></div>`;
+  } else if (n.status === 'In MailPoet eingeplant') {
+    actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-sent">Als versendet markieren</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button></div>`;
+  } else if (n.status === 'Versendet') {
+    actions = `<div class="kpis"><span class="label">Kennzahlen aus MailPoet (nach etwa 7 Tagen)</span>
+        <div class="row">${NL_KPI.map(([k, l]) => `<label class="kpi-in"><span class="small muted">${l}</span><input type="text" inputmode="decimal" id="n-${n.id}-${k}" data-kpi="${k}" value="${esc(n[k] ?? '')}"></label>`).join('')}
+        <button class="btn ghost" data-act="nl-kpi">Kennzahlen speichern</button></div></div>`;
+  } else {
+    actions = `<div class="row" style="margin-top:16px"><button class="btn ghost" data-act="nl-reopen">Wiederherstellen</button></div>`;
+  }
+  return `
+  <article class="card post nl" data-id="${esc(n.id)}">
+    <div>
+      <span class="label">Versand</span>
+      <div class="entry-date"><strong>${esc(n.day.slice(0, 2))}</strong> ${fmtDayLong(n.date)} · ${esc(n.time)} Uhr</div>
+      <p class="muted small" style="margin-top:6px">KW ${esc(n.kw)} · ${esc(n.type)} · ${esc(n.rubric || '')}</p>
+      <span class="label" style="display:block;margin-top:16px">Bezug Social Media</span>
+      <p class="small" style="margin:4px 0 0">${esc(n.social || 'keiner')}</p>
+      ${n.image_idea ? `<span class="label" style="display:block;margin-top:16px">Bildidee</span><p class="small muted" style="margin:4px 0 0">${esc(n.image_idea)}</p>` : ''}
+      <p class="muted small" style="margin-top:12px">Aus dem Newsletter-Plan${stamps}</p>
+    </div>
+    <div style="min-width:0">
+      <div class="row" style="margin-bottom:8px"><span class="badge ${NL_BADGE[n.status] ?? 'grey'}">${esc(n.status)}</span></div>
+      <h3 style="margin-bottom:14px">${esc(n.topic)}</h3>
+      ${n.note ? `<p class="open-point" style="margin-bottom:14px"><strong>Offen:</strong> ${esc(n.note)}</p>` : ''}
+      ${problem ? `<p class="open-point" style="margin-bottom:14px"><strong>Vor der Freigabe:</strong> ${esc(problem)}</p>` : ''}
+      ${warning ? `<p class="open-point" style="margin-bottom:14px"><strong>Hinweis:</strong> ${esc(warning)}</p>` : ''}
+      <div class="nl-fields">${NL_FIELDS.slice(0, 3).map(field).join('')}</div>
+      ${field(NL_FIELDS[3])}
+      <div class="nl-fields">${NL_FIELDS.slice(4, 6).map(field).join('')}</div>
+      <details class="extra-box" ${n.extra_title ? 'open' : ''}><summary>Zusatzblock</summary>${NL_FIELDS.slice(6).map(field).join('')}</details>
+      ${actions}
+      ${['Versendet', 'Gestrichen'].includes(n.status) ? '' : improveBlock(n.id, 'Was soll anders werden? Zum Beispiel: Betreff kürzer, Text sachlicher, anderer Button …')}
+    </div>
+  </article>`;
+}
+
+function bindNl(el, n) {
+  el.querySelectorAll('input, textarea').forEach((i) => i.addEventListener('input', () => {
+    S.dirty.add(n.id);
+    const c = el.querySelector(`[data-count="${i.dataset.nf}"]`);
+    if (c) {
+      const max = NL_FIELDS.find(([f]) => f === i.dataset.nf)[2];
+      c.textContent = `${i.value.length} / ${max} Zeichen`;
+      c.classList.toggle('over', i.value.length > max);
+    }
+  }));
+  const collect = () => Object.fromEntries([...el.querySelectorAll('[data-nf]')].map((i) => [i.dataset.nf, i.value.trim() || null]));
+  const run = async (btn, fn, msg) => {
+    btn.disabled = true;
+    try {
+      await fn();
+      S.dirty.delete(n.id);
+      toast(msg);
+      render();
+    } catch (e) {
+      toast(e.message);
+      btn.disabled = false;
+    }
+  };
+  el.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = () => {
+    const k = b.dataset.copy;
+    copyText(k === 'mail' ? nlMailText(n) : n[k] || '', { subject: 'Betreff', preview: 'Vorschautext', mail: 'Text' }[k]);
+  }));
+  el.querySelectorAll('[data-act]').forEach((btn) => {
+    const act = btn.dataset.act;
+    btn.onclick = () => {
+      if (act === 'improve') return sendImprove(btn, el, `Wunsch aus dem Dashboard zu Newsletter ${n.nr} „${n.subject || n.topic}“ (ID ${n.id}, Versand ${n.date}, Status ${n.status})`, n.id);
+      if (act === 'nl-save') return run(btn, () => saveNl(n, collect()), 'Gespeichert.');
+      if (act === 'nl-approve') {
+        const data = collect();
+        const problem = nlProblem({ ...n, ...data });
+        if (problem) return toast(problem);
+        return confirmClick(btn, 'Wirklich freigeben?', () => run(btn, () => saveNl(n, { ...data, status: 'Freigegeben', approved_at: nowIso() }), 'Freigegeben. Jetzt in MailPoet einplanen.'));
+      }
+      if (act === 'nl-drop') return confirmClick(btn, 'Wirklich streichen?', () => run(btn, () => saveNl(n, { ...collect(), status: 'Gestrichen' }), 'Gestrichen.'));
+      if (act === 'nl-planned') return run(btn, () => saveNl(n, { status: 'In MailPoet eingeplant', planned_at: nowIso() }), 'Als in MailPoet eingeplant markiert.');
+      if (act === 'nl-sent') return confirmClick(btn, 'Wirklich versendet?', () => run(btn, () => saveNl(n, { status: 'Versendet', sent_at: nowIso() }), 'Als versendet markiert. Kennzahlen bitte nach etwa 7 Tagen eintragen.'));
+      if (act === 'nl-reopen') return run(btn, () => saveNl(n, { status: 'Entwurf', approved_at: null, planned_at: null }), 'Wieder als Entwurf offen.');
+      if (act === 'nl-kpi') {
+        const vals = Object.fromEntries([...el.querySelectorAll('[data-kpi]')].map((i) => {
+          const v = i.value.trim().replace(',', '.');
+          return [i.dataset.kpi, v === '' ? null : Number(v)];
+        }));
+        if (Object.values(vals).some((v) => v != null && Number.isNaN(v))) return toast('Bitte nur Zahlen eintragen, z. B. 34,5.');
+        return run(btn, () => saveNl(n, vals), 'Kennzahlen gespeichert.');
       }
     };
   });
@@ -498,8 +794,10 @@ function viewVerbindungen() {
 }
 
 // ---------- Rahmen ----------
-const views = { plan: viewPlan, freigabe: viewFreigabe, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
-const currentView = () => (views[location.hash.slice(1)] ? location.hash.slice(1) : 'freigabe');
+const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
+// #freigabe-newsletter ist der Newsletter-Teil der Freigabe-Seite
+const viewKey = () => (location.hash === '#freigabe-newsletter' ? 'freigabe' : location.hash.slice(1));
+const currentView = () => (views[viewKey()] ? viewKey() : 'freigabe');
 
 function render() {
   // Waehrend in der Freigabe getippt wird, nicht neu zeichnen
@@ -512,13 +810,14 @@ function render() {
   document.getElementById('pending').hidden = true;
   const view = currentView();
   document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.view === view));
-  const open = S.posts.filter((p) => ['draft', 'failed', 'partial'].includes(p.status)).length;
+  // Zähler: offene Social-Entwürfe plus Newsletter, die in den nächsten 14 Tagen rausgehen und noch nicht freigegeben sind
+  const open = socialOpen() + nlDue();
   const c = document.getElementById('count-freigabe');
   c.hidden = !open;
   c.textContent = open;
   const runner = S.status.runner;
   document.getElementById('runner').textContent = runner?.last_run ? `Letzter Lauf ${fmtDate(runner.last_run)}` : '';
-  if (!S.loaded && view !== 'plan' && view !== 'checkliste') {
+  if (!S.loaded && !['plan', 'newsletter', 'checkliste'].includes(view)) {
     main.innerHTML = `<div class="card empty"><h2>Daten werden geladen</h2><p style="margin-top:10px">${S.offline ? 'Die Datenbank ist in dieser Ansicht nicht erreichbar. Öffnen Sie das Dashboard angemeldet auf claude.ai.' : 'Einen Moment bitte.'}</p></div>`;
     return;
   }
@@ -541,9 +840,10 @@ async function start() {
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
-  let first = 4;
+  let first = 5;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
   db.collection('posts').onSnapshot((snap) => { S.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
+  db.collection('newsletters').onSnapshot((snap) => { S.newsletters = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('metrics').onSnapshot((snap) => { S.metrics = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('status').onSnapshot((snap) => { S.status = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
   db.collection('checklist').onSnapshot((snap) => { S.checklist = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);

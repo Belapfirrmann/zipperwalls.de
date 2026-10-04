@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Baut das Dashboard als eine einzige HTML Datei fuer das Claude Artefakt:
-// Stylesheet, Logo, Redaktionsplan und die gemeinsame Textlogik aus src/ werden eingebettet.
+// Stylesheet, Logo, Redaktionsplan, Newsletter-Plan und die gemeinsame Textlogik aus src/ werden eingebettet.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { REDAKTIONSPLAN } from '../src/redaktionsplan.js';
+import { NEWSLETTERPLAN } from '../src/newsletterplan.js';
 import { WEEKLY_TEMPLATE, SETUP_TEMPLATE } from '../src/plan.js';
 import { SETUP_STEPS } from '../src/setup-steps.js';
 
@@ -35,7 +36,8 @@ ${read('dashboard/style.css')}
   <aside class="side">
     <div class="logo">${logo}</div>
     <nav id="nav">
-      <a href="#plan" data-view="plan">Plan</a>
+      <a href="#plan" data-view="plan">Social-Plan</a>
+      <a href="#newsletter" data-view="newsletter">Newsletter-Plan</a>
       <a href="#freigabe" data-view="freigabe">Freigabe <span class="count" id="count-freigabe" hidden></span></a>
       <a href="#checkliste" data-view="checkliste">Abhakeliste</a>
       <a href="#zahlen" data-view="zahlen">Zahlen</a>
@@ -53,6 +55,7 @@ ${read('dashboard/style.css')}
 <div class="toast" id="toast" role="status"></div>
 <script>
 const PLAN = ${json(REDAKTIONSPLAN)};
+const NL = ${json(NEWSLETTERPLAN)};
 const WEEKLY_TEMPLATE = ${json(WEEKLY_TEMPLATE)};
 const SETUP_TEMPLATE = ${json(SETUP_TEMPLATE)};
 const SETUP_STEPS = ${json(SETUP_STEPS)};
