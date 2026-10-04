@@ -24,7 +24,11 @@ export const NEWSLETTERPLAN = {
   "types": [
     {
       "name": "gekoppelt",
-      "count": 13
+      "count": 12
+    },
+    {
+      "name": "eigenständig",
+      "count": 1
     }
   ],
   "entries": [
@@ -45,7 +49,7 @@ export const NEWSLETTERPLAN = {
       "button_text": "Messestände ansehen",
       "button_link": "https://www.zipperwalls.de/messestaende/",
       "extra_title": "Nächste Woche im Newsletter",
-      "extra_text": "Von der Idee zur Messewand: wie eine Bestellung bei uns abläuft und an welchen Stellen Sie Zeit sparen können.",
+      "extra_text": "Fernwirkung: So gestalten Sie Ihre Messewand, damit Besucher Ihre Botschaft schon aus zehn Metern verstehen.",
       "extra_link": null,
       "image_idea": "Grafik aus Post 02 (Social_Media/2026/KW 41/post-02-instagram-facebook.png) oder Produktbild eines Messestand-Sets.",
       "note": "Erste Ausgabe nach langer Pause: Vor dem Versand Empfängerliste in MailPoet prüfen (nur Abonnenten mit Einwilligung).",
@@ -60,21 +64,21 @@ export const NEWSLETTERPLAN = {
       "date": "2026-10-13",
       "day": "Dienstag",
       "time": "09:00",
-      "type": "gekoppelt",
-      "social": "Post 25: Hinter den Kulissen: So läuft Ihre Bestellung ab (Zusatzblock zu Post 04: Kundenstimme)",
-      "rubric": "Hinter den Kulissen",
-      "topic": "Von der Idee zur Messewand: So läuft Ihre Bestellung ab, und wo Sie Zeit sparen",
-      "subject": "Von der Idee zur Messewand: So läuft Ihre Bestellung ab",
-      "subject_alt": "Vier Schritte bis zur fertigen Messewand",
-      "preview": "Was zwischen Bestellung und Lieferung passiert und wie Sie an jeder Stelle Zeit gewinnen.",
-      "text": "Guten Tag,\n\nwas passiert eigentlich zwischen Ihrer Bestellung und dem Moment, in dem die fertige Messewand bei Ihnen ankommt? Wir zeigen Ihnen die vier Schritte und an welchen Stellen Sie selbst Zeit gewinnen.\n\nVON DER IDEE ZUR MESSEWAND\n\n1. Produkt konfigurieren. Im Shop wählen Sie Größe, ein- oder beidseitigen Druck und die Transportlösung, zum Beispiel Tasche oder Trolley.\nTipp: Klären Sie vorher Standmaße und Standart. Dann wissen Sie, welche Breite und welche Druckseiten Sie brauchen.\n\n2. Druckdaten anlegen. Sie legen Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. Keine eigenen Daten? Unser Grafikservice gestaltet Ihr Layout oder passt vorhandene Dateien an.\nTipp: Bilder in Endgröße mit mindestens 120 dpi, Schriften in Pfade umwandeln, Farbraum CMYK und Überdrucken deaktivieren.\n\n3. Daten prüfen. Vor der Produktion werden Ihre Druckdaten geprüft, zum Beispiel auf Auflösung, Schriften und Farbraum.\nTipp: Planen Sie eine Korrekturschleife ein. Die Produktion startet erst nach Ihrer Freigabe.\n\n4. Produktion und Versand. Ihr Stoffdruck entsteht im Sublimationsverfahren, B1-zertifiziert und bei 30 °C waschbar. Danach geht alles fertig verpackt auf den Weg zu Ihnen.\n\nBei Fragen zu Größe oder Ausstattung beraten wir Sie persönlich, Montag bis Freitag von 8 bis 17 Uhr.\n\nViele Grüße\nIhr Team von Zipperwalls",
-      "button_text": "Messewände ansehen",
-      "button_link": "https://www.zipperwalls.de/messewaende/",
-      "extra_title": "Am Donnerstag auf unseren Kanälen",
-      "extra_text": "Was unsere Kunden an der Zusammenarbeit am häufigsten hervorheben: die persönliche Betreuung.",
+      "type": "eigenständig",
+      "social": "kein direkter Bezug (Zusatzblock zu Post 25: Hinter den Kulissen, Bestellablauf)",
+      "rubric": "Gestaltung",
+      "topic": "Fernwirkung: So gestalten Sie eine Messewand, die aus zehn Metern wirkt",
+      "subject": "Fernwirkung: Fünf Regeln für Ihre Messewand",
+      "subject_alt": "Wirkt Ihre Messewand auch aus zehn Metern?",
+      "preview": "Besucher entscheiden in Sekunden. So gestalten Sie ein Motiv, das im Gang auffällt und sofort verstanden wird.",
+      "text": "Guten Tag,\n\nBesucher entscheiden im Vorbeigehen, ob sie stehen bleiben. Ihre Messewand hat dafür nur wenige Sekunden, und das oft aus mehreren Metern Entfernung. Mit diesen fünf Regeln wirkt Ihr Motiv auch aus zehn Metern.\n\nFÜNF REGELN FÜR FERNWIRKUNG\n\n1. Eine Wand, eine Botschaft. Formulieren Sie eine Kernaussage in wenigen Worten, die sofort klar macht, was Sie anbieten. Details gehören in das Gespräch oder auf den Flyer, nicht auf die Rückwand.\nTipp: Testen Sie die Aussage am Kollegen. Versteht er in drei Sekunden, worum es geht, passt sie.\n\n2. Wichtiges nach oben. Logo und Kernaussage gehören in den oberen Bereich der Wand. Theke, Möbel und Besucher verdecken den unteren Teil fast immer.\nTipp: Lassen Sie im unteren Bereich Platz für Bildfläche statt Text.\n\n3. Groß und klar schreiben. Wählen Sie eine gut lesbare Schrift ohne Verzierungen und eine Schriftgröße, die auch aus der Entfernung lesbar ist. Lieber weniger Text, dafür größer.\nTipp: Drucken Sie den Entwurf auf A4 aus und betrachten Sie ihn aus drei Metern. Was dort schwer lesbar ist, ist es auf der Messe auch.\n\n4. Starker Kontrast. Dunkle Schrift auf hellem Grund oder helle Schrift auf dunklem Grund. Text direkt auf unruhigen Fotos geht in der Halle unter.\n\n5. Ein großes Bild statt vieler kleiner. Ein starkes Motiv zieht mehr Blicke an als eine Collage. Achten Sie auf mindestens 120 dpi in Endgröße, damit nichts unscharf wirkt.\n\nWenn Sie bei der Gestaltung Unterstützung möchten, übernimmt unser Grafikservice Layout und Datenprüfung.\n\nViele Grüße\nIhr Team von Zipperwalls",
+      "button_text": "Zum Grafikservice",
+      "button_link": "https://www.zipperwalls.de/grafikservice/",
+      "extra_title": "Heute auf unseren Kanälen",
+      "extra_text": "Von der Idee zur fertigen Messewand: wie eine Bestellung bei uns abläuft.",
       "extra_link": null,
-      "image_idea": "Grafik aus Post 25 (KW 42) oder Produktfoto einer bedruckten Messewand aus dem Shop.",
-      "note": "Thema am 04.10.2026 geändert: statt Messekalender (Wunsch Bela/Darien) gekoppelt an Post 25. Messekalender nicht mehr verwenden.",
+      "image_idea": "Produktfoto einer bedruckten Messewand mit klarem, großem Motiv aus dem Shop.",
+      "note": "Thema am 04.10.2026 geändert (Wunsch Bela/Darien): kein Messekalender, kein Bestellablauf. Eigenständige Ausgabe zur Gestaltung.",
       "status": "Entwurf",
       "open_rate": null,
       "click_rate": null,
