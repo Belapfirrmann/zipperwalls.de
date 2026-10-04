@@ -26,7 +26,7 @@ export const REDAKTIONSPLAN = {
   "pillars": [
     {
       "name": "Ratgeber",
-      "count": 10
+      "count": 11
     },
     {
       "name": "Produkte & Anwendung",
@@ -56,9 +56,9 @@ export const REDAKTIONSPLAN = {
   "entries": [
     {
       "nr": 1,
-      "kw": 41,
-      "date": "2026-10-06",
-      "day": "Di",
+      "kw": 40,
+      "date": "2026-10-04",
+      "day": "So",
       "pillar": "Über uns",
       "topic": "Start: Zipperwalls stellt sich vor",
       "format": "Bildpost 4:5",
@@ -77,14 +77,14 @@ export const REDAKTIONSPLAN = {
         "KW 41/post-01-instagram-facebook.png",
         "KW 41/post-01-linkedin.png"
       ],
-      "note": "Voraussetzung: Instagram-Account @zipperwalls.de angelegt, Facebook-Infos (Adresse, Telefon, Öffnungszeiten) korrigiert.",
-      "status": "Entwurf"
+      "note": "Voraussetzung: Instagram-Account @zipperwalls.de angelegt, Facebook-Infos (Adresse, Telefon, Öffnungszeiten) korrigiert. Als Testpost am 04.10.2026 veröffentlicht.",
+      "status": "Gepostet"
     },
     {
       "nr": 2,
       "kw": 41,
-      "date": "2026-10-08",
-      "day": "Do",
+      "date": "2026-10-06",
+      "day": "Di",
       "pillar": "Ratgeber",
       "topic": "Messe-Tipp #01: Frühjahrsmessen 2027 jetzt planen",
       "format": "Bildpost 4:5 (optional Karussell)",
@@ -108,9 +108,9 @@ export const REDAKTIONSPLAN = {
     },
     {
       "nr": 3,
-      "kw": 42,
-      "date": "2026-10-13",
-      "day": "Di",
+      "kw": 41,
+      "date": "2026-10-08",
+      "day": "Do",
       "pillar": "Produkte & Anwendung",
       "topic": "Messewand EASE L: in Minuten aufgebaut",
       "format": "Bildpost 4:5",
@@ -130,6 +130,29 @@ export const REDAKTIONSPLAN = {
         "KW 42/post-03-linkedin.png"
       ],
       "note": "Produktrender stammt von zipperwalls.de. Für spätere Posts echte Aufbaufotos sammeln.",
+      "status": "Entwurf"
+    },
+    {
+      "nr": 25,
+      "kw": 42,
+      "date": "2026-10-13",
+      "day": "Di",
+      "pillar": "Ratgeber",
+      "topic": "Druckdaten-Check: fünf Punkte vor dem Upload",
+      "format": "Karussell (7 Slides: Titel, 5 Punkte, Abschluss)",
+      "headline": "DRUCKDATEN? ERST PRÜFEN, DANN HOCHLADEN.",
+      "instagram": "Druckdaten-Check: fünf Punkte vor dem Upload.\nDamit Ihr Motiv auf dem Stoff so wirkt wie geplant, lohnt sich ein kurzer Blick auf diese Punkte:\n\n1. Format passend zur Druckvorlage\nLegen Sie Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. So stimmen Maße und Beschnitt.\n\n2. Bildauflösung mindestens 120 dpi\nGemessen bei 100 % Skalierung, also in Endgröße. Darunter wirken Fotos auf großen Flächen schnell unscharf.\n\n3. Schriften in Pfade umwandeln\nSo wird jede Schrift genau so gedruckt, wie Sie sie gestaltet haben, auch wenn sie uns nicht vorliegt.\n\n4. Farbraum CMYK\nRGB-Daten werden für den Druck automatisch umgewandelt. Dabei können sich Farben leicht verschieben. Mit CMYK-Daten haben Sie das Ergebnis besser im Griff.\n\n5. Überdrucken deaktivieren\nIst Überdrucken aktiv, können Elemente im Druck verschwinden oder Farben sich ungewollt mischen.\n\nKeine Zeit für die Datenaufbereitung? Unser Grafikservice passt vorhandene Dateien an die Druckvorlage an.\nAlle Druckinformationen finden Sie auf zipperwalls.de",
+      "facebook": "Druckdaten-Check: fünf Punkte vor dem Upload.\nDamit Ihr Motiv auf dem Stoff so wirkt wie geplant, lohnt sich vor dem Hochladen ein kurzer Blick auf diese Punkte:\n\n1. Format passend zur Druckvorlage\nLegen Sie Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. So stimmen Maße und Beschnitt.\n\n2. Bildauflösung mindestens 120 dpi\nGemessen bei 100 % Skalierung, also in Endgröße. Darunter wirken Fotos auf großen Flächen schnell unscharf.\n\n3. Schriften in Pfade umwandeln\nSo wird jede Schrift genau so gedruckt, wie Sie sie gestaltet haben, auch wenn sie uns nicht vorliegt.\n\n4. Farbraum CMYK\nRGB-Daten werden für den Druck automatisch umgewandelt. Dabei können sich Farben leicht verschieben. Mit CMYK-Daten haben Sie das Ergebnis besser im Griff.\n\n5. Überdrucken deaktivieren\nIst Überdrucken aktiv, können Elemente im Druck verschwinden oder Farben sich ungewollt mischen.\n\nKeine Zeit für die Datenaufbereitung? Unser Grafikservice passt vorhandene Dateien an die Druckvorlage an.\nAlle Druckinformationen: https://www.zipperwalls.de/kundenservice/druckinformationen/",
+      "linkedin": "Der häufigste Engpass vor der Messe sind nicht die Systeme, sondern die Druckdaten.\n\nFünf Punkte, die wir vor jedem Upload empfehlen:\n\n1. Format passend zur Druckvorlage\nLegen Sie Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. So stimmen Maße und Beschnitt.\n\n2. Bildauflösung mindestens 120 dpi\nGemessen bei 100 % Skalierung, also in Endgröße. Darunter wirken Fotos auf großen Flächen schnell unscharf.\n\n3. Schriften in Pfade umwandeln\nSo wird jede Schrift genau so gedruckt, wie Sie sie gestaltet haben, auch wenn sie uns nicht vorliegt.\n\n4. Farbraum CMYK\nRGB-Daten werden für den Druck automatisch umgewandelt. Dabei können sich Farben leicht verschieben. Mit CMYK-Daten haben Sie das Ergebnis besser im Griff.\n\n5. Überdrucken deaktivieren\nIst Überdrucken aktiv, können Elemente im Druck verschwinden oder Farben sich ungewollt mischen.\n\nWer diese fünf Punkte prüft, spart Korrekturschleifen und Zeit vor dem Messetermin. Alle Druckinformationen: https://www.zipperwalls.de/kundenservice/druckinformationen/",
+      "hashtags": [
+        "#druckdaten",
+        "#textildruck",
+        "#messewand",
+        "#messetipp",
+        "#zipperwalls"
+      ],
+      "files": [],
+      "note": "Neu eingefügt am 04.10.2026 für den freien Termin am 13.10. Fakten aus den Zipperwalls-Druckvorgaben. Link zu den Druckinformationen vor Veröffentlichung prüfen.",
       "status": "Entwurf"
     },
     {
