@@ -381,20 +381,29 @@ const improveBlock = (id, placeholder) => `
       </div>`;
 
 // ---------- Newsletter ----------
-// Plan kommt aus dem Newsletter-Plan (xlsx, scripts/import_newsletter.py), Änderungen und Status liegen in Collection "newsletters"
+// Plan kommt aus dem Newsletter-Plan (xlsx, scripts/import_newsletter.py). Entwürfe liegen in Collection "newsletters"
+// (Dokument nl-<Nr>) und werden einzeln angelegt (Claude, siehe docs/routinen/newsletter-entwuerfe.md). Nur sie erscheinen in der Freigabe.
+// Gestaltet wird mit renderNewsletter aus src/newsletter-render.js (beim Bauen eingefügt).
 const NL_STATUS = ['Entwurf', 'Verschoben', 'Freigegeben', 'In MailPoet eingeplant', 'Versendet', 'Gestrichen'];
 const NL_BADGE = { Entwurf: '', Verschoben: '', Freigegeben: 'dark', 'In MailPoet eingeplant': 'dark', Versendet: 'grey', Gestrichen: 'grey' };
 const NL_GROUPS = { offen: ['Entwurf', 'Verschoben'], geplant: ['Freigegeben', 'In MailPoet eingeplant'], erledigt: ['Versendet', 'Gestrichen'] };
-const NL_FIELDS = [
-  ['subject', 'Betreff', 60], ['subject_alt', 'Betreff Alternative (A/B-Test)', 60], ['preview', 'Vorschautext', 120],
-  ['text', 'Text'], ['button_text', 'Button-Text'], ['button_link', 'Button-Link'],
-  ['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text'], ['extra_link', 'Zusatzblock Link'],
+// [Feld, Beschriftung, max. Zeichen, Art]
+const NL_SECTIONS = [
+  ['Betreff und Vorschautext', [['subject', 'Betreff', 60], ['subject_alt', 'Betreff Alternative (A/B-Test)', 60], ['preview', 'Vorschautext', 120]], true],
+  ['Kopf', [['badge', 'Badge (gelb)'], ['headline', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short']]],
+  ['Bild', [['image_url', 'Bild-Adresse für MailPoet (zipperwalls.de)'], ['image_alt', 'Bildbeschreibung (Alt-Text)'], ['image_link', 'Bild verlinkt auf']]],
+  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt)', 0, 'long']], true],
+  ['Button', [['button_text', 'Button-Text'], ['button_link', 'Button-Link']]],
+  ['Angebot', [['offer_label', 'Angebot Kennzeile'], ['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
+  ['Zusatzblock', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
 ];
+const NL_FIELDS = NL_SECTIONS.flatMap(([, fields]) => fields);
 const NL_KPI = [['open_rate', 'Öffnungsrate %'], ['click_rate', 'Klickrate %'], ['unsubscribes', 'Abmeldungen']];
 const nlId = (nr) => `nl-${nr}`;
 const fmtDayLong = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 
+// Plan-Einträge mit ihrem Entwurf (falls vorhanden)
 function nlEntries() {
   const docs = Object.fromEntries(S.newsletters.map(({ id, ...d }) => [id, d]));
   return NL.entries.map((e) => {
@@ -402,7 +411,9 @@ function nlEntries() {
     return { ...e, ...(doc || {}), id: nlId(e.nr), doc, status: doc?.status || e.status || 'Entwurf' };
   });
 }
-const nlDue = () => nlEntries().filter((n) => NL_GROUPS.offen.includes(n.status) && n.date <= inDays(14)).length;
+// Nur angelegte Entwürfe (für die Freigabe)
+const nlDrafts = () => nlEntries().filter((n) => n.doc);
+const nlDue = () => nlDrafts().filter((n) => NL_GROUPS.offen.includes(n.status) && n.date <= inDays(14)).length;
 const socialOpen = () => S.posts.filter((p) => ['draft', 'failed', 'partial'].includes(p.status)).length;
 
 // Blockiert die Freigabe: Platzhalter, Längen, Links nicht auf zipperwalls.de, Pflichtfelder
@@ -412,18 +423,18 @@ function nlProblem(n) {
     const ph = findPlaceholder(v);
     if (ph) return `${label}: Platzhalter ${ph} noch ersetzen.`;
     if (max && v.length > max) return `${label} zu lang (${v.length} von ${max} Zeichen).`;
-    if (f.endsWith('_link') && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
+    if ((f.endsWith('_link') || f === 'image_url') && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
   }
   for (const [f, label] of [['subject', 'Betreff'], ['preview', 'Vorschautext'], ['text', 'Text']]) if (!n[f]) return `${label} fehlt.`;
   return null;
 }
-
-// Nur Hinweis, blockiert nicht: Ortsnamen und Herkunftsangaben sind bei Social Media verboten (z. B. Grußformel „aus Herxheim“)
+// Nur Hinweis, blockiert nicht: Ortsnamen und Herkunftsangaben sind bei Social Media verboten
 function nlWarning(n) {
   for (const [f, label] of NL_FIELDS) {
     const bad = findForbidden(n[f] || '');
     if (bad) return `${label} enthält „${bad}“. In Social-Media-Posts ist das nicht erlaubt, bitte prüfen.`;
   }
+  if (!n.image_url && !n.image_asset) return 'Noch kein Bild.';
   return null;
 }
 
@@ -431,8 +442,12 @@ function nlWarning(n) {
 const nlMailText = (n) => [
   n.text,
   n.button_text ? `Button: ${n.button_text}\n${n.button_link || ''}` : null,
+  n.offer_title ? `${n.offer_title}\n${n.offer_text || ''}${n.offer_button_text ? `\nButton: ${n.offer_button_text}\n${n.offer_button_link || ''}` : ''}` : null,
   n.extra_title ? `${n.extra_title}\n${n.extra_text || ''}${n.extra_link ? `\n${n.extra_link}` : ''}` : null,
 ].filter(Boolean).join('\n\n');
+
+// Vorschau: Bild aus den Dashboard-Assets (fremde Adressen sind im Artefakt gesperrt), Logo eingebettet
+const nlPreviewHtml = (n) => renderNewsletter(n, { preview: true, logo: LOGO_FARBIG, imageSrc: n.image_asset ? blobUrl(n.image_asset) : null });
 
 async function copyText(text, label) {
   try {
@@ -456,9 +471,56 @@ async function copyText(text, label) {
 async function saveNl(n, patch) {
   const base = Object.fromEntries(NL_FIELDS.map(([f]) => [f, n[f] ?? null]));
   await write((db) => db.collection('newsletters').doc(n.id).set({
-    ...(n.doc || {}), ...base, nr: n.nr, kw: n.kw, date: n.date, time: n.time, status: n.status,
+    ...(n.doc || {}), ...base, image_asset: n.image_asset ?? null, nr: n.nr, kw: n.kw, date: n.date, time: n.time, status: n.status,
     created_at: n.doc?.created_at || nowIso(), ...patch, updated_at: nowIso(),
   }));
+}
+
+// iframe mit der gestalteten E-Mail; Höhe passt sich an, außer im Rahmen mit fester Höhe
+function fillPreview(frame, html, fit) {
+  frame.onload = () => {
+    if (!fit) return;
+    try { frame.style.height = frame.contentDocument.documentElement.scrollHeight + 'px'; } catch { /* Höhe bleibt */ }
+  };
+  frame.srcdoc = html;
+}
+
+// Vollbild-Ansicht mit Umschalter Desktop / Handy
+function openFullscreen(n) {
+  const box = document.createElement('div');
+  box.className = 'nl-full';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Newsletter-Vorschau im Vollbild');
+  box.innerHTML = `
+    <div class="nl-full-bar">
+      <div style="min-width:0"><span class="label">Vorschau · ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr</span><div class="nl-subject">${esc(n.subject || '')}</div><div class="muted small">${esc(n.preview || '')}</div></div>
+      <div class="row">
+        <button class="tab on" type="button" data-w="680">Desktop</button><button class="tab" type="button" data-w="390">Handy</button>
+        <button class="btn small" type="button" data-close>Schließen</button>
+      </div>
+    </div>
+    <div class="nl-full-stage"><iframe title="Newsletter-Vorschau" class="nl-full-frame"></iframe></div>`;
+  document.body.appendChild(box);
+  document.body.style.overflow = 'hidden';
+  const frame = box.querySelector('iframe');
+  fillPreview(frame, nlPreviewHtml(n), true);
+  const close = () => {
+    box.remove();
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  box.querySelector('[data-close]').onclick = close;
+  box.querySelector('[data-close]').focus();
+  box.querySelectorAll('[data-w]').forEach((b) => (b.onclick = () => {
+    box.querySelectorAll('[data-w]').forEach((x) => x.classList.toggle('on', x === b));
+    frame.style.width = b.dataset.w + 'px';
+    fillPreview(frame, nlPreviewHtml(n), true);
+  }));
+  // Wer im Browser Vollbild hat, bekommt es auch hier (optional)
+  box.requestFullscreen?.().catch(() => {});
 }
 
 let nlFilter = 'alle';
@@ -510,7 +572,7 @@ function viewNewsletter() {
                   ${e.image_idea ? `<p class="muted small" style="margin-top:10px"><strong>Bildidee:</strong> ${esc(e.image_idea)}</p>` : ''}
                 </details>
               </div>
-              <div class="entry-act"><a class="btn ghost small" href="#freigabe-newsletter" data-goto="${esc(e.id)}">Zur Freigabe</a></div>
+              <div class="entry-act">${e.doc ? `<a class="btn ghost small" href="#freigabe-newsletter" data-goto="${esc(e.id)}">Zur Freigabe</a>` : '<span class="muted small">Noch kein Entwurf</span>'}</div>
             </article>`).join('')}</div></div>`).join('') : '<div class="card empty">Keine Ausgaben für diesen Filter.</div>'}
     </section>
     ${NL.sources?.length ? `<details class="card setup"><summary><h2>Quellen</h2></summary><ul class="steps">${NL.sources.map((s) => `<li>${esc(s)}</li>`).join('')}</ul></details>` : ''}`;
@@ -525,7 +587,7 @@ function viewNewsletter() {
 // Umschalter oben auf der Freigabe-Seite
 function freigabeParts(active) {
   const s = socialOpen();
-  const n = nlEntries().filter((x) => NL_GROUPS.offen.includes(x.status)).length;
+  const n = nlDrafts().filter((x) => NL_GROUPS.offen.includes(x.status)).length;
   return `<div class="parts" role="tablist" aria-label="Bereich der Freigabe">
     <a role="tab" href="#freigabe" class="part ${active === 'social' ? 'on' : ''}" aria-selected="${active === 'social'}">Social Media <span class="part-n">${s} offen</span></a>
     <a role="tab" href="#freigabe-newsletter" class="part ${active === 'newsletter' ? 'on' : ''}" aria-selected="${active === 'newsletter'}">Newsletter <span class="part-n">${n} offen</span></a>
@@ -535,17 +597,17 @@ function freigabeParts(active) {
 let nlFreigabeFilter = 'offen';
 let nlFocus = null;
 function viewFreigabeNewsletter() {
-  const all = nlEntries();
+  const all = nlDrafts();
   const byDate = (a, b) => String(a.date).localeCompare(String(b.date));
   const groups = Object.fromEntries(Object.entries(NL_GROUPS).map(([k, st]) => [k, all.filter((n) => st.includes(n.status)).sort(byDate)]));
   groups.erledigt.reverse();
   const list = groups[nlFreigabeFilter];
   main.innerHTML = `
-    <div class="head"><h1>Freigabe</h1>${freigabeParts('newsletter')}<p>Jede Woche ein Newsletter, Versand zeitgleich mit dem passenden Post. Prüfen, bei Bedarf anpassen und freigeben (Darien). Danach in MailPoet einplanen und hier abhaken. Nach dem Versand die Kennzahlen aus MailPoet eintragen, die nächste Quartalsplanung wertet sie aus.</p></div>
+    <div class="head"><h1>Freigabe</h1>${freigabeParts('newsletter')}<p>Die Vorschau zeigt den Newsletter so, wie er bei den Empfängern ankommt. Alle Links und Buttons sind klickbar, „Vollbild“ zeigt ihn groß als Desktop- oder Handy-Ansicht. Daneben lässt sich alles anpassen, die Vorschau ändert sich sofort. Dann freigeben (Darien), in MailPoet einplanen und hier abhaken.</p></div>
     <div class="row" style="margin-bottom:22px">
       ${Object.keys(NL_GROUPS).map((k) => `<button class="btn small ${nlFreigabeFilter === k ? 'dark' : 'ghost'}" data-filter="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join('')}
     </div>
-    <div id="posts">${list.length ? list.map(nlCard).join('') : `<div class="card empty">${nlFreigabeFilter === 'offen' ? 'Keine offenen Newsletter. Neue kommen mit dem nächsten Newsletter-Plan.' : 'Nichts vorhanden.'}</div>`}</div>`;
+    <div id="posts">${list.length ? list.map(nlCard).join('') : `<div class="card empty">${nlFreigabeFilter === 'offen' ? 'Kein Newsletter-Entwurf offen. Claude legt die Entwürfe einzeln an, den Versandplan sehen Sie unter <a href="#newsletter">Newsletter-Plan</a>.' : 'Nichts vorhanden.'}</div>`}</div>`;
   main.querySelectorAll('[data-filter]').forEach((b) => (b.onclick = () => { nlFreigabeFilter = b.dataset.filter; render(); }));
   main.querySelectorAll('.nl').forEach((el) => bindNl(el, all.find((n) => n.id === el.dataset.id)));
   if (nlFocus) {
@@ -559,27 +621,24 @@ function nlCard(n) {
   const dis = editable ? '' : 'disabled';
   const problem = editable ? nlProblem(n) : null;
   const warning = editable ? nlWarning(n) : null;
-  const field = ([f, label, max]) => {
+  const field = ([f, label, max, kind]) => {
     const v = n[f] || '';
-    const long = f === 'text' || f === 'extra_text';
-    const input = long
-      ? `<textarea id="n-${n.id}-${f}" data-nf="${f}" class="${f === 'extra_text' ? 'short' : ''}" ${dis}>${esc(v)}</textarea>`
+    const input = kind
+      ? `<textarea id="n-${n.id}-${f}" data-nf="${f}" class="${kind}" ${dis}>${esc(v)}</textarea>`
       : `<input id="n-${n.id}-${f}" type="text" data-nf="${f}" value="${esc(v)}" ${dis}>`;
     return `<div class="field"><label class="label" for="n-${n.id}-${f}">${label}</label>${input}${max ? `<div class="counter ${v.length > max ? 'over' : ''}" data-count="${f}">${v.length} / ${max} Zeichen</div>` : ''}</div>`;
   };
   const copy = `<div class="row" style="margin-top:12px"><span class="label">Für MailPoet kopieren</span>
-      <button class="btn ghost small" data-copy="subject">Betreff</button><button class="btn ghost small" data-copy="preview">Vorschautext</button><button class="btn ghost small" data-copy="mail">Text mit Button und Zusatzblock</button></div>`;
-  const stamps = [['approved_at', 'Freigegeben'], ['planned_at', 'In MailPoet eingeplant'], ['sent_at', 'Versendet']].filter(([k]) => n[k]).map(([k, l]) => `<br>${l} ${fmtDate(n[k])}`).join('');
+      <button class="btn ghost small" data-copy="subject">Betreff</button><button class="btn ghost small" data-copy="preview">Vorschautext</button><button class="btn ghost small" data-copy="mail">Texte</button></div>`;
+  const stamps = [['approved_at', 'Freigegeben'], ['planned_at', 'In MailPoet eingeplant'], ['sent_at', 'Versendet']].filter(([k]) => n[k]).map(([k, l]) => ` · ${l} ${fmtDate(n[k])}`).join('');
   let actions = '';
   if (editable) {
     actions = `<div class="row" style="margin-top:16px">
         <button class="btn" data-act="nl-approve">Freigeben</button>
         <button class="btn ghost" data-act="nl-save">Speichern</button>
-        <button class="btn ghost small" data-act="nl-drop">Streichen</button>
-        <span class="muted small">Versand ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</span></div>`;
+        <button class="btn ghost small" data-act="nl-drop">Streichen</button></div>`;
   } else if (n.status === 'Freigegeben') {
-    actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-planned">In MailPoet eingeplant</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button>
-        <span class="muted small">In MailPoet einplanen für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</span></div>`;
+    actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-planned">In MailPoet eingeplant</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button></div>`;
   } else if (n.status === 'In MailPoet eingeplant') {
     actions = `${copy}<div class="row" style="margin-top:16px"><button class="btn" data-act="nl-sent">Als versendet markieren</button><button class="btn ghost small" data-act="nl-reopen">Zurück zu Entwurf</button></div>`;
   } else if (n.status === 'Versendet') {
@@ -590,33 +649,41 @@ function nlCard(n) {
     actions = `<div class="row" style="margin-top:16px"><button class="btn ghost" data-act="nl-reopen">Wiederherstellen</button></div>`;
   }
   return `
-  <article class="card post nl" data-id="${esc(n.id)}">
-    <div>
-      <span class="label">Versand</span>
-      <div class="entry-date"><strong>${esc(n.day.slice(0, 2))}</strong> ${fmtDayLong(n.date)} · ${esc(n.time)} Uhr</div>
-      <p class="muted small" style="margin-top:6px">KW ${esc(n.kw)} · ${esc(n.type)} · ${esc(n.rubric || '')}</p>
-      <span class="label" style="display:block;margin-top:16px">Bezug Social Media</span>
-      <p class="small" style="margin:4px 0 0">${esc(n.social || 'keiner')}</p>
-      ${n.image_idea ? `<span class="label" style="display:block;margin-top:16px">Bildidee</span><p class="small muted" style="margin:4px 0 0">${esc(n.image_idea)}</p>` : ''}
-      <p class="muted small" style="margin-top:12px">Aus dem Newsletter-Plan${stamps}</p>
+  <article class="card nl" data-id="${esc(n.id)}">
+    <div class="nl-top">
+      <div style="min-width:0">
+        <div class="row" style="gap:8px;margin-bottom:8px"><span class="badge ${NL_BADGE[n.status] ?? 'grey'}">${esc(n.status)}</span><span class="pill-tag ${n.type === 'eigenständig' ? 'b1' : 'b0'}">${esc(n.type)}</span><span class="pill-tag b2">${esc(n.rubric || '')}</span></div>
+        <h2>${esc(n.subject || n.topic)}</h2>
+        <p class="muted small" style="margin:6px 0 0">Ausgabe ${esc(n.nr)} · Versand ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr · Bezug: ${esc(n.social || 'keiner')}${stamps}</p>
+      </div>
+      <button class="btn dark" type="button" data-act="nl-full">Vollbild</button>
     </div>
-    <div style="min-width:0">
-      <div class="row" style="margin-bottom:8px"><span class="badge ${NL_BADGE[n.status] ?? 'grey'}">${esc(n.status)}</span></div>
-      <h3 style="margin-bottom:14px">${esc(n.topic)}</h3>
-      ${n.note ? `<p class="open-point" style="margin-bottom:14px"><strong>Offen:</strong> ${esc(n.note)}</p>` : ''}
-      ${problem ? `<p class="open-point" style="margin-bottom:14px"><strong>Vor der Freigabe:</strong> ${esc(problem)}</p>` : ''}
-      ${warning ? `<p class="open-point" style="margin-bottom:14px"><strong>Hinweis:</strong> ${esc(warning)}</p>` : ''}
-      <div class="nl-fields">${NL_FIELDS.slice(0, 3).map(field).join('')}</div>
-      ${field(NL_FIELDS[3])}
-      <div class="nl-fields">${NL_FIELDS.slice(4, 6).map(field).join('')}</div>
-      <details class="extra-box" ${n.extra_title ? 'open' : ''}><summary>Zusatzblock</summary>${NL_FIELDS.slice(6).map(field).join('')}</details>
-      ${actions}
-      ${['Versendet', 'Gestrichen'].includes(n.status) ? '' : improveBlock(n.id, 'Was soll anders werden? Zum Beispiel: Betreff kürzer, Text sachlicher, anderer Button …')}
+    ${n.note ? `<p class="open-point"><strong>Offen:</strong> ${esc(n.note)}</p>` : ''}
+    ${problem ? `<p class="open-point"><strong>Vor der Freigabe:</strong> ${esc(problem)}</p>` : ''}
+    ${warning ? `<p class="open-point"><strong>Hinweis:</strong> ${esc(warning)}</p>` : ''}
+    <div class="nl-body">
+      <div class="nl-preview">
+        <div class="nl-inbox"><span class="label">Posteingang</span><strong>${esc(n.subject || '')}</strong><span class="muted">${esc(n.preview || '')}</span></div>
+        <iframe title="Vorschau Newsletter ${esc(n.nr)}" class="nl-frame" loading="lazy"></iframe>
+      </div>
+      <div class="nl-edit" style="min-width:0">
+        ${NL_SECTIONS.map(([title, fields, open]) => `<details class="nl-sec" ${open ? 'open' : ''}><summary>${title}</summary>
+          ${fields.map(field).join('')}
+          ${title === 'Bild' && editable && S.assets ? `<label class="btn ghost small">Bild für die Vorschau hochladen<input type="file" accept="image/jpeg,image/png,image/webp" data-act="nl-image" hidden></label>
+            <p class="muted small" style="margin-top:6px">In MailPoet wird das Bild über die Adresse oben eingebunden. Die Vorschau hier braucht eine hochgeladene Kopie.</p>` : ''}
+        </details>`).join('')}
+        ${actions}
+        ${['Versendet', 'Gestrichen'].includes(n.status) ? '' : improveBlock(n.id, 'Was soll anders werden? Zum Beispiel: Betreff kürzer, anderes Bild, Text sachlicher …')}
+      </div>
     </div>
   </article>`;
 }
 
 function bindNl(el, n) {
+  const frame = el.querySelector('.nl-frame');
+  fillPreview(frame, nlPreviewHtml(n), false);
+  const collect = () => Object.fromEntries([...el.querySelectorAll('[data-nf]')].map((i) => [i.dataset.nf, i.value.trim() || null]));
+  let t = null;
   el.querySelectorAll('input, textarea').forEach((i) => i.addEventListener('input', () => {
     S.dirty.add(n.id);
     const c = el.querySelector(`[data-count="${i.dataset.nf}"]`);
@@ -625,8 +692,16 @@ function bindNl(el, n) {
       c.textContent = `${i.value.length} / ${max} Zeichen`;
       c.classList.toggle('over', i.value.length > max);
     }
+    // Vorschau live nachziehen
+    if (i.dataset.nf) {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const y = frame.contentWindow?.scrollY || 0;
+        frame.onload = () => { try { frame.contentWindow.scrollTo(0, y); } catch { /* egal */ } };
+        frame.srcdoc = nlPreviewHtml({ ...n, ...collect() });
+      }, 350);
+    }
   }));
-  const collect = () => Object.fromEntries([...el.querySelectorAll('[data-nf]')].map((i) => [i.dataset.nf, i.value.trim() || null]));
   const run = async (btn, fn, msg) => {
     btn.disabled = true;
     try {
@@ -641,11 +716,29 @@ function bindNl(el, n) {
   };
   el.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = () => {
     const k = b.dataset.copy;
-    copyText(k === 'mail' ? nlMailText(n) : n[k] || '', { subject: 'Betreff', preview: 'Vorschautext', mail: 'Text' }[k]);
+    copyText(k === 'mail' ? nlMailText(n) : n[k] || '', { subject: 'Betreff', preview: 'Vorschautext', mail: 'Texte' }[k]);
   }));
   el.querySelectorAll('[data-act]').forEach((btn) => {
     const act = btn.dataset.act;
+    if (act === 'nl-image') {
+      btn.onchange = async () => {
+        const file = btn.files[0];
+        if (!file) return;
+        try {
+          if (file.size > 8 * 1024 * 1024) throw new Error('Bild größer als 8 MB.');
+          toast('Bild wird hochgeladen …');
+          const up = await S.assets.upload(file);
+          await saveNl({ ...n, ...collect() }, { image_asset: up.id });
+          S.dirty.delete(n.id);
+          toast('Bild gespeichert.');
+        } catch (e) {
+          toast(e?.code === 'too_large' ? 'Bild zu groß.' : e.message || 'Hochladen fehlgeschlagen.');
+        }
+      };
+      return;
+    }
     btn.onclick = () => {
+      if (act === 'nl-full') return openFullscreen({ ...n, ...collect() });
       if (act === 'improve') return sendImprove(btn, el, `Wunsch aus dem Dashboard zu Newsletter ${n.nr} „${n.subject || n.topic}“ (ID ${n.id}, Versand ${n.date}, Status ${n.status})`, n.id);
       if (act === 'nl-save') return run(btn, () => saveNl(n, collect()), 'Gespeichert.');
       if (act === 'nl-approve') {
@@ -801,7 +894,7 @@ const currentView = () => (views[viewKey()] ? viewKey() : 'freigabe');
 
 function render() {
   // Waehrend in der Freigabe getippt wird, nicht neu zeichnen
-  if (currentView() === 'freigabe' && S.dirty.size && main.querySelector('.post')) {
+  if (currentView() === 'freigabe' && S.dirty.size && main.querySelector('.post, .nl')) {
     S.pending = true;
     document.getElementById('pending').hidden = false;
     return;

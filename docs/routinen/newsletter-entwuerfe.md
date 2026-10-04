@@ -1,0 +1,28 @@
+# Newsletter-Entwürfe anlegen
+
+Ein Entwurf pro Ausgabe, erst wenn Bela oder Darien darum bitten oder der Versand näher rückt. Nur angelegte Entwürfe
+erscheinen unter Freigabe › Newsletter. Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
+
+## Ablauf
+
+1. Repo bereitstellen (wie in `posten.md`). Plan: `src/newsletterplan.js` (`NEWSLETTERPLAN.entries`).
+2. Ausgabe wählen und prüfen, ob es in Collection `newsletters` schon `nl-<nr>` gibt (ArtifactData `get`). Dann nicht überschreiben.
+3. Bild: das Foto des gekoppelten Social-Media-Posts (Collection `posts`, Dokument `plan-<Post-Nr>`, erste Slide zeigt das Motiv),
+   aber ohne Text darauf. Am besten dasselbe Produktfoto aus dem Shop (zipperwalls.de/wp-content/uploads/…, volle Größe ohne
+   `-768x432`). Keine Fremdlogos außer PIXLIP GO, keine KI-Bilder.
+   - `image_url`: öffentliche Adresse auf www.zipperwalls.de (die nutzt MailPoet).
+   - Dieselbe Datei als Asset ins Artefakt laden (Artifact Tool, `asset: true`) und die ID als `image_asset` eintragen (nur für die Vorschau,
+     fremde Adressen sind im Artefakt gesperrt).
+4. Dokument `newsletters/nl-<nr>` anlegen (`set`, ohne if_version). Felder:
+   `nr, kw, date, time, status: "Entwurf", subject, subject_alt, preview, badge, headline, image_url, image_asset, image_alt, image_link,
+   text, button_text, button_link, offer_label, offer_title, offer_text, offer_button_text, offer_button_link, extra_title, extra_text,
+   extra_link, source: "claude", notes, created_at, updated_at`.
+   - `badge` und `headline` wie die Grafik des Social-Media-Posts (z. B. „Messe-Tipp #01“, „Frühjahrsmesse?\nJetzt planen.“).
+   - `text` aus dem Plan. Gliederung: Leerzeile = Absatz, Zeile in VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt,
+     „Viele Grüße …“ = Grußformel, Telefon/E-Mail = Kontaktzeile. Grußformel ohne Ortsnamen („Viele Grüße“, nicht „aus Herxheim“).
+   - Angebot: ein passendes, sachliches Angebot (Beratung, Grafikservice, Produkt) mit Button. Kein Rabatt-Ton.
+   - Alle Links auf https://www.zipperwalls.de/ und vorher mit curl auf HTTP 200 prüfen.
+   - Platzhalter wie [DATUM] nicht selbst ausfüllen, in `notes` melden.
+5. Nie freigeben. Das macht Darien im Dashboard.
+
+Gestaltung: `src/newsletter-render.js` (Design „Messepraxis“ wie `newsletter/messepraxis-vorlage.html` auf main).

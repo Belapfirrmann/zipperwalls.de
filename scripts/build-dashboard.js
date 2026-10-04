@@ -24,6 +24,8 @@ function inlineSvg(src) {
     .replace('<svg ', '<svg role="img" aria-label="Zipperwalls" ');
 }
 const logo = inlineSvg(read('dashboard/assets/logo-weiss.svg'));
+// Farbiges Logo (auf Weiß) für die Newsletter-Vorschau als data-URI
+const logoFarbig = 'data:image/svg+xml;base64,' + Buffer.from(read('dashboard/assets/logo-farbig.svg')).toString('base64');
 
 const html = `<title>Zipperwalls Social Media</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,10 +58,12 @@ ${read('dashboard/style.css')}
 <script>
 const PLAN = ${json(REDAKTIONSPLAN)};
 const NL = ${json(NEWSLETTERPLAN)};
+const LOGO_FARBIG = ${json(logoFarbig)};
 const WEEKLY_TEMPLATE = ${json(WEEKLY_TEMPLATE)};
 const SETUP_TEMPLATE = ${json(SETUP_TEMPLATE)};
 const SETUP_STEPS = ${json(SETUP_STEPS)};
 ${stripModule(read('src/text.js'))}
+${stripModule(read('src/newsletter-render.js'))}
 ${read('dashboard/app.js')}
 </script>
 `;

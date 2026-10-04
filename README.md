@@ -21,6 +21,7 @@ Einrichtung: `docs/SETUP.md`. Anleitungen der Routinen: `docs/routinen/`.
 | `src/text.js` | Textregeln (Hashtags, Zeichengrenzen, Platzhalter), gemeinsam für Dashboard und Skript |
 | `src/redaktionsplan.js` | Redaktionsplan, erzeugt aus `plans/Redaktionsplan_*.xlsx` |
 | `src/newsletterplan.js` | Newsletter-Plan, erzeugt aus `plans/Newsletter-Plan_*.xlsx` |
+| `src/newsletter-render.js` | Newsletter als E-Mail-HTML im Zipperwalls-Design (Vorschau im Dashboard) |
 | `test/` | Tests (`npm test`) |
 
 ## Redaktionsplan aktualisieren
@@ -40,6 +41,8 @@ Social Media und Newsletter. Newsletter-Ablauf: Entwurf prüfen und freigeben (D
 Änderungen und Status liegen in der Artefakt-Datenbank, Collection `newsletters`, Dokument `nl-<Nr>`
 (Felder wie im Plan plus `status`, `approved_at`, `planned_at`, `sent_at`, `open_rate`, `click_rate`, `unsubscribes`).
 Status-Werte wie in der Tabelle: Entwurf, Verschoben, Freigegeben, In MailPoet eingeplant, Versendet, Gestrichen.
+In der Freigabe erscheinen nur angelegte Entwürfe, mit gestalteter Vorschau (Design „Messepraxis“, `src/newsletter-render.js`),
+Vollbild als Desktop- oder Handy-Ansicht und klickbaren Links. Wie Claude einen Entwurf anlegt: `docs/routinen/newsletter-entwuerfe.md`.
 
 Neuen Newsletter-Plan einspielen:
 
