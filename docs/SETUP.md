@@ -41,11 +41,14 @@ Heißen die Anwendungsfälle bei euch anders oder fehlt einer: Screenshot der Li
 3. Docs and tools > **OAuth Token Tools** > Token erzeugen mit den Scopes `openid profile w_member_social`.
    Der Token wird **LINKEDIN_TOKEN**. Er gilt 60 Tage. Das Ablaufdatum als **LINKEDIN_TOKEN_EXPIRES** eintragen (z. B. `2026-12-01`).
    Gepostet wird über das Profil der Person, die den Token erzeugt.
-4. **Wichtig:** Gepostet wird nur auf die Unternehmensseite. Dafür braucht es die **Community Management API**:
-   - In der LinkedIn App unter „Products“ die **Community Management API** beantragen. LinkedIn prüft von Hand
-     (Unternehmensangaben, Verifizierung der App durch einen Admin der Zipperwalls-Seite). Das kann einige Tage bis Wochen dauern.
-   - Nach der Freigabe einen neuen Token mit `openid profile w_member_social w_organization_social r_organization_social`
-     erzeugen und als `LINKEDIN_TOKEN` eintragen.
+4. **Wichtig:** Gepostet wird nur auf die Unternehmensseite. Dafür braucht es die **Community Management API**, und die muss
+   laut LinkedIn das einzige Produkt in ihrer App sein. Deshalb eine **zweite App** anlegen:
+   - linkedin.com/developers/apps > „Create app“, Name z. B. „Zipperwalls Seite“, als LinkedIn Page die Zipperwalls-Seite, Logo hochladen.
+   - Reiter „Settings“ > „Verify“: den Link an einen Admin der Seite schicken und bestätigen lassen.
+   - Reiter „Products“ > nur **Community Management API** > „Request access“, Formular ausfüllen. LinkedIn prüft von Hand
+     (einige Tage bis Wochen).
+   - Nach der Freigabe in **dieser neuen App** unter „Docs and tools“ > „OAuth Token Tools“ einen Token mit
+     `w_organization_social r_organization_social` erzeugen und als `LINKEDIN_TOKEN` eintragen (Ablaufdatum in `LINKEDIN_TOKEN_EXPIRES`).
    - `LINKEDIN_AUTHOR=urn:li:organization:<Seiten-ID>` setzen. Die Seiten-ID steht in der Adresse der Admin-Ansicht der Seite
      (`linkedin.com/company/<Seiten-ID>/admin`).
    - Bis dahin überspringt die Routine LinkedIn und postet nie auf ein persönliches Profil.

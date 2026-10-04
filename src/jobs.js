@@ -3,7 +3,7 @@
 import { composeText, validate, CHANNELS } from './text.js';
 import { publishFacebook, uploadHiddenPhoto, deletePhoto, insightsFacebook } from './publishers/facebook.js';
 import { publishInstagram, insightsInstagram } from './publishers/instagram.js';
-import { publishLinkedIn, insightsLinkedIn } from './publishers/linkedin.js';
+import { publishLinkedIn, insightsLinkedIn, linkedinVersion } from './publishers/linkedin.js';
 import { apiFetch } from './publishers/http.js';
 
 // Zugangsdaten kommen aus Umgebungsvariablen der Claude Umgebung, nie aus dem Dashboard
@@ -119,9 +119,13 @@ export async function checkConnections(env) {
   await run('instagram', async (t) => ({ label: '@' + (await apiFetch(`${g}/${t.meta.igUserId}?fields=username&access_token=${t.accessToken}`)).data.username }));
   await run('linkedin', async (t) => {
     if (!isOrgAuthor(env)) throw new Error(LINKEDIN_PAUSED);
-    const me = await apiFetch('https://api.linkedin.com/v2/userinfo', { headers: { Authorization: `Bearer ${t.accessToken}` } });
+    // Eigene App nur mit Community Management API: kein "Sign In", daher Prüfung über die Beiträge der Seite
+    const author = encodeURIComponent(env.LINKEDIN_AUTHOR);
+    await apiFetch(`https://api.linkedin.com/rest/posts?q=author&author=${author}&count=1`, {
+      headers: { Authorization: `Bearer ${t.accessToken}`, 'Linkedin-Version': linkedinVersion(env), 'X-Restli-Protocol-Version': '2.0.0', 'X-RestLi-Method': 'FINDER' },
+    });
     const exp = env.LINKEDIN_TOKEN_EXPIRES ? new Date(env.LINKEDIN_TOKEN_EXPIRES) : null;
-    return { label: t.meta.author?.startsWith('urn:li:organization:') ? 'Unternehmensseite' : me.data.name, days_left: exp ? Math.floor((exp - Date.now()) / 86400000) : null };
+    return { label: 'Unternehmensseite', days_left: exp ? Math.floor((exp - Date.now()) / 86400000) : null };
   });
   return out;
 }
