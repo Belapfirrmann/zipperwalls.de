@@ -133,7 +133,7 @@ export function renderNewsletter(n, optsIn = {}) {
   </td></tr>` : '';
 
   // Drei Produktempfehlungen (Felder p1_* bis p3_*), Bild in der Vorschau aus den Dashboard-Assets
-  const prods = [1, 2, 3].map((i) => ({ name: n[`p${i}_name`], text: n[`p${i}_text`], link: n[`p${i}_link`], img: preview ? opts.productImages?.[i - 1] : n[`p${i}_image_url`] })).filter((x) => x.name);
+  const prods = [1, 2, 3].map((i) => ({ name: n[`p${i}_name`], price: n[`p${i}_price`], text: n[`p${i}_text`], link: n[`p${i}_link`], img: preview ? opts.productImages?.[i - 1] : n[`p${i}_image_url`] })).filter((x) => x.name);
   const products = prods.length ? `
   <tr><td class="pad" style="padding:0 40px 36px;background:#FFCC20;">
     <div style="${F}padding-top:32px;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#1D1D1B;">${H(n.products_label || 'Unsere Empfehlung')}</div>
@@ -144,6 +144,7 @@ export function renderNewsletter(n, optsIn = {}) {
           <a href="${H(x.link || '#')}">${x.img ? `<img src="${H(x.img)}" alt="${H(x.name)}" height="130" class="pimg" style="width:100%;height:130px;object-fit:cover;border-radius:20px 0 0 0;">` : `<div style="${F}height:130px;background:#F5F5F5;border-radius:20px 0 0 0;font-size:12px;color:#4B4F58;text-align:center;line-height:130px;">Bild</div>`}</a>
         </td></tr><tr><td style="${F}padding:14px 14px 16px;">
           <div style="font-size:16px;line-height:1.15;font-weight:900;text-transform:uppercase;color:#1D1D1B;">${H(x.name)}</div>
+          ${x.price ? `<div style="margin-top:6px;font-size:15px;font-weight:800;color:#1D1D1B;">${H(x.price)}</div>` : ''}
           <p style="margin:6px 0 10px;font-size:14px;line-height:1.45;color:#4B4F58;">${H(x.text || '')}</p>
           <a href="${H(x.link || '#')}" style="font-size:14px;font-weight:800;color:#1D1D1B;">Ansehen ›</a>
         </td></tr></table>

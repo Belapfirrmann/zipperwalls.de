@@ -397,7 +397,7 @@ const NL_SECTIONS = [
   ['Angebot', [['offer_label', 'Angebot Kennzeile'], ['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
   ['Zusatzblock', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
   ['Produktempfehlungen (gelber Block)', [['products_label', 'Kennzeile'], ['products_title', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short'],
-    ...[1, 2, 3].flatMap((i) => [[`p${i}_name`, `Produkt ${i}: Name`], [`p${i}_text`, `Produkt ${i}: Kurztext`, 0, 'short'], [`p${i}_link`, `Produkt ${i}: Link`], [`p${i}_image_url`, `Produkt ${i}: Bild-Adresse (zipperwalls.de)`]])]],
+    ...[1, 2, 3].flatMap((i) => [[`p${i}_name`, `Produkt ${i}: Name`], [`p${i}_price`, `Produkt ${i}: Preis (z. B. ab 169,60 € netto)`], [`p${i}_text`, `Produkt ${i}: Kurztext`, 0, 'short'], [`p${i}_link`, `Produkt ${i}: Link`], [`p${i}_image_url`, `Produkt ${i}: Bild-Adresse (zipperwalls.de)`]])]],
 ];
 const NL_FIELDS = NL_SECTIONS.flatMap(([, fields]) => fields);
 const NL_KPI = [['open_rate', 'Öffnungsrate %'], ['click_rate', 'Klickrate %'], ['unsubscribes', 'Abmeldungen']];
