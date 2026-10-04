@@ -35,6 +35,12 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
    - **Texte bei Tipp-Posts: jeden Punkt im Text ausführen** (nummerierte Liste, je Punkt ein bis zwei Sätze Erklärung), nicht nur aufzählen.
      Wenn es im Ratgeber auf zipperwalls.de/wissen einen passenden Beitrag gibt, am Ende darauf hinweisen (bei Instagram ohne Link,
      „mehr im Ratgeber auf zipperwalls.de“). Fachlich nichts erfinden, nur Fakten aus dem Plan, dem Shop oder dem Ratgeber.
+   - **Newsletter-Hinweis bei gekoppelten Posts** (Vorgabe Bela und Darien, 04.10.2026): In `src/newsletterplan.js` nennt jede
+     Ausgabe im Feld `social` den gekoppelten Post (z. B. „Post 02: …“ = Plan-Nr. 2; nur die direkt genannte Nummer zählt,
+     nicht ein „Zusatzblock zu Post …“). Ist der Post gekoppelt, am Ende aller drei Texte ergänzen:
+     „Noch mehr zu diesem Thema gibt es in unserem Newsletter. Anmelden können Sie sich auf zipperwalls.de.“
+     Bei Facebook und LinkedIn darf statt „auf zipperwalls.de“ der direkte Link zur Anmeldeseite stehen, aber nur wenn du sie auf
+     www.zipperwalls.de gefunden und per curl (HTTP 200) geprüft hast. In `notes` vermerken: „Gekoppelt mit Newsletter Nr. X (Datum)“.
    Bilder als Assets ins Artefakt laden (Artifact Tool, `url` wie oben, `asset: true`, `file_path`). IDs merken.
 4. Dokument `posts/plan-<nr>` anlegen (`set`, ohne if_version):
    ```json

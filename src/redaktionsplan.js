@@ -26,7 +26,7 @@ export const REDAKTIONSPLAN = {
   "pillars": [
     {
       "name": "Ratgeber",
-      "count": 11
+      "count": 10
     },
     {
       "name": "Produkte & Anwendung",
@@ -34,6 +34,10 @@ export const REDAKTIONSPLAN = {
     },
     {
       "name": "Über uns",
+      "count": 2
+    },
+    {
+      "name": "Hinter den Kulissen",
       "count": 2
     },
     {
@@ -47,10 +51,6 @@ export const REDAKTIONSPLAN = {
     {
       "name": "Saison",
       "count": 2
-    },
-    {
-      "name": "Hinter den Kulissen",
-      "count": 1
     }
   ],
   "entries": [
@@ -137,22 +137,22 @@ export const REDAKTIONSPLAN = {
       "kw": 42,
       "date": "2026-10-13",
       "day": "Di",
-      "pillar": "Ratgeber",
-      "topic": "Druckdaten-Check: fünf Punkte vor dem Upload",
-      "format": "Karussell (7 Slides: Titel, 5 Punkte, Abschluss)",
-      "headline": "DRUCKDATEN? ERST PRÜFEN, DANN HOCHLADEN.",
-      "instagram": "Druckdaten-Check: fünf Punkte vor dem Upload.\nDamit Ihr Motiv auf dem Stoff so wirkt wie geplant, lohnt sich ein kurzer Blick auf diese Punkte:\n\n1. Format passend zur Druckvorlage\nLegen Sie Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. So stimmen Maße und Beschnitt.\n\n2. Bildauflösung mindestens 120 dpi\nGemessen bei 100 % Skalierung, also in Endgröße. Darunter wirken Fotos auf großen Flächen schnell unscharf.\n\n3. Schriften in Pfade umwandeln\nSo wird jede Schrift genau so gedruckt, wie Sie sie gestaltet haben, auch wenn sie uns nicht vorliegt.\n\n4. Farbraum CMYK\nRGB-Daten werden für den Druck automatisch umgewandelt. Dabei können sich Farben leicht verschieben. Mit CMYK-Daten haben Sie das Ergebnis besser im Griff.\n\n5. Überdrucken deaktivieren\nIst Überdrucken aktiv, können Elemente im Druck verschwinden oder Farben sich ungewollt mischen.\n\nKeine Zeit für die Datenaufbereitung? Unser Grafikservice passt vorhandene Dateien an die Druckvorlage an.\nAlle Druckinformationen finden Sie auf zipperwalls.de",
-      "facebook": "Druckdaten-Check: fünf Punkte vor dem Upload.\nDamit Ihr Motiv auf dem Stoff so wirkt wie geplant, lohnt sich vor dem Hochladen ein kurzer Blick auf diese Punkte:\n\n1. Format passend zur Druckvorlage\nLegen Sie Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. So stimmen Maße und Beschnitt.\n\n2. Bildauflösung mindestens 120 dpi\nGemessen bei 100 % Skalierung, also in Endgröße. Darunter wirken Fotos auf großen Flächen schnell unscharf.\n\n3. Schriften in Pfade umwandeln\nSo wird jede Schrift genau so gedruckt, wie Sie sie gestaltet haben, auch wenn sie uns nicht vorliegt.\n\n4. Farbraum CMYK\nRGB-Daten werden für den Druck automatisch umgewandelt. Dabei können sich Farben leicht verschieben. Mit CMYK-Daten haben Sie das Ergebnis besser im Griff.\n\n5. Überdrucken deaktivieren\nIst Überdrucken aktiv, können Elemente im Druck verschwinden oder Farben sich ungewollt mischen.\n\nKeine Zeit für die Datenaufbereitung? Unser Grafikservice passt vorhandene Dateien an die Druckvorlage an.\nAlle Druckinformationen: https://www.zipperwalls.de/kundenservice/druckinformationen/",
-      "linkedin": "Der häufigste Engpass vor der Messe sind nicht die Systeme, sondern die Druckdaten.\n\nFünf Punkte, die wir vor jedem Upload empfehlen:\n\n1. Format passend zur Druckvorlage\nLegen Sie Ihr Motiv direkt in der Druckvorlage des jeweiligen Produkts an. So stimmen Maße und Beschnitt.\n\n2. Bildauflösung mindestens 120 dpi\nGemessen bei 100 % Skalierung, also in Endgröße. Darunter wirken Fotos auf großen Flächen schnell unscharf.\n\n3. Schriften in Pfade umwandeln\nSo wird jede Schrift genau so gedruckt, wie Sie sie gestaltet haben, auch wenn sie uns nicht vorliegt.\n\n4. Farbraum CMYK\nRGB-Daten werden für den Druck automatisch umgewandelt. Dabei können sich Farben leicht verschieben. Mit CMYK-Daten haben Sie das Ergebnis besser im Griff.\n\n5. Überdrucken deaktivieren\nIst Überdrucken aktiv, können Elemente im Druck verschwinden oder Farben sich ungewollt mischen.\n\nWer diese fünf Punkte prüft, spart Korrekturschleifen und Zeit vor dem Messetermin. Alle Druckinformationen: https://www.zipperwalls.de/kundenservice/druckinformationen/",
+      "pillar": "Hinter den Kulissen",
+      "topic": "Hinter den Kulissen: So läuft Ihre Bestellung ab",
+      "format": "Karussell (6 Slides: Titel, 4 Schritte, Abschluss)",
+      "headline": "VON DER IDEE ZUR MESSEWAND.",
+      "instagram": "So läuft Ihre Bestellung bei Zipperwalls ab.\nVon der ersten Idee bis zur fertigen Messewand in vier Schritten:\n\n1. Produkt konfigurieren\nIm Shop wählen Sie Größe, ein- oder beidseitigen Druck und die Transportlösung, zum Beispiel Tasche oder Trolley. Bei Fragen zu Größe oder Ausstattung beraten wir Sie persönlich, Mo bis Fr von 8 bis 17 Uhr.\n\n2. Druckdaten anlegen\nSie legen Ihr Motiv in der Druckvorlage des jeweiligen Produkts an. Keine eigenen Daten? Unser Grafikservice gestaltet Ihr Layout oder passt vorhandene Dateien an.\n\n3. Daten prüfen\nVor der Produktion werden Ihre Druckdaten geprüft, zum Beispiel auf Auflösung, Schriften und Farbraum. So fallen Fehler auf, bevor gedruckt wird.\n\n4. Produktion und Versand\nIhr Stoffdruck entsteht im Sublimationsverfahren, B1-zertifiziert und bei 30 °C waschbar. Danach geht alles fertig verpackt auf den Weg zu Ihnen.\n\nFragen zu Ihrem Projekt? Wir sind persönlich für Sie da.",
+      "facebook": "Von der Idee zur fertigen Messewand: So läuft Ihre Bestellung bei Zipperwalls ab.\n\n1. Produkt konfigurieren\nIm Shop wählen Sie Größe, ein- oder beidseitigen Druck und die Transportlösung, zum Beispiel Tasche oder Trolley. Bei Fragen zu Größe oder Ausstattung beraten wir Sie persönlich, Mo bis Fr von 8 bis 17 Uhr.\n\n2. Druckdaten anlegen\nSie legen Ihr Motiv in der Druckvorlage des jeweiligen Produkts an. Keine eigenen Daten? Unser Grafikservice gestaltet Ihr Layout oder passt vorhandene Dateien an.\n\n3. Daten prüfen\nVor der Produktion werden Ihre Druckdaten geprüft, zum Beispiel auf Auflösung, Schriften und Farbraum. So fallen Fehler auf, bevor gedruckt wird.\n\n4. Produktion und Versand\nIhr Stoffdruck entsteht im Sublimationsverfahren, B1-zertifiziert und bei 30 °C waschbar. Danach geht alles fertig verpackt auf den Weg zu Ihnen.\n\nFragen zu Ihrem Projekt? Sie erreichen uns Mo bis Fr von 8 bis 17 Uhr unter +49 7276 4049970.",
+      "linkedin": "Ein Messeauftritt beginnt lange vor dem Aufbau. So läuft eine Bestellung bei Zipperwalls ab:\n\n1. Produkt konfigurieren\nIm Shop wählen Sie Größe, ein- oder beidseitigen Druck und die Transportlösung, zum Beispiel Tasche oder Trolley. Bei Fragen zu Größe oder Ausstattung beraten wir Sie persönlich, Mo bis Fr von 8 bis 17 Uhr.\n\n2. Druckdaten anlegen\nSie legen Ihr Motiv in der Druckvorlage des jeweiligen Produkts an. Keine eigenen Daten? Unser Grafikservice gestaltet Ihr Layout oder passt vorhandene Dateien an.\n\n3. Daten prüfen\nVor der Produktion werden Ihre Druckdaten geprüft, zum Beispiel auf Auflösung, Schriften und Farbraum. So fallen Fehler auf, bevor gedruckt wird.\n\n4. Produktion und Versand\nIhr Stoffdruck entsteht im Sublimationsverfahren, B1-zertifiziert und bei 30 °C waschbar. Danach geht alles fertig verpackt auf den Weg zu Ihnen.\n\nSo wissen Sie bei jedem Schritt, woran Sie sind. Fragen zu Ihrem Projekt beantworten wir gern persönlich.",
       "hashtags": [
-        "#druckdaten",
-        "#textildruck",
+        "#hinterdenkulissen",
         "#messewand",
-        "#messetipp",
+        "#textildruck",
+        "#messestand",
         "#zipperwalls"
       ],
       "files": [],
-      "note": "Neu eingefügt am 04.10.2026 für den freien Termin am 13.10. Fakten aus den Zipperwalls-Druckvorgaben. Link zu den Druckinformationen vor Veröffentlichung prüfen.",
+      "note": "Neu eingefügt am 04.10.2026 für den freien Termin am 13.10. (ersetzt den Druckdaten-Check, der sich mit Newsletter Nr. 4 doppelte). Vor Veröffentlichung prüfen: Ablauf des Datenchecks und Versand so korrekt beschrieben?",
       "status": "Entwurf"
     },
     {
