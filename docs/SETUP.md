@@ -58,9 +58,9 @@ Drei geplante Claude Läufe, eingerichtet von Claude nach eurer Bestätigung:
 
 | Routine | Wann | Anleitung |
 |---|---|---|
-| Social Posting | werktags stündlich 7 bis 19 Uhr | `docs/routinen/posten.md` |
-| Social Entwürfe | Mo und Mi 7:30 Uhr | `docs/routinen/entwuerfe.md` |
-| Social Zahlen | täglich 6:30 Uhr | `docs/routinen/zahlen.md` |
+| Social Posting | Mo bis Fr stündlich, jeweils 2 Minuten nach der vollen Stunde, 7 bis 19 Uhr | `docs/routinen/posten.md` |
+| Social Entwürfe | Mo und Mi 7:22 Uhr | `docs/routinen/entwuerfe.md` |
+| Social Zahlen | täglich 6:22 Uhr | `docs/routinen/zahlen.md` |
 
 Alle 60 Tage: neuen LinkedIn Token erzeugen und `LINKEDIN_TOKEN` sowie `LINKEDIN_TOKEN_EXPIRES` ersetzen.
 Das Dashboard warnt 10 Tage vorher.
