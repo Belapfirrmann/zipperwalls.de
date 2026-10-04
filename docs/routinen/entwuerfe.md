@@ -9,9 +9,18 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
 2. Nächsten Eintrag bestimmen: den frühesten Eintrag mit Datum in den nächsten 3 Tagen, zu dem es in Collection `posts`
    noch kein Dokument `plan-<nr>` gibt (ArtifactData `get`). Gibt es keinen: Lauf beenden.
 3. Grafiken erstellen nach dem Skill `brandkit` (Social Media Formate): Instagram und Facebook 1080 x 1350 px,
-   LinkedIn 1200 x 1200 px, Bildtext = `headline` aus dem Plan, Logo als Originaldatei. Als JPEG speichern.
+   LinkedIn 1200 x 1200 px, Logo als Originaldatei in der Farbvariante passend zum Hintergrund. Als JPEG speichern.
+   Verbindliche Regeln von Bela und Darien:
+   - **Jede Grafik enthält mindestens ein echtes Foto** (Produkt, Stand, Aufbau, Detail). Reine Text-Grafiken sind nicht erlaubt.
+     Kein passendes Foto verfügbar: keine Grafik bauen, `image` und `image_linkedin` auf null lassen und in `notes`
+     „FOTO fehlt: <welches Motiv gebraucht wird>“ eintragen. Nie ein Foto erfinden oder ein Fremdlogo zeigen.
+   - **Heller Hintergrund ist der Standard** (Weiß `#FFFFFF` oder `#F5F5F5`, Text `#1D1D1B`, farbiges Logo auf Weiß,
+     schwarzes Logo auf Hellgrau). Das dunkle Footer-Grün `#1F2725` nur als Ausnahme: höchstens jeder vierte Post,
+     nie zwei Posts hintereinander.
+   - **Keine Herkunftsangaben**: nie Ortsnamen (insbesondere nie „Herxheim“), nie „aus Deutschland“, „Made in Germany“
+     oder Ähnliches, weder im Bild noch im Text. Steht so etwas im Plan, nicht übernehmen, sondern in `notes` melden.
+   - Bildtext = `headline` aus dem Plan, Barlow Black, Versalien, ein gelbes Signalelement.
    Bilder als Assets ins Artefakt laden (Artifact Tool, `url` wie oben, `asset: true`, `file_path`). IDs merken.
-   Kann keine Grafik erstellt werden, ohne Bild weitermachen und das in `notes` vermerken.
 4. Dokument `posts/plan-<nr>` anlegen (`set`, ohne if_version):
    ```json
    {

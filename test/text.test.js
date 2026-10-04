@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeText, validate, escapeLinkedIn, normalizeHashtags, isoWeek, findPlaceholder, berlinToUtc } from '../src/text.js';
+import { composeText, validate, escapeLinkedIn, normalizeHashtags, isoWeek, findPlaceholder, berlinToUtc, findForbidden } from '../src/text.js';
 import { PLAN } from '../src/plan.js';
 
 test('Hashtags werden vereinheitlicht und dedupliziert', () => {
@@ -48,4 +48,13 @@ test('Redaktionsplan Q4 2026 ist vollstaendig eingelesen', () => {
   // Platzhalter stehen laut Legende in Post 20 und 23
   const withPh = PLAN.entries.filter((e) => findPlaceholder(e.facebook + e.instagram + e.linkedin)).map((e) => e.nr);
   assert.deepEqual(withPh, [20, 23]);
+});
+
+test('Herkunftsangaben werden gesperrt', () => {
+  assert.equal(findForbidden('Messewände aus Herxheim'), 'Herxheim');
+  assert.match(validate('facebook', 'Qualität aus Deutschland', false), /Herkunft/);
+  assert.match(validate('linkedin', 'Made in Germany', false), /Herkunft/);
+  assert.equal(findForbidden('Seit 2019 beliefern wir Industrie und Handel.'), null);
+  const all = PLAN.entries.map((e) => [e.headline, e.instagram, e.facebook, e.linkedin].join(' ')).join(' ');
+  assert.equal(findForbidden(all), null, 'Redaktionsplan frei von Herkunftsangaben');
 });

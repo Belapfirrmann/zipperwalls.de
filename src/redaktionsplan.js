@@ -62,9 +62,9 @@ export const REDAKTIONSPLAN = {
       "pillar": "Über uns",
       "topic": "Start: Zipperwalls stellt sich vor",
       "format": "Bildpost 4:5",
-      "headline": "MESSEWÄNDE AUS HERXHEIM",
-      "instagram": "Messewände aus Herxheim.\nSeit 2019 statten wir B2B-Aussteller mit Messewänden, Messeständen und Messetheken aus. Inklusive Druck, werkzeuglos aufgebaut und mit persönlicher Beratung.\nAb sofort zeigen wir hier Produkte, Praxistipps und Einblicke für Ihren nächsten Messeauftritt.",
-      "facebook": "Zipperwalls ist zurück auf Facebook.\nSeit 2019 statten wir Unternehmen, Agenturen, Behörden und Vereine mit Messewänden, Messeständen und Messetheken aus, jeweils inklusive Druck. Unsere Systeme bauen Sie ohne Werkzeug auf, und bei Fragen erreichen Sie uns persönlich.\nAb jetzt finden Sie hier regelmäßig Produktneuheiten, Praxistipps für Ihre Messeplanung und Einblicke aus Herxheim. Wir freuen uns auf den Austausch.",
+      "headline": "JETZT AUCH HIER.",
+      "instagram": "Zipperwalls ist jetzt auf Instagram.\nSeit 2019 statten wir B2B-Aussteller mit Messewänden, Messeständen und Messetheken aus. Inklusive Druck, werkzeuglos aufgebaut und mit persönlicher Beratung.\nAb sofort zeigen wir hier Produkte, Praxistipps und Einblicke für Ihren nächsten Messeauftritt.",
+      "facebook": "Zipperwalls ist zurück auf Facebook.\nSeit 2019 statten wir Unternehmen, Agenturen, Behörden und Vereine mit Messewänden, Messeständen und Messetheken aus, jeweils inklusive Druck. Unsere Systeme bauen Sie ohne Werkzeug auf, und bei Fragen erreichen Sie uns persönlich.\nAb jetzt finden Sie hier regelmäßig Produktneuheiten, Praxistipps für Ihre Messeplanung und Einblicke hinter die Kulissen. Wir freuen uns auf den Austausch.",
       "linkedin": "Zipperwalls: Messewände, Messestände und Messeausstattung für B2B-Aussteller.\n\nSeit 2019 beliefern wir Industrie, Handel, Handwerk, Agenturen, Behörden und Vereine mit modularen Messesystemen inklusive Druck. Über 950 Produkte, werkzeugloser Aufbau und eine persönliche Beratung, die unsere Kunden bei Trusted Shops mit 4,77 von 5 bewerten.\n\nAuf dieser Seite teilen wir ab sofort regelmäßig Wissen rund um Messeplanung, Standgestaltung und Messetechnik. Folgen Sie uns, wenn Ihr nächster Messeauftritt schon in Planung ist.",
       "hashtags": [
         "#zipperwalls",

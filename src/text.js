@@ -30,6 +30,8 @@ export function validate(channel, text, hasImage) {
   if (!text) return 'Kein Text vorhanden.';
   const placeholder = findPlaceholder(text);
   if (placeholder) return `Platzhalter ${placeholder} im Text noch ersetzen.`;
+  const forbidden = findForbidden(text);
+  if (forbidden) return `„${forbidden}“ darf nicht vorkommen: keine Angaben zur Herkunft der Produkte.`;
   if (text.length > LIMITS[channel]) return `Text zu lang (${text.length} von ${LIMITS[channel]} Zeichen).`;
   if (channel === 'instagram') {
     if (!hasImage) return 'Instagram braucht ein Bild.';
@@ -87,4 +89,14 @@ export function berlinToUtc(date, time = '09:00') {
     return Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute) - ts;
   };
   return new Date(guess - offset(guess - offset(guess))).toISOString();
+}
+
+// Keine Herkunftsangaben: Ortsnamen und "Made in" Aussagen sind tabu (Vorgabe Bela und Darien)
+const FORBIDDEN = [/herxheim/i, /aus deutschland/i, /in deutschland (hergestellt|produziert|gefertigt|gedruckt)/i, /made in germany/i, /deutsche[nr]? (produktion|fertigung|qualität)/i, /hergestellt in/i, /produziert in/i];
+export function findForbidden(text) {
+  for (const re of FORBIDDEN) {
+    const m = re.exec(text || '');
+    if (m) return m[0];
+  }
+  return null;
 }
