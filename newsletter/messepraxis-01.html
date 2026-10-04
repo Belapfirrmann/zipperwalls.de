@@ -9,9 +9,9 @@
   Betreff:   Frühjahrsmesse 2027: Was Sie jetzt im Herbst erledigen sollten
   Preheader: Der Zeitplan rückwärts gerechnet. Dazu: warum Licht Besucher anzieht.
 
-  Hinweise für MailerLite:
-  - {$name}, {$url}, {$unsubscribe}, {$preferences} sind MailerLite-Platzhalter. Beim Einfügen prüfen.
-  - Logo vor dem Versand als PNG (Breite 440 px, Anzeige 220 px) in MailerLite hochladen und src ersetzen.
+  Hinweise für MailPoet:
+  - [subscriber:firstname | default:und willkommen], [link:newsletter_view_in_browser_action], [link:subscription_unsubscribe_url], [link:subscription_manage_url] sind MailPoet-Shortcodes. Beim Einfügen prüfen.
+  - Logo vor dem Versand als PNG (Breite 440 px, Anzeige 220 px) in die WordPress-Mediathek laden und src ersetzen.
     Viele Mailprogramme zeigen eingebettete SVG nicht an.
   - Bildplatzhalter (graue Kästen) durch echte Fotos ersetzen, Breite 1080 px.
   - Alle Links tragen UTM-Parameter, damit Anfragen aus dem Newsletter in Analytics sichtbar sind.
@@ -44,7 +44,7 @@
 
   <!-- Webversion -->
   <tr><td class="pad f" style="padding:12px 40px;background:#F2F5F7;font-size:12px;color:#4B4F58;text-align:right;">
-    Wird die Mail nicht richtig angezeigt? <a href="{$url}" style="color:#4B4F58;">Im Browser lesen</a>
+    Wird die Mail nicht richtig angezeigt? <a href="[link:newsletter_view_in_browser_action]" style="color:#4B4F58;">Im Browser lesen</a>
   </td></tr>
 
   <!-- Kopf: Logo auf Weiß = farbiges Logo -->
@@ -60,7 +60,7 @@
 
   <!-- Intro -->
   <tr><td class="pad f" style="padding:28px 40px 8px;font-size:17px;line-height:1.55;color:#1D1D1B;">
-    <p style="margin:0 0 14px;">Guten Tag {$name},</p>
+    <p style="margin:0 0 14px;">Guten Tag [subscriber:firstname | default:und willkommen],</p>
     <p style="margin:0 0 14px;">willkommen zur ersten Ausgabe der Messepraxis. Auf Instagram und LinkedIn zeigen wir unsere Messe-Tipps kurz und kompakt. Hier finden Sie sie alle zwei Wochen ausführlich: mit Zeitplänen, Checklisten und Beispielen aus unseren Projekten.</p>
     <p style="margin:0;">Heute geht es um die Frühjahrsmessen 2027. Die entscheiden sich nämlich jetzt.</p>
   </td></tr>
@@ -184,7 +184,7 @@
     <p style="margin:0 0 8px;color:#FFFFFF;font-weight:700;">Zipperwalls</p>
     <p style="margin:0 0 8px;">[Firmierung laut Impressum] · Gewerbepark West 13 · 76863 Herxheim<br>+49 7276 4049970 · info@zipperwalls.de</p>
     <p style="margin:0 0 8px;">Sie erhalten diese Mail, weil Sie sich für die Messepraxis angemeldet haben.</p>
-    <p style="margin:0;"><a href="{$unsubscribe}" style="color:#FFFFFF;">Abmelden</a> · <a href="{$preferences}" style="color:#FFFFFF;">Einstellungen</a> · <a href="https://www.zipperwalls.de/impressum/" style="color:#FFFFFF;">Impressum</a> · <a href="https://www.zipperwalls.de/datenschutz/" style="color:#FFFFFF;">Datenschutz</a></p>
+    <p style="margin:0;"><a href="[link:subscription_unsubscribe_url]" style="color:#FFFFFF;">Abmelden</a> · <a href="[link:subscription_manage_url]" style="color:#FFFFFF;">Einstellungen</a> · <a href="https://www.zipperwalls.de/impressum/" style="color:#FFFFFF;">Impressum</a> · <a href="https://www.zipperwalls.de/datenschutz/" style="color:#FFFFFF;">Datenschutz</a></p>
   </td></tr>
 
 </table>
