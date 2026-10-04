@@ -170,3 +170,9 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 .setup[open] summary::after { content: '\2212'; }
 .setup ol { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 8px; max-width: 75ch; overflow-wrap: anywhere; }
 [hidden] { display: none !important; }
+.improve { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--linie); }
+.improve .label { display: block; margin-bottom: 6px; }
+.improve-row { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.improve-row textarea { min-height: 64px; flex: 1 1 260px; }
+.improve-row .btn { align-self: flex-end; }
+.improve p { margin: 6px 0 0; }

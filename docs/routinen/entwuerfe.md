@@ -14,6 +14,9 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
    - **Jede Grafik enthält mindestens ein echtes Foto** (Produkt, Stand, Aufbau, Detail). Reine Text-Grafiken sind nicht erlaubt.
      Kein passendes Foto verfügbar: keine Grafik bauen, `image` und `image_linkedin` auf null lassen und in `notes`
      „FOTO fehlt: <welches Motiv gebraucht wird>“ eintragen. Nie ein Foto erfinden oder ein Fremdlogo zeigen.
+   - **Fotoquelle:** zuerst Bilder, die Bela und Darien im Dashboard hochgeladen haben, sonst Produkt- und Standbilder aus dem
+     Shop zipperwalls.de (passend zum Thema des Posts, z. B. Messestand-Sets mit mehreren Wänden). Keine Bilder mit
+     sichtbarem Lieferanten- oder Fremdlogo. Keine KI-Bilder ohne ausdrücklichen Hinweis in `notes`.
    - **Heller Hintergrund ist der Standard** (Weiß `#FFFFFF` oder `#F5F5F5`, Text `#1D1D1B`, farbiges Logo auf Weiß,
      schwarzes Logo auf Hellgrau). Das dunkle Footer-Grün `#1F2725` nur als Ausnahme: höchstens jeder vierte Post,
      nie zwei Posts hintereinander.

@@ -20,7 +20,7 @@ const STATUS = {
 const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
-const S = { db: null, assets: null, posts: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, posts: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -246,6 +246,15 @@ function postCard(p, connected) {
         ${p.status === 'draft' ? `<button class="btn ghost" data-act="reject">Ablehnen</button>` : ''}
       </div>` : ''}
       ${['approved', 'scheduled'].includes(p.status) ? `<div class="row" style="margin-top:16px"><button class="btn ghost" data-act="withdraw">Zurückziehen</button></div>` : ''}
+      ${p.status !== 'published' ? `
+      <div class="improve">
+        <label class="label" for="imp-${esc(p.id)}">Mit Claude verbessern</label>
+        <div class="improve-row">
+          <textarea id="imp-${esc(p.id)}" data-imp rows="2" maxlength="3000" placeholder="Was soll anders werden? Zum Beispiel: Text kürzer, anderes Foto, Bild heller, LinkedIn sachlicher …"></textarea>
+          <button class="btn dark" data-act="improve">An Claude senden</button>
+        </div>
+        <p class="muted small" data-imp-hint>Geht direkt an Claude im Chat. Claude passt den Entwurf an und antwortet als Kommentar.</p>
+      </div>` : ''}
     </div>
   </article>`;
 }
@@ -292,6 +301,39 @@ function bindPost(el, p) {
 
   el.querySelectorAll('[data-act]').forEach((btn) => {
     const act = btn.dataset.act;
+    if (act === 'improve') {
+      btn.onclick = async () => {
+        const box = el.querySelector('[data-imp]');
+        const hint = el.querySelector('[data-imp-hint]');
+        const wish = box.value.trim();
+        if (!wish) return toast('Bitte erst beschreiben, was Claude ändern soll.');
+        if (!S.comments) return toast('Senden an Claude ist in dieser Ansicht nicht verfügbar. Bitte das Dashboard auf claude.ai öffnen.');
+        btn.disabled = true;
+        try {
+          const state = await S.comments.canSendToClaude();
+          if (state !== 'available') {
+            const why = {
+              no_session: 'Gerade hört keine Claude-Sitzung zu. Öffnen Sie die Claude-Sitzung zum Dashboard und versuchen Sie es erneut.',
+              writers_only: 'Senden an Claude ist nur für Bearbeiter dieses Dashboards möglich.',
+              off: 'Senden an Claude ist hier ausgeschaltet.',
+            };
+            throw new Error(why[state] || 'Senden an Claude ist gerade nicht möglich.');
+          }
+          const anchor = await S.comments.anchorFor(el);
+          const text = `Wunsch aus dem Dashboard zu Post „${p.title}“ (ID ${p.id}, Status ${p.status}):\n${wish}`.slice(0, 3900);
+          await S.comments.sendToClaude({ anchor, text });
+          box.value = '';
+          S.dirty.delete(p.id);
+          hint.textContent = 'Gesendet. Claude kümmert sich darum, die Änderung erscheint hier automatisch.';
+          toast('An Claude gesendet.');
+        } catch (e) {
+          const msg = { consent_required: 'Bitte erlauben Sie dem Dashboard einmalig, Kommentare zu schreiben, und senden Sie erneut.', forbidden: 'Kommentieren aus dem Dashboard ist hier ausgeschaltet.', rate_limited: 'Kurz warten, dann erneut senden.', claude_unavailable: 'Claude ist gerade nicht erreichbar. Ihr Text ist noch da, bitte später erneut senden.' }[e?.code];
+          toast(msg || e?.message || 'Senden fehlgeschlagen.');
+        }
+        btn.disabled = false;
+      };
+      return;
+    }
     if (act === 'image') {
       btn.onchange = async () => {
         const file = btn.files[0];
@@ -511,6 +553,7 @@ async function start() {
   }
   S.db = db;
   S.assets = await claude.use('assets').catch(() => null);
+  S.comments = await claude.use('comments').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
   let first = 4;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
