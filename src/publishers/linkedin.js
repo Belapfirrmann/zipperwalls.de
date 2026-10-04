@@ -1,9 +1,17 @@
 import { apiFetch } from './http.js';
 import { escapeLinkedIn } from '../text.js';
 
+// LinkedIn schaltet API-Versionen nach etwa 12 Monaten ab. Ohne feste Vorgabe nehmen wir den Monat
+// vor drei Monaten (YYYYMM): sicher veröffentlicht und noch lange aktiv.
+export function linkedinVersion(env = {}, now = new Date()) {
+  if (env.LINKEDIN_VERSION) return env.LINKEDIN_VERSION;
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1));
+  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
 const headers = (env, token, extra = {}) => ({
   Authorization: `Bearer ${token}`,
-  'Linkedin-Version': env.LINKEDIN_VERSION || '202506',
+  'Linkedin-Version': linkedinVersion(env),
   'X-Restli-Protocol-Version': '2.0.0',
   ...extra,
 });

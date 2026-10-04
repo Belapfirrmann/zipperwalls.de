@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { publishFacebook } from '../src/publishers/facebook.js';
 import { publishInstagram } from '../src/publishers/instagram.js';
-import { publishLinkedIn } from '../src/publishers/linkedin.js';
+import { publishLinkedIn, linkedinVersion } from '../src/publishers/linkedin.js';
 
 const env = { GRAPH_VERSION: 'v22.0', LINKEDIN_VERSION: '202506' };
 
@@ -72,4 +72,10 @@ test('LinkedIn: Bild hochladen und Post mit Media ID erstellen', async () => {
   assert.equal(post.content.media.id, 'urn:li:image:42');
   assert.equal(calls[2].opts.headers['Linkedin-Version'], '202506');
   assert.equal(r.url, 'https://www.linkedin.com/feed/update/urn:li:share:7');
+});
+
+test('LinkedIn-Version: drei Monate zurück, feste Vorgabe hat Vorrang', () => {
+  assert.equal(linkedinVersion({}, new Date('2026-10-04T12:00:00Z')), '202607');
+  assert.equal(linkedinVersion({}, new Date('2027-02-15T12:00:00Z')), '202611');
+  assert.equal(linkedinVersion({ LINKEDIN_VERSION: '202608' }), '202608');
 });
