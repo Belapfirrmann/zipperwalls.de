@@ -9,7 +9,9 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
 2. Nächsten Eintrag bestimmen: den frühesten Eintrag mit Datum in den nächsten 3 Tagen, zu dem es in Collection `posts`
    noch kein Dokument `plan-<nr>` gibt (ArtifactData `get`). Gibt es keinen: Lauf beenden.
 3. Grafiken erstellen nach dem Skill `brandkit` (Social Media Formate): Instagram und Facebook 1080 x 1350 px,
-   LinkedIn 1200 x 1200 px, Logo als Originaldatei in der Farbvariante passend zum Hintergrund. Als JPEG speichern.
+   LinkedIn 1200 x 1200 px. Als JPEG speichern.
+   - **Kein Zipperwalls-Logo in der Grafik.** Das Logo steht schon als Profilbild über jedem Post, im Bild würde es sich doppeln
+     (Vorgabe Bela und Darien, 04.10.2026). Das gilt vor allen Brandkit-Regeln zur Logoplatzierung.
    Verbindliche Regeln von Bela und Darien:
    - **Jede Grafik enthält mindestens ein echtes Foto** (Produkt, Stand, Aufbau, Detail). Reine Text-Grafiken sind nicht erlaubt.
      Kein passendes Foto verfügbar: keine Grafik bauen, `image` und `image_linkedin` auf null lassen und in `notes`

@@ -23,6 +23,10 @@ async function linkedinAuthor(token) {
   return `urn:li:person:${me.data.sub}`;
 }
 
+// LinkedIn nur als Unternehmensseite (Vorgabe Bela und Darien): ohne Organisations-Absender wird nicht gepostet
+export const isOrgAuthor = (env) => String(env.LINKEDIN_AUTHOR || '').startsWith('urn:li:organization:');
+export const LINKEDIN_PAUSED = 'Pausiert: LinkedIn postet nur als Unternehmensseite. Dafür fehlt noch die Freigabe der Community Management API (LINKEDIN_AUTHOR).';
+
 const imageFor = (images, channel) => (channel === 'linkedin' && images?.linkedin) || images?.main || null;
 
 /**
@@ -39,6 +43,10 @@ export async function publishJob(env, job, { dryRun = false } = {}) {
 
   for (const channel of channels) {
     if (previous[channel]?.status === 'ok') continue;
+    if (channel === 'linkedin' && !isOrgAuthor(env)) {
+      results[channel] = { status: 'skipped', error: LINKEDIN_PAUSED, at };
+      continue;
+    }
     const text = composeText(post, channel);
     const img = imageFor(job.images, channel);
     try {
@@ -68,8 +76,9 @@ export async function publishJob(env, job, { dryRun = false } = {}) {
   }
 
   const merged = { ...previous, ...results };
-  const okCount = channels.filter((c) => merged[c]?.status === 'ok').length;
-  const status = dryRun ? 'dry-run' : okCount === channels.length ? 'published' : okCount > 0 ? 'partial' : 'failed';
+  const active = channels.filter((c) => merged[c]?.status !== 'skipped');
+  const okCount = active.filter((c) => merged[c]?.status === 'ok').length;
+  const status = dryRun ? 'dry-run' : active.length && okCount === active.length ? 'published' : okCount > 0 ? 'partial' : 'failed';
   return { status, results };
 }
 
@@ -109,6 +118,7 @@ export async function checkConnections(env) {
   await run('facebook', async (t) => ({ label: (await apiFetch(`${g}/${t.meta.pageId}?fields=name&access_token=${t.accessToken}`)).data.name }));
   await run('instagram', async (t) => ({ label: '@' + (await apiFetch(`${g}/${t.meta.igUserId}?fields=username&access_token=${t.accessToken}`)).data.username }));
   await run('linkedin', async (t) => {
+    if (!isOrgAuthor(env)) throw new Error(LINKEDIN_PAUSED);
     const me = await apiFetch('https://api.linkedin.com/v2/userinfo', { headers: { Authorization: `Bearer ${t.accessToken}` } });
     const exp = env.LINKEDIN_TOKEN_EXPIRES ? new Date(env.LINKEDIN_TOKEN_EXPIRES) : null;
     return { label: t.meta.author?.startsWith('urn:li:organization:') ? 'Unternehmensseite' : me.data.name, days_left: exp ? Math.floor((exp - Date.now()) / 86400000) : null };

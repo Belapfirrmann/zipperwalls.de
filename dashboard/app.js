@@ -236,7 +236,7 @@ function postCard(p, connected) {
           return `<label class="chan"><input type="checkbox" id="c-${esc(p.id)}-${c}" data-ch="${c}" ${p.channels.includes(c) ? 'checked' : ''} ${editable && !ok ? '' : 'disabled'}> ${CH[c]}${!connected.has(c) ? ' <span class="badge grey tiny">nicht verbunden</span>' : ''}</label>`;
         }).join('')}
       </div>
-      ${results.length ? `<div class="results">${results.map(([c, r]) => (r.status === 'ok' ? `<div>✓ ${CH[c]}: veröffentlicht ${fmtDate(r.at)} ${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">ansehen</a>` : ''}</div>` : `<div class="err"><strong>${CH[c]}:</strong> ${esc(r.error || r.status)}</div>`)).join('')}</div>` : ''}
+      ${results.length ? `<div class="results">${results.map(([c, r]) => (r.status === 'ok' ? `<div>✓ ${CH[c]}: veröffentlicht ${fmtDate(r.at)} ${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">ansehen</a>` : ''}</div>` : (r.status === 'skipped' ? `<div class="muted">${CH[c]}: ${esc(r.error || 'übersprungen')}</div>` : `<div class="err"><strong>${CH[c]}:</strong> ${esc(r.error || r.status)}</div>`))).join('')}</div>` : ''}
       ${editable ? `
       <div class="row" style="margin-top:16px">
         <button class="btn" data-act="now">${['failed', 'partial'].includes(p.status) ? 'Erneut posten' : 'Jetzt posten'}</button>
@@ -490,7 +490,7 @@ function viewVerbindungen() {
   const info = {
     facebook: ['Postet auf die Zipperwalls Facebook Seite.', 'META_PAGE_TOKEN, META_PAGE_ID'],
     instagram: ['Voraussetzung: Instagram Business oder Creator Konto, verknüpft mit der Facebook Seite.', 'IG_USER_ID (nutzt dasselbe Seiten-Token)'],
-    linkedin: ['Postet über das LinkedIn Profil, dem das Token gehört. Für die Unternehmensseite braucht es eine Freigabe von LinkedIn.', 'LINKEDIN_TOKEN, LINKEDIN_TOKEN_EXPIRES'],
+    linkedin: ['Postet ausschließlich auf die Unternehmensseite zipperwalls.de. Bis LinkedIn die Community Management API freigibt, ist LinkedIn pausiert.', 'LINKEDIN_TOKEN, LINKEDIN_TOKEN_EXPIRES, LINKEDIN_AUTHOR'],
   };
   main.innerHTML = `
     <div class="head"><h1>Verbindungen</h1><p>Die Zugangsdaten liegen nicht im Dashboard, sondern geschützt in der Claude Umgebung. Claude prüft sie bei jedem Lauf und meldet hier den Stand.</p></div>

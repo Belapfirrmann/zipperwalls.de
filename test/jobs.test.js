@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { publishJob, metricsJob, tokensFromEnv } from '../src/jobs.js';
 
-const ENV = { META_PAGE_TOKEN: 'PT', META_PAGE_ID: '1', IG_USER_ID: '9', LINKEDIN_TOKEN: 'LT', LINKEDIN_AUTHOR: 'urn:li:person:abc', GRAPH_VERSION: 'v22.0' };
+const ENV = { META_PAGE_TOKEN: 'PT', META_PAGE_ID: '1', IG_USER_ID: '9', LINKEDIN_TOKEN: 'LT', LINKEDIN_AUTHOR: 'urn:li:organization:42', GRAPH_VERSION: 'v22.0' };
 const img = { bytes: new Uint8Array([1, 2]), type: 'image/png' };
 const post = (extra = {}) => ({ variants: { facebook: 'FB Text', instagram: 'IG Text', linkedin: 'LI Text' }, hashtags: ['#messe'], channels: ['facebook', 'instagram', 'linkedin'], ...extra });
 
@@ -92,4 +92,13 @@ test('Kennzahlen je Kanal', async () => {
   const r = await metricsJob({ META_PAGE_TOKEN: 'PT', META_PAGE_ID: '1' }, { published: [{ post_id: 'p', channel: 'facebook', external_id: '1_2' }] });
   assert.equal(r.channels.facebook.account.followers, 120);
   assert.deepEqual(r.channels.facebook.posts.p, { likes: 7, comments: 2, shares: 0 });
+});
+
+test('LinkedIn ohne Unternehmensseite wird übersprungen, nie aufs persönliche Profil', async () => {
+  const state = { calls: [] };
+  fakeApis(state);
+  const r = await publishJob({ ...ENV, LINKEDIN_AUTHOR: '' }, { post: post(), images: { main: img } });
+  assert.equal(r.results.linkedin.status, 'skipped');
+  assert.equal(r.status, 'published');
+  assert.ok(!state.calls.some((u) => u.includes('linkedin')), 'kein LinkedIn-Aufruf');
 });
