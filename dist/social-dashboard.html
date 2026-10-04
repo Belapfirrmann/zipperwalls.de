@@ -531,7 +531,7 @@ function viewFreigabe() {
   };
   const list = groups[filter];
   main.innerHTML = `
-    <div class="head"><h1>Freigabe</h1><p>Zweimal pro Woche kommt ein Entwurf. Prüfen, bei Bedarf anpassen, dann „Jetzt posten“ oder „Planen“. Claude veröffentlicht beim nächsten stündlichen Lauf.</p></div>
+    <div class="head"><h1>Freigabe</h1><p>Zweimal pro Woche kommt ein Entwurf. Prüfen, bei Bedarf anpassen oder Claude unten um Änderungen bitten, dann „Freigeben“. Den Termin übernimmt Claude nach Redaktionsplan.</p></div>
     ${connected.size === 0 ? `<div class="notice">Noch kein Kanal verbunden. Gepostet werden kann erst, wenn die Zugangsdaten eingetragen sind (siehe <a href="#verbindungen">Verbindungen</a>).</div>` : ''}
     <div class="row" style="margin-bottom:22px">
       ${['offen', 'geplant', 'erledigt'].map((k) => `<button class="btn small ${filter === k ? 'dark' : 'ghost'}" data-filter="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join('')}
@@ -578,13 +578,9 @@ function postCard(p, connected) {
       ${results.length ? `<div class="results">${results.map(([c, r]) => (r.status === 'ok' ? `<div>✓ ${CH[c]}: veröffentlicht ${fmtDate(r.at)} ${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">ansehen</a>` : ''}</div>` : (r.status === 'skipped' ? `<div class="muted">${CH[c]}: ${esc(r.error || 'übersprungen')}</div>` : `<div class="err"><strong>${CH[c]}:</strong> ${esc(r.error || r.status)}</div>`))).join('')}</div>` : ''}
       ${editable ? `
       <div class="row" style="margin-top:16px">
-        <button class="btn" data-act="now">${['failed', 'partial'].includes(p.status) ? 'Erneut posten' : 'Jetzt posten'}</button>
-        <input type="datetime-local" id="w-${esc(p.id)}" data-f="when" value="${toLocalInput(p.scheduled_at)}" aria-label="Termin" style="width:auto">
-        <button class="btn dark" data-act="schedule">Planen</button>
-        <button class="btn ghost" data-act="save">Speichern</button>
-        ${p.status === 'draft' ? `<button class="btn ghost" data-act="reject">Ablehnen</button>` : ''}
+        <button class="btn" data-act="approve">${['failed', 'partial'].includes(p.status) ? 'Erneut freigeben' : 'Freigeben'}</button>
+        <span class="muted small">${p.scheduled_at && new Date(p.scheduled_at) > new Date() ? `Geht am ${fmtDate(p.scheduled_at)} raus.` : 'Geht beim nächsten Lauf raus.'} Textänderungen werden beim Freigeben gespeichert.</span>
       </div>` : ''}
-      ${['approved', 'scheduled'].includes(p.status) ? `<div class="row" style="margin-top:16px"><button class="btn ghost" data-act="withdraw">Zurückziehen</button></div>` : ''}
       ${p.status !== 'published' ? `
       <div class="improve">
         <label class="label" for="imp-${esc(p.id)}">Mit Claude verbessern</label>
@@ -692,33 +688,19 @@ function bindPost(el, p) {
     }
     btn.onclick = async () => {
       try {
-        if (act === 'save') {
-          await write(() => postRef(p.id).update(collect()));
-          return done('Gespeichert.');
-        }
-        if (act === 'reject') {
-          return confirmClick(btn, 'Wirklich ablehnen?', async () => {
-            await write(() => postRef(p.id).update({ status: 'rejected', updated_at: nowIso() }));
-            done('Entwurf abgelehnt.');
+        if (act === 'approve') {
+          const data = collect();
+          check(data);
+          const planned = p.scheduled_at && new Date(p.scheduled_at) > new Date();
+          return confirmClick(btn, planned ? `Für ${fmtDate(p.scheduled_at)} freigeben?` : 'Jetzt freigeben?', async () => {
+            await write(() => postRef(p.id).update({
+              ...data,
+              status: planned ? 'scheduled' : 'approved',
+              scheduled_at: planned ? p.scheduled_at : nowIso(),
+              approved_at: nowIso(),
+            }));
+            done(planned ? `Freigegeben für ${fmtDate(p.scheduled_at)}.` : 'Freigegeben. Claude veröffentlicht beim nächsten Lauf.');
           });
-        }
-        if (act === 'withdraw') {
-          await write(() => postRef(p.id).update({ status: 'draft', approved_at: null, updated_at: nowIso() }));
-          return done('Zurückgezogen. Der Post ist wieder ein Entwurf.');
-        }
-        const data = collect();
-        check(data);
-        if (act === 'now') {
-          return confirmClick(btn, `Auf ${data.channels.map((c) => CH[c]).join(', ')} posten?`, async () => {
-            await write(() => postRef(p.id).update({ ...data, status: 'approved', scheduled_at: nowIso(), approved_at: nowIso() }));
-            done('Freigegeben. Claude veröffentlicht beim nächsten Lauf.');
-          });
-        }
-        if (act === 'schedule') {
-          const when = new Date(val('when'));
-          if (Number.isNaN(when.getTime()) || when < new Date()) throw new Error('Bitte einen Zeitpunkt in der Zukunft wählen.');
-          await write(() => postRef(p.id).update({ ...data, status: 'scheduled', scheduled_at: when.toISOString(), approved_at: nowIso() }));
-          return done(`Geplant für ${fmtDate(when.toISOString())}.`);
         }
       } catch (e) {
         fail(e);
