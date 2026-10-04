@@ -214,6 +214,16 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 .kpis .row { align-items: flex-end; }
 @media (max-width: 1100px) { .nl-body { grid-template-columns: minmax(0, 1fr); } .nl-preview { position: static; } .nl-frame { height: 640px; } }
 
+/* Versandtermin in der Newsletter-Karte */
+.nl-side { display: grid; gap: 10px; flex: 0 1 340px; }
+.nl-when { display: grid; gap: 2px; padding: 12px 18px; background: var(--gelb); color: var(--auf-gelb); border-radius: var(--r) 0 var(--r) 0; }
+.nl-when .label { color: var(--auf-gelb); font-size: 12px; }
+.nl-when strong { font-size: 22px; font-weight: 900; line-height: 1.1; }
+.nl-when-time { font-size: 18px; font-weight: 800; }
+.nl-when .muted { color: var(--auf-gelb); opacity: .75; }
+.nl-next { margin: 12px 0 0; padding: 10px 14px; background: var(--flaeche); border-left: 4px solid var(--grau); font-size: 15px; }
+.nl-next.warn { border-left-color: var(--gelb-dunkel); }
+
 /* Vollbild-Vorschau */
 .nl-full { position: fixed; inset: 0; z-index: 20; background: rgba(20, 26, 25, .92); display: flex; flex-direction: column; }
 .nl-full-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px; background: var(--card); color: var(--text); }
@@ -1011,13 +1021,34 @@ const nlId = (nr) => `nl-${nr}`;
 const fmtDayLong = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 
-// Plan-Einträge mit ihrem Entwurf (falls vorhanden)
+// Datum und Uhrzeit in deutscher Zeit aus einem UTC-Zeitpunkt
+const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+function berlinParts(iso) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
+  const date = `${p.year}-${p.month}-${p.day}`;
+  return { date, time: `${p.hour}:${p.minute}`, day: WEEKDAYS[new Date(date + 'T12:00:00Z').getUTCDay()] };
+}
+
+// Versandtermin: Ein gekoppelter Newsletter geht zeitgleich mit seinem Social-Media-Post raus.
+// Termin des Posts aus dem Dashboard (posts/plan-<nr>.scheduled_at), sonst aus dem Redaktionsplan. Eigenständige behalten ihren Plantermin.
+function nlTiming(e) {
+  const m = e.type === 'gekoppelt' ? /Post\s*0*(\d+)/i.exec(e.social || '') : null;
+  const postNr = m ? Number(m[1]) : null;
+  const planPost = postNr != null ? PLAN.entries.find((x) => x.nr === postNr) : null;
+  const post = postNr != null ? S.posts.find((x) => x.plan_nr === postNr && x.status !== 'rejected') : null;
+  const iso = post?.scheduled_at || (planPost?.date ? berlinToUtc(planPost.date, PLAN.rhythm?.time || '09:00') : berlinToUtc(e.date, e.time || '09:00'));
+  const t = berlinParts(iso);
+  return { ...t, send_at: iso, kw: Number(isoWeek(new Date(t.date + 'T12:00:00Z')).split('-W')[1]), post_nr: planPost ? postNr : null, post_topic: planPost?.topic || null, plan_date: e.date };
+}
+
+// Plan-Einträge mit ihrem Entwurf (falls vorhanden); Termin immer aus nlTiming
 function nlEntries() {
   const docs = Object.fromEntries(S.newsletters.map(({ id, ...d }) => [id, d]));
   return NL.entries.map((e) => {
     const doc = docs[nlId(e.nr)] || null;
-    return { ...e, ...(doc || {}), id: nlId(e.nr), doc, status: doc?.status || e.status || 'Entwurf' };
-  });
+    return { ...e, ...(doc || {}), ...nlTiming(e), id: nlId(e.nr), doc, status: doc?.status || e.status || 'Entwurf' };
+  }).sort((a, b) => a.send_at.localeCompare(b.send_at));
 }
 // Nur angelegte Entwürfe (für die Freigabe)
 const nlDrafts = () => nlEntries().filter((n) => n.doc);
@@ -1083,7 +1114,7 @@ async function copyText(text, label) {
 async function saveNl(n, patch) {
   const base = Object.fromEntries(NL_FIELDS.map(([f]) => [f, n[f] ?? null]));
   await write((db) => db.collection('newsletters').doc(n.id).set({
-    ...(n.doc || {}), ...base, image_asset: n.image_asset ?? null, nr: n.nr, kw: n.kw, date: n.date, time: n.time, status: n.status,
+    ...(n.doc || {}), ...base, image_asset: n.image_asset ?? null, nr: n.nr, kw: n.kw, date: n.date, time: n.time, send_at: n.send_at, post_nr: n.post_nr, status: n.status,
     created_at: n.doc?.created_at || nowIso(), ...patch, updated_at: nowIso(),
   }));
 }
@@ -1174,7 +1205,7 @@ function viewNewsletter() {
                 <div class="row" style="gap:8px;margin-bottom:6px"><span class="pill-tag ${e.type === 'eigenständig' ? 'b1' : 'b0'}">${esc(e.type)}</span><span class="pill-tag b2">${esc(e.rubric || '')}</span><span class="badge ${NL_BADGE[e.status] ?? 'grey'}">${esc(e.status)}</span></div>
                 <h3>${esc(e.topic)}</h3>
                 <p class="small" style="margin:6px 0 0"><span class="muted">Betreff:</span> ${esc(e.subject || '')}</p>
-                <p class="muted small" style="margin:2px 0 0">Bezug: ${esc(e.social || 'keiner')}</p>
+                <p class="muted small" style="margin:2px 0 0">${e.post_nr != null ? `Zeitgleich mit Post #${esc(e.post_nr)} „${esc(e.post_topic)}“` : `Bezug: ${esc(e.social || 'keiner')}`}${e.plan_date !== e.date ? ` · im Plan stand ${fmtDay(e.plan_date)}` : ''}</p>
                 ${e.note ? `<p class="open-point"><strong>Offen:</strong> ${esc(e.note)}</p>` : ''}
                 <details><summary>Inhalt ansehen</summary>
                   <div style="margin-top:10px"><span class="label">Vorschautext</span><div class="pre">${esc(e.preview || '')}</div></div>
@@ -1266,10 +1297,23 @@ function nlCard(n) {
       <div style="min-width:0">
         <div class="row" style="gap:8px;margin-bottom:8px"><span class="badge ${NL_BADGE[n.status] ?? 'grey'}">${esc(n.status)}</span><span class="pill-tag ${n.type === 'eigenständig' ? 'b1' : 'b0'}">${esc(n.type)}</span><span class="pill-tag b2">${esc(n.rubric || '')}</span></div>
         <h2>${esc(n.subject || n.topic)}</h2>
-        <p class="muted small" style="margin:6px 0 0">Ausgabe ${esc(n.nr)} · Versand ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr · Bezug: ${esc(n.social || 'keiner')}${stamps}</p>
+        <p class="muted small" style="margin:6px 0 0">Ausgabe ${esc(n.nr)}${stamps}</p>
       </div>
-      <button class="btn dark" type="button" data-act="nl-full">Vollbild</button>
+      <div class="nl-side">
+      <div class="nl-when">
+        <span class="label">Versand</span>
+        <strong>${esc(n.day)}, ${fmtDayLong(n.date)}</strong>
+        <span class="nl-when-time">${esc(n.time)} Uhr</span>
+        <span class="small">${n.post_nr != null ? `Zeitgleich mit Post #${esc(n.post_nr)} „${esc(n.post_topic)}“` : 'Eigenständig, ohne gekoppelten Post'}</span>
+        ${n.plan_date !== n.date ? `<span class="small muted">Im Newsletter-Plan stand ${fmtDayLong(n.plan_date)}, angepasst an den Post.</span>` : ''}
+      </div>
+      <button class="btn dark" type="button" data-act="nl-full">Vollbild ansehen</button>
+      </div>
     </div>
+    ${{ Entwurf: `<p class="nl-next">Nach der Freigabe muss der Newsletter noch in MailPoet für diesen Termin eingeplant werden. Automatisch geht er erst raus, sobald die Verbindung zu MailPoet steht.</p>`,
+        Verschoben: `<p class="nl-next">Verschoben. Neuen Termin mit dem Post abstimmen, dann freigeben.</p>`,
+        Freigegeben: `<p class="nl-next warn"><strong>Noch nicht eingeplant:</strong> Bitte in MailPoet für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr einplanen und dann „In MailPoet eingeplant“ klicken.</p>`,
+        'In MailPoet eingeplant': `<p class="nl-next">In MailPoet eingeplant für ${esc(n.day)}, ${fmtDayLong(n.date)}, ${esc(n.time)} Uhr.</p>` }[n.status] || ''}
     ${n.note ? `<p class="open-point"><strong>Offen:</strong> ${esc(n.note)}</p>` : ''}
     ${problem ? `<p class="open-point"><strong>Vor der Freigabe:</strong> ${esc(problem)}</p>` : ''}
     ${warning ? `<p class="open-point"><strong>Hinweis:</strong> ${esc(warning)}</p>` : ''}
@@ -1357,7 +1401,7 @@ function bindNl(el, n) {
         const data = collect();
         const problem = nlProblem({ ...n, ...data });
         if (problem) return toast(problem);
-        return confirmClick(btn, 'Wirklich freigeben?', () => run(btn, () => saveNl(n, { ...data, status: 'Freigegeben', approved_at: nowIso() }), 'Freigegeben. Jetzt in MailPoet einplanen.'));
+        return confirmClick(btn, `Für ${n.day.slice(0, 2)} ${fmtDayLong(n.date)}, ${n.time} Uhr freigeben?`, () => run(btn, () => saveNl(n, { ...data, status: 'Freigegeben', approved_at: nowIso() }), `Freigegeben. Jetzt in MailPoet für ${fmtDayLong(n.date)}, ${n.time} Uhr einplanen.`));
       }
       if (act === 'nl-drop') return confirmClick(btn, 'Wirklich streichen?', () => run(btn, () => saveNl(n, { ...collect(), status: 'Gestrichen' }), 'Gestrichen.'));
       if (act === 'nl-planned') return run(btn, () => saveNl(n, { status: 'In MailPoet eingeplant', planned_at: nowIso() }), 'Als in MailPoet eingeplant markiert.');
