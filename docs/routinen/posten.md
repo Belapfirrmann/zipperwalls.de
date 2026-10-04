@@ -21,7 +21,7 @@ Nie Texte ändern, nie selbst freigeben, nie Entwürfe posten. Veröffentlicht w
       `{ "post": { "variants", "body", "hashtags", "channels", "results" aus dem Dokument }, "images": { "main": <Pfad image>, "linkedin": <Pfad image_linkedin oder weglassen> } }`
    4. `node scripts/social.js publish tmp/job-<id>.json` ausführen. Ausgabe ist JSON `{ status, results }`.
    5. Zurückschreiben (`update`): `status` = Ausgabe status (published, partial oder failed),
-      `results` = bisherige results zusammengeführt mit den neuen (Kanal für Kanal), `updated_at` = jetzt.
+      `results` = bisherige results zusammengeführt mit den neuen (Kanal für Kanal; ein neuer Eintrag ersetzt den alten des Kanals vollständig, ein altes `error` fällt also weg), `updated_at` = jetzt.
       Bricht das Skript ab (Exit Code ungleich 0), `status: "failed"` und die Fehlermeldung in `results` beim betroffenen Kanal.
 5. Hängende Posts: Steht ein Post seit mehr als 30 Minuten auf `publishing`, auf `failed` setzen mit Hinweis in `results`. Nicht erneut senden.
 6. Lauf protokollieren: `status/runner` setzen auf `{ "last_run": <jetzt>, "summary": "<kurz: wie viele gepostet, Fehler>" }`.
