@@ -209,6 +209,16 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 .kpis .row { align-items: flex-end; }
 @media (max-width: 1100px) { .nl-body { grid-template-columns: minmax(0, 1fr); } .nl-preview { position: static; } .nl-frame { height: 640px; } }
 
+/* Versandtermin in der Newsletter-Karte */
+.nl-side { display: grid; gap: 10px; flex: 0 1 340px; }
+.nl-when { display: grid; gap: 2px; padding: 12px 18px; background: var(--gelb); color: var(--auf-gelb); border-radius: var(--r) 0 var(--r) 0; }
+.nl-when .label { color: var(--auf-gelb); font-size: 12px; }
+.nl-when strong { font-size: 22px; font-weight: 900; line-height: 1.1; }
+.nl-when-time { font-size: 18px; font-weight: 800; }
+.nl-when .muted { color: var(--auf-gelb); opacity: .75; }
+.nl-next { margin: 12px 0 0; padding: 10px 14px; background: var(--flaeche); border-left: 4px solid var(--grau); font-size: 15px; }
+.nl-next.warn { border-left-color: var(--gelb-dunkel); }
+
 /* Vollbild-Vorschau */
 .nl-full { position: fixed; inset: 0; z-index: 20; background: rgba(20, 26, 25, .92); display: flex; flex-direction: column; }
 .nl-full-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px; background: var(--card); color: var(--text); }
