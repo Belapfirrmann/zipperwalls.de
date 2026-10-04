@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messepraxis [NN]: [THEMA]</title>
+<!--
+  Zipperwalls Messepraxis, VORLAGE
+  Betreff:   [BETREFF, max. 60 Zeichen]
+  Preheader: [PREHEADER, ca. 90 Zeichen, ergänzt den Betreff]
+  Alles in [ECKIGEN KLAMMERN] ersetzen, nicht benötigte Module komplett löschen.
+  In allen Links utm_campaign=messepraxis-NN auf die Ausgabennummer setzen.
+
+  Hinweise für MailerLite:
+  - {$name}, {$url}, {$unsubscribe}, {$preferences} sind MailerLite-Platzhalter. Beim Einfügen prüfen.
+  - Logo vor dem Versand als PNG (Breite 440 px, Anzeige 220 px) in MailerLite hochladen und src ersetzen.
+    Viele Mailprogramme zeigen eingebettete SVG nicht an.
+  - Bildplatzhalter (graue Kästen) durch echte Fotos ersetzen, Breite 1080 px.
+  - Alle Links tragen UTM-Parameter, damit Anfragen aus dem Newsletter in Analytics sichtbar sind.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:0; background:#F2F5F7; }
+  table { border-collapse:collapse; }
+  img { border:0; display:block; max-width:100%; height:auto; }
+  a { color:#1D1D1B; }
+  .f { font-family:'Barlow', Arial, Helvetica, sans-serif; }
+  @media (max-width:620px) {
+    .wrap { width:100% !important; }
+    .pad { padding-left:20px !important; padding-right:20px !important; }
+    .h1 { font-size:30px !important; }
+    .col { display:block !important; width:100% !important; }
+    .outer { padding:0 !important; }
+    .box { padding:18px 16px 4px !important; }
+    .tl { width:88px !important; font-size:12px !important; }
+  }
+</style>
+</head>
+<body>
+<div style="display:none;max-height:0;overflow:hidden;">[PREHEADER]</div>
+
+<table role="presentation" width="100%" style="background:#F2F5F7;">
+<tr><td class="outer" align="center" style="padding:24px 8px;">
+
+<table role="presentation" class="wrap" width="600" style="width:600px;background:#FFFFFF;">
+
+  <!-- Webversion -->
+  <tr><td class="pad f" style="padding:12px 40px;background:#F2F5F7;font-size:12px;color:#4B4F58;text-align:right;">
+    Wird die Mail nicht richtig angezeigt? <a href="{$url}" style="color:#4B4F58;">Im Browser lesen</a>
+  </td></tr>
+
+  <!-- Kopf: Logo auf Weiß = farbiges Logo -->
+  <tr><td class="pad" style="padding:32px 40px 20px;">
+    <a href="https://www.zipperwalls.de/?utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=messepraxis-NN"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iRWJlbmVfMiIgZGF0YS1uYW1lPSJFYmVuZSAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDUuMzggNzUuMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogIzFEMUQxQjsKICAgICAgfQoKICAgICAgLmNscy0yIHsKICAgICAgICBmaWxsOiAjMUQxRDFCOwogICAgICB9CiAgICAgIC5tMCB7IGZpbGw6ICMxRDFEMUI7IH0KICAgICAgLm0xIHsgZmlsbDogIzFEMUQxQjsgfQogICAgICAubTIgeyBmaWxsOiAjZmZjYzIwOyB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8ZyBpZD0iRWJlbmVfMS0yIiBkYXRhLW5hbWU9IkViZW5lIDEiPgogICAgPGc+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTk4LjUsNTAuM2MuOS00LjUsMy4xLTYuMSw2LjktOC42bDIyLjItMTQuMmMuMzUtLjI1LjktLjYuOS0uOXMtLjMtLjQtLjgtLjRoLTIybDIuNS0xMS44aDM1LjNjNC0uMyw3LjUsMi44LDcuNyw2Ljh2LjVjMCwuOC0uMSwxLjUtLjMsMi4zLS43LDMuOS0zLjMsNy4yLTYuOSw4LjhsLTIxLjYsMTMuOGMtLjUuNC0xLC43LTEsLjksMCwuMywwLC40LjguNGgyMi40bC0yLjcsMTIuM2gtMzYuN3MtMi4xMy4yNC00LjQ4LTIuMjRjLTIuOTUtMy4xMi0yLjMyLTYuODYtMi4yMi03LjY2WiIvPgogICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMTU2LjkgMTQuNyAxNzMuOSAxNC43IDE2NC4xIDYwLjQgMTQ3LjIgNjAuNCAxNTYuOSAxNC43Ii8+CiAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxNTcuOSAxMC4xIDE2MCAwIDE3NyAwIDE3NC44IDEwLjEgMTU3LjkgMTAuMSIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0yMDguMywxNC43YzguNC0uOSwxNS45LDUuMiwxNi44LDEzLjYuMSwxLjEuMSwyLjIsMCwzLjIsMCwyLjYtLjIsNS4yLS43LDcuOC0yLjYsMTMuOS03LjYsMjEuMS0yNCwyMS4xaC0xMi44bC0zLjEsMTQuN2gtMTYuOGwxMC45LTUwLjljLjUtNS44LDUuNy0xMCwxMS41LTkuNSwwLDAsMTguMiwwLDE4LjIsMFpNMTkwLjEsNDguNGg3LjhjNiwwLDguMi01LjUsOS4yLTkuOS4zLTIsLjUtNCwuNi02LjEsMC0zLjItMS4yLTUuNi01LjUtNS42aC0zLjJjLTMuNSwwLTQuNS45LTUuMSw0LjNsLTMuOCwxNy4zWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0yNjIuMywxNC43YzguNC0uOCwxNS45LDUuMywxNi43LDEzLjcuMSwxLjEuMSwyLjEsMCwzLjIsMCwyLjYtLjMsNS4yLS44LDcuOC0yLjYsMTMuOS03LjYsMjEuMS0yNCwyMS4xaC0xMi44bC0zLjEsMTQuN2gtMTYuOGwxMC44LTUwLjljLjYtNS44LDUuNy0xMCwxMS41LTkuNWwxOC41LS4xWk0yNDQuMSw0OC40aDcuN2M2LDAsOC4yLTUuNSw5LjItOS45LjQtMiwuNi00LC42LTYuMSwwLTMuMi0xLjItNS42LTUuNS01LjZoLTMuMWMtMy40LDAtNC41LjktNS4xLDQuM2wtMy44LDE3LjNaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTI5Ny43LDYwLjRjLTExLDAtMTYuMS00LjItMTYuMS0xNCwwLTMuNi40LTcuMiwxLjMtMTAuNyw0LjQtMTkuNywxMC4yLTIxLjQsMjkuOS0yMS40LDE0LjMsMCwyMS42LDIuMSwyMS42LDEyLjYsMCwyLjYtLjMsNS4xLS45LDcuNi0xLjMsNS4xLTMuNiw4LjYtOS42LDguNmgtMjQuOWMtLjEuNi0uMSwxLjIsMCwxLjgsMCwzLDIuMywzLjksNy40LDMuOWgyMi4ybC0yLjUsMTEuOC0yOC40LS4yWk0zMTMuNywzMi4zYzIuOCwwLDMuMS0xLjEsMy40LTIuMXYtMS4zYzAtMi42LTQuNS0yLjktNi45LTIuOS01LjEsMC03LjkuNy05LjEsNi40aDEyLjZ2LS4xWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0zMzguNSwzMy43YzMuMy0xNS41LDEwLjktMTksMjYuNS0xOWgxMS4xbC0yLjUsMTEuOWgtNi4zYy03LjgsMC0xMS4zLDQuMy0xMi45LDEyLjFsLTQuNywyMS43aC0xNi45bDUuNy0yNi43WiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0zOTUuNCw0MWMwLC42LDAsMS40LjYsMS40cy45LS45LDEtMS4zbDExLjQtMjIuMWMxLjEtMiwzLTUuMSwxMC4yLTUuMXM4LjgsMi45LDksNS4xbDIuMSwyMi4xYzAsLjUsMCwxLjMuNSwxLjNzLjktLjksMS4xLTEuNGwxMi41LTI2LjNoMTYuN2wtMTguMywzNy4xYy0xLjgsNS45LTcuNCw5LjctMTMuNSw5LjMtOC40LDAtMTAuNS0zLjQtMTAuNy02LjZsLTEuNy0yMGMwLS43LDAtMS40LS40LTEuNHMtLjYuNy0xLDEuNGwtMTAuMiwyMGMtMS42LDMuMy00LjQsNi42LTEyLjgsNi42cy0xMC4yLTQtMTAuNC05LjJsLTIuNi0zNy4xaDE1LjNsMS4yLDI2LjJaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTQ5NC4xLDE0LjdjOS4xLDAsMTMuNCw1LjEsMTMuNCwxMiwwLDEuMi0uMSwyLjQtLjQsMy42bC00LjIsMjAuN2MtLjYsNS44LTUuNywxMC4xLTExLjYsOS41aC0yNi42Yy03LDAtMTAuMi00LjQtMTAuMi0xMS4xLDAtMiwuMi00LC42LTYsMS44LTguNiw0LjYtMTEuNiwxNC4xLTExLjZoMjAuOXYtMmMwLTIuMi0xLjUtMy40LTQuMy0zLjRoLTIzLjZsMi41LTExLjgsMjkuNC4xWk00NzUuOCw0Mi41Yy0xLjgtLjItMy41LDEtMy45LDIuOC0uMS41LS4xLDEsMCwxLjQtLjEsMS4zLjgsMi40LDIuMSwyLjVoOC45YzIuNiwwLDMuNi0uOSw0LjItMy41bC44LTMuM2gtMTIuMXYuMVoiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNTIwLjMsMGgxNi45bC0xMi45LDYwLjRoLTE2LjlMNTIwLjMsMFoiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNTQzLjgsMGgxNi45bC0xMi44LDYwLjRoLTE3TDU0My44LDBaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTU1NS44LDQ4LjJoMjQuOGMuNiwwLDEuNywwLDEuNy0xcy0zLjQtMi4zLTUuMS0zbC04LjQtMy40Yy02LjItMi4zLTkuNS01LjEtOS41LTExLDAtMS4yLjItMi40LjUtMy42LDEuOC04LjYsNi4xLTExLjcsMTQuOC0xMS43aDMxLjJsLTIuNSwxMS44aC0yNC44Yy0uNywwLTMsMC0zLC45czEuMywxLjMsMy45LDIuM2wxMC4yLDMuOWM2LjgsMi43LDExLDUuMSwxMSwxMi4xLDAsMS4yLS4yLDIuNS0uNSwzLjctMS44LDguNi02LDExLjItMTQuNywxMS4yaC0zMS45bDIuMy0xMi4yWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xNS41Nyw1OC41MmMtLjEtLjA4LS4yLS4xNi0uMy0uMjUuMS4wOC4yLjE3LjMuMjVaIi8+CiAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE0LjA3LDU3LjAzcy0uMDctLjA5LS4xLS4xNGMuMDMuMDUuMDcuMDkuMS4xNFoiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTQuNjMsNTcuNjdjLjEuMTEuMjEuMjEuMzIuMzEtLjExLS4xLS4yMS0uMi0uMzItLjMxWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik01OS4zMyw2MC41aC4wNGMuMTEsMCwuMjEtLjAxLjMyLS4wMi0uMTIsMC0uMjQuMDItLjM2LjAyWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik02MDEsNjAuNWwuOC0zLjhoMy4ybC0uOCwzLjhoLTMuMloiLz4KICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNjE0LjUsNjAuNWMtNC43LDAtNi41LTIuMi02LjUtNS45LDAtMS4zLjItMi41LjUtMy43LDEuMi01LjgsMy4yLTguOSw5LjctOC45aDUuNWwxLjMtNmgzbC00LjcsMjEuNmMtLjQsMS44LTEsMi45LTMuNSwyLjloLTUuM1pNNjE4LjIsNDQuNGMtNC41LDAtNS43LDIuNS02LjYsNi45LS4zLDEuMS0uNCwyLjMtLjUsMy40LDAsMi4zLDEsMy41LDQuMiwzLjVoMy44YzEsMCwxLjMtLjQsMS41LTEuM2wyLjYtMTIuNC01LS4xWiIvPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik02MzIuOCw2MC41Yy0yLjguMy01LjMtMS43LTUuNi00LjV2LTFjMC0xLjQuMi0yLjcuNS00LDEuNC02LjgsMy45LTkuMiwxMC4yLTkuMiw0LjIsMCw3LjQsMS4yLDcuNCw1LjEuMS43LjEsMS40LDAsMi0uNSwyLjEtMSwzLjMtMy41LDMuM2gtMTEuMmMtLjIuOS0uMywxLjgtLjMsMi42LDAsMS45LjcsMy4zLDMuMywzLjNoOS4xbC0uNSwyLjRoLTkuNFpNNjQwLjksNDkuOGMuNSwwLDEtLjQsMS4xLS45aDB2LTEuNGMwLTIuNC0xLjgtMy4zLTQuNS0zLjMtMy44LDAtNS43LDEuNS02LjYsNS43bDEwLS4xWiIvPgogICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMC4wOTYgMC4wNjgpIHNjYWxlKDAuMjg2OCkiPgo8ZyBpZD0iQmlsZG1hcmtlIj4KICAgIDxnPgogICAgICA8Zz4KICAgICAgICA8cGF0aCBjbGFzcz0ibTEiIGQ9Ik02Ny40MiwxOTUuMDRjLS4zMi0uMjYtLjY2LS41NS0xLS44NC4zMy4yOC42Ni41NywxLC44NFoiLz4KICAgICAgICA8cGF0aCBjbGFzcz0ibTEiIGQ9Ik02Mi40MiwxOTAuMDZjLS4xMi0uMTUtLjIyLS4zMS0uMzQtLjQ2LjExLjE1LjIyLjMxLjM0LjQ2WiIvPgogICAgICAgIDxwYXRoIGNsYXNzPSJtMSIgZD0iTTY0LjI5LDE5Mi4yYy4zNC4zNi43MS42OSwxLjA3LDEuMDMtLjM2LS4zNC0uNzEtLjY2LTEuMDctMS4wM1oiLz4KICAgICAgICA8cGF0aCBjbGFzcz0ibTAiIGQ9Ik0yNTYuNTIuMTFoLTEwMS4xMmMuNzIsMS42NywzLjE0LDQuMjksNC40NSw3LjU2bC0xMSw0LjY3LDIuMzMsNy42NywxMC4zMy01YzEuMzMsNCwyLjY3LDksMy42NywxNGwtMTAsMy4zMywxLjMzLDguMzMsMTAuMzMtMy4zM2MuNjcsNC4zMywxLDksMSwxMy4zM2wtMTEuNjcsMi42N3Y4LjY3bDExLjMzLTIuMzNjLS4zMyw1LTEsMTAtMi4zMywxNC42N2gtMTAuMzNsLTIuNjcsOSwxMC4zMywxLjY3Yy0yLDUtNC4zMyw5LjY3LTcuMzMsMTRsLTktNS02LDgsOCw0LjMzYy0yLjY3LDMuNjctNS42Nyw2LjY3LTguNjcsMTBsLTctNi42Ny03LjMzLDcsNyw2LjY3Yy0zLjY3LDMtNi42Nyw1LjY3LTEwLjMzLDguNjdsLTYtNy4zMy04LDYuMzMsNi4zMyw3LjY3LTcsNS42Ny04LjY3LTExcS0uMzMtLjMzLS42Ny0uNjdjLTMtMi42Ny03LjMzLTIuMzMtMTAsLjY3bC0xMi42NywxMi42N2MtMiwyLTMsNC42Ny0yLjMzLDcuMzMsNS4zMy0xLjY3LDExLC4zMywxNC42Niw0LjMzbDEyLDE0LjY2YzMuMzMsNC42NywzLjY3LDEwLjMzLDEuMzMsMTUuMzMsMi4zMywxLjMzLDUsMS4zMyw3LjMzLDBsMTUtMTBjLjMzLDAsLjMzLS4zMy42Ny0uMzMsMy0yLDQtNi42NywxLjY3LTEwbC00LjMzLTUuMzMsOC02LjMzLTYuMzMtOCw2LjMzLTUsMS42Ny0xLjMzLDYuMzMsOCw4LTYtNi4zMy03LjY3YzMuMzMtMi42Nyw2LjY3LTUsMTAuMzMtNy4zM2w0LDguNjcsOS01LTQuMzMtOC4zM2M0LjMzLTIuMzMsOS00LjMzLDE0LTZsMS4zMyw5LDkuMzMtMy0xLjMzLTguNjdzMy4xNi0uNzgsNS4zMy0xYzIuMTctLjIyLDcuNTktLjY2LDcuNTktLjY2bC0uOTMsOS42Nmg5bDMtOS42N2M0LjMzLjMzLDguNjcsMSwxMywybC01LDkuNjcsOCwyLjY3LDUtOS42N2M0LDEsNy42NywyLjMzLDExLDMuNjdsLTYuMzMsOSw3LjY3LDMuMzMsNi05LDkuNjcsNS03LjMzLDkuNjcsNy4zMyw0LDcuNjctOS4zMyw0LjY5LDMuMzUtNS4xNSwyNC4wNiwyNi4wNC0xMjEuNzFDMjkyLjExLDE4LjA3LDI3OC4yMS4xMSwyNTYuNTIuMTFaIi8+CiAgICAgICAgPHBhdGggY2xhc3M9Im0xIiBkPSJNMjEzLjI1LDIwMS42NGguMTVjLjM1LDAsLjctLjA0LDEuMDYtLjA1LS40LjAxLS44LjA1LTEuMi4wNVoiLz4KICAgICAgPC9nPgogICAgICA8cGF0aCBjbGFzcz0ibTIiIGQ9Ik03Mi4xMiwxOTguMTJjNy4zLDMuODMsMTEuMTgsMy41MiwxMS4xOCwzLjUyaDEyOS44OGMyMi41OSwwLDQzLjIzLTE2LjIyLDQ4LjIxLTM5LjkxbDUuMTUtMjQuMDYtNC42OS0zLjM1LTcuNjcsOS4zMy03LjMzLTQsNy4zMy05LjY3LTkuNjctNS02LDktNy42Ny0zLjMzLDYuMzMtOWMtMy4zMy0xLjMzLTctMi42Ny0xMS0zLjY3bC01LDkuNjctOC0yLjY3LDUtOS42N2MtNC4zMy0xLTguNjctMS42Ny0xMy0ybC0zLDkuNjdoLTlsLjkzLTkuNjZzLTIuNzMuMjItNS45Ni41MWMtMi4xNy4yLTYuOTcsMS4xNS02Ljk3LDEuMTVsMS4zMyw4LjY3LTkuMzMsMy0xLjMzLTljLTUsMS42Ny05LjY3LDMuNjctMTQsNmw0LjMzLDguMzMtOSw1LTQtOC42N2MtMy42NywyLjMzLTcsNC42Ny0xMC4zMyw3LjMzbDYuMzMsNy42Ny04LDYtNi4zMy04LTEuNjcsMS4zMy02LjMzLDUsNi4zMyw4LTgsNi4zMyw0LjMzLDUuMzNjMi4zMywzLjMzLDEuMzMsOC0xLjY3LDEwLS4zMywwLS4zMy4zMy0uNjcuMzNsLTE1LDEwYy0yLjMzLDEuMzMtNSwxLjMzLTcuMzMsMCwyLjMzLTUsMi0xMC42Ny0xLjMzLTE1LjMzbC0xMi0xNC42NmMtMy42Ny00LTkuMzMtNi0xNC42Ni00LjMzLS42Ny0yLjY3LjMzLTUuMzMsMi4zMy03LjMzbDEyLjY3LTEyLjY3YzIuNjctMyw3LTMuMzMsMTAtLjY3cS4zMy4zMy42Ny42N2w4LjY3LDExLDctNS42N2gwbC02LjMzLTcuNjcsOC02LjMzLDYsNy4zM2MzLjY3LTMsNi42Ny01LjY3LDEwLjMzLTguNjdsLTctNi42Nyw3LjMzLTcsNyw2LjY3YzMtMy4zMyw2LTYuMzMsOC42Ny0xMGwtOC00LjMzLDYtOCw5LDVjMy00LjMzLDUuMzMtOSw3LjMzLTE0bC0xMC4zMy0xLjY3LDIuNjctOWgxMC4zM2MxLjMzLTQuNjcsMi05LjY3LDIuMzMtMTQuNjZsLTExLjMzLDIuMzN2LTguNjdsMTEuNjctMi42N2MwLTQuMzMtLjMzLTktMS0xMy4zM2wtMTAuMzMsMy4zMy0xLjMzLTguMzMsMTAtMy4zM2MtMS01LTIuMzMtMTAtMy42Ny0xNGwtMTAuMzMsNS0yLjMzLTcuNjcsMTEtNC42N2MtMS4zMy0zLjMzLTMuODQtNi00LjUxLTcuNjdoLTI2Ljc4Yy0yMi42Ni42Ny00MC4zNywxNy00NS43LDM5LjMzbC0yNi42NiwxMjMuNjVjLS4zNywyLjAzLS44OCw0LjUyLS44OCw2LjE5LDAsMCwuMDksNC41OCwxLjQ4LDkuNjUsMCwwLDEuMTUsNS43OCw1LjgzLDExLjUyLDQuMzMsNS4yOSw5LjUsNy43OSw5LjUsNy43OVoiLz4KICAgICAgPHBhdGggY2xhc3M9Im0wIiBkPSJNOTMuODUsMTc2LjMxbC0xMC42Ny0xM2MtNi4wMy02LjI1LTEzLjYxLTUuNzktMjEuMzMsMGwtNyw1TDYuODYsMjAzLjY0Yy03LDQuNjctOSwxNC00LjMzLDIxbDE0LjMzLDE4LjMzYzYsNS42NywxNS4zMyw1LjY3LDIxLjMzLDBsNDYuMzMtNDEuOTksNC4zMy00YzguNDQtNi44OSwxMC4yNC0xMy41OSw1LTIwLjY2Wk04Ny42NSwxOTAuNTVsLTIuNDcsMS45MmMtMy4yOSwyLjU2LTguMDQsMS45Ny0xMC42MS0xLjMybC05LjcxLTEyLjQ3Yy0yLjU2LTMuMjktMS45Ny04LjA0LDEuMzItMTAuNjFsMi40Ny0xLjkyYzMuMjktMi41Niw4LjA0LTEuOTcsMTAuNjEsMS4zMmw5LjcxLDEyLjQ3YzIuNTYsMy4yOSwxLjk3LDguMDQtMS4zMiwxMC42MVoiLz4KICAgIDwvZz4KICA8L2c+CgogICAgICA8L2c+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4K" width="220" alt="zipperwalls.de" style="width:220px;"></a>
+  </td></tr>
+  <tr><td class="pad f" style="padding:0 40px;">
+    <table role="presentation" width="100%"><tr>
+      <td class="f" style="border-top:3px solid #1D1D1B;padding-top:10px;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#1D1D1B;">Messepraxis</td>
+      <td class="f" align="right" style="border-top:3px solid #1D1D1B;padding-top:10px;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#4B4F58;">Ausgabe [NN] · [MONAT JAHR]</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- Intro -->
+  <tr><td class="pad f" style="padding:28px 40px 8px;font-size:17px;line-height:1.55;color:#1D1D1B;">
+    <p style="margin:0 0 14px;">Guten Tag {$name},</p>
+    <p style="margin:0;">[INTRO: zwei bis drei Sätze. Worum geht es heute und warum gerade jetzt?]</p>
+  </td></tr>
+
+  <!-- Haupttipp -->
+  <tr><td class="pad" style="padding:28px 40px 0;">
+    <table role="presentation"><tr><td class="f" style="background:#FFCC20;color:#1D1D1B;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:5px 12px;border-radius:8px 0 8px 0;">Messe-Tipp #[NR]</td></tr></table>
+  </td></tr>
+  <tr><td class="pad f" style="padding:14px 40px 0;">
+    <h1 class="h1 f" style="margin:0;font-size:40px;line-height:1;font-weight:900;font-style:italic;text-transform:uppercase;color:#1D1D1B;">[HEADLINE ZEILE 1]<br>[ZEILE 2]</h1>
+  </td></tr>
+  <tr><td class="pad f" style="padding:18px 40px 0;font-size:17px;line-height:1.55;color:#1D1D1B;">
+    <p style="margin:0 0 14px;">[HAUPTTIPP ABSATZ 1: Problem aus Sicht des Ausstellers.]</p>
+    <p style="margin:0;">[HAUPTTIPP ABSATZ 2: Überleitung zu den Schritten.]</p>
+  </td></tr>
+
+  <!-- Zeitplan -->
+  <tr><td class="pad" style="padding:20px 40px 0;">
+    <table role="presentation" width="100%" style="background:#F5F5F5;border-radius:30px 0 30px 0;">
+      <tr><td class="box" style="padding:22px 24px 6px;">
+        <table role="presentation" width="100%">
+          <tr>
+            <td class="f tl" valign="top" width="118" style="padding:0 12px 16px 0;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1D1D1B;">[SCHRITT 1]<br><span style="font-weight:400;letter-spacing:0;text-transform:none;color:#4B4F58;">[ZEIT]</span></td>
+            <td class="f" valign="top" style="padding:0 0 16px;font-size:16px;line-height:1.5;color:#1D1D1B;"><strong>[Kernaussage.]</strong> [Erklärung in ein bis zwei Sätzen.]</td>
+          </tr>
+          <tr>
+            <td class="f" valign="top" style="padding:0 12px 16px 0;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1D1D1B;">[SCHRITT 2]<br><span style="font-weight:400;letter-spacing:0;text-transform:none;color:#4B4F58;">[ZEIT]</span></td>
+            <td class="f" valign="top" style="padding:0 0 16px;font-size:16px;line-height:1.5;color:#1D1D1B;"><strong>[Kernaussage.]</strong> [Erklärung.]</td>
+          </tr>
+          <tr>
+            <td class="f" valign="top" style="padding:0 12px 16px 0;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1D1D1B;">[SCHRITT 3]<br><span style="font-weight:400;letter-spacing:0;text-transform:none;color:#4B4F58;">[ZEIT]</span></td>
+            <td class="f" valign="top" style="padding:0 0 16px;font-size:16px;line-height:1.5;color:#1D1D1B;"><strong>[Kernaussage.]</strong> [Erklärung.]</td>
+          </tr>
+          <tr>
+            <td class="f" valign="top" style="padding:0 12px 16px 0;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1D1D1B;">[SCHRITT 4]<br><span style="font-weight:400;letter-spacing:0;text-transform:none;color:#4B4F58;">[ZEIT]</span></td>
+            <td class="f" valign="top" style="padding:0 0 16px;font-size:16px;line-height:1.5;color:#1D1D1B;"><strong>[Kernaussage.]</strong> [Erklärung.]</td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td class="pad f" style="padding:20px 40px 0;font-size:17px;line-height:1.55;color:#1D1D1B;">
+    <p style="margin:0 0 10px;"><strong>[ZWISCHENÜBERSCHRIFT CHECKLISTE:]</strong></p>
+    <p style="margin:0 0 6px;">1. [Punkt]</p>
+    <p style="margin:0 0 6px;">2. [Punkt]</p>
+    <p style="margin:0;">3. [Punkt]</p>
+  </td></tr>
+
+  <tr><td class="pad" style="padding:22px 40px 0;">
+    <table role="presentation"><tr><td style="background:#FFCC20;border-radius:12px 0 12px 0;">
+      <a class="f" href="[LINK HAUPTTIPP]?utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=messepraxis-NN" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#1D1D1B;text-decoration:none;">[BUTTON HAUPTTIPP]</a>
+    </td></tr></table>
+  </td></tr>
+
+  <!-- Trenner -->
+  <tr><td class="pad" style="padding:36px 40px 0;"><div style="border-top:1px solid #D9DDE0;font-size:0;line-height:0;">&nbsp;</div></td></tr>
+
+  <!-- Kurz-Tipp -->
+  <tr><td class="pad f" style="padding:28px 40px 0;">
+    <div class="f" style="font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#4B4F58;">Kurz-Tipp #[NR]</div>
+    <h2 class="f" style="margin:8px 0 10px;font-size:26px;line-height:1.05;font-weight:900;text-transform:uppercase;color:#1D1D1B;">[HEADLINE KURZ-TIPP]</h2>
+    <p style="margin:0;font-size:17px;line-height:1.55;color:#1D1D1B;">[KURZ-TIPP: drei Sätze, gern der Instagram-Text ausformuliert.] <a href="[LINK RATGEBER]?utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=messepraxis-NN" style="color:#1D1D1B;font-weight:700;">Zum Ratgeber</a></p>
+  </td></tr>
+
+  <!-- Produkt -->
+  <tr><td class="pad" style="padding:36px 40px 0;">
+    <table role="presentation" width="100%" style="background:#1F2725;border-radius:30px 0 30px 0;">
+      <tr><td style="padding:0;">
+        <div class="f" style="height:220px;background:#424242;border-radius:30px 0 0 0;color:#B8BCBF;font-size:13px;text-align:center;line-height:220px;">Bild: [PRODUKTFOTO 1080 px breit]</div>
+      </td></tr>
+      <tr><td class="f" style="padding:24px 28px 28px;color:#FFFFFF;">
+        <div style="font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#FFCC20;">Produkt im Einsatz</div>
+        <h2 class="f" style="margin:8px 0 12px;font-size:26px;line-height:1.05;font-weight:900;text-transform:uppercase;color:#FFFFFF;">[PRODUKTNAME]</h2>
+        <p style="margin:0 0 14px;font-size:16px;line-height:1.55;color:#E6E8EA;">[NUTZEN IN EINEM SATZ]</p>
+        <p style="margin:0 0 4px;font-size:15px;line-height:1.5;color:#E6E8EA;">[FAKT 1]</p>
+        <p style="margin:0 0 4px;font-size:15px;line-height:1.5;color:#E6E8EA;">[FAKT 2]</p>
+        <p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#E6E8EA;">[FAKT 3]</p>
+        <table role="presentation"><tr><td style="background:#FFCC20;border-radius:12px 0 12px 0;">
+          <a class="f" href="[LINK PRODUKT]?utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=messepraxis-NN&amp;utm_content=produkt" style="display:inline-block;padding:13px 24px;font-size:16px;font-weight:700;color:#1D1D1B;text-decoration:none;">Jetzt konfigurieren</a>
+        </td></tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Kundenstimme -->
+  <tr><td class="pad f" style="padding:36px 40px 0;">
+    <div class="f" style="font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#4B4F58;">Aus unseren Bewertungen</div>
+    <p class="f" style="margin:10px 0 8px;font-size:24px;line-height:1.25;font-weight:700;font-style:italic;color:#1D1D1B;">„[ZITAT AUS BEWERTUNG]“</p>
+    <p style="margin:0;font-size:14px;line-height:1.5;color:#4B4F58;">[QUELLE] · [AKTUELLE NOTE]</p>
+  </td></tr>
+
+  <!-- Service / Angebot -->
+  <tr><td class="pad" style="padding:36px 40px 0;">
+    <table role="presentation" width="100%" style="background:#F5F5F5;border-radius:30px 0 30px 0;">
+      <tr><td class="f" style="padding:26px 28px;">
+        <h2 class="f" style="margin:0 0 10px;font-size:22px;line-height:1.1;font-weight:900;text-transform:uppercase;color:#1D1D1B;">[HEADLINE ANGEBOT]</h2>
+        <p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#1D1D1B;">[ANGEBOT: Beratung, Grafikservice, Bestellschluss o. ä. Sachlich, ohne Rabattton.]</p>
+        <p style="margin:0 0 18px;font-size:16px;line-height:1.55;color:#1D1D1B;"><strong>+49 7276 4049970</strong> · Mo bis Fr, 8 bis 17 Uhr</p>
+        <table role="presentation"><tr><td style="background:#1D1D1B;border-radius:12px 0 12px 0;">
+          <a class="f" href="[LINK ANGEBOT]?utm_source=newsletter&amp;utm_medium=email&amp;utm_campaign=messepraxis-NN&amp;utm_content=beratung" style="display:inline-block;padding:13px 24px;font-size:16px;font-weight:700;color:#FFFFFF;text-decoration:none;">[BUTTON ANGEBOT]</a>
+        </td></tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Social -->
+  <tr><td class="pad f" style="padding:36px 40px 0;font-size:16px;line-height:1.55;color:#1D1D1B;">
+    <p style="margin:0 0 6px;"><strong>Jeden Dienstag und Donnerstag ein neuer Tipp.</strong></p>
+    <p style="margin:0;">Kurz und zum Speichern auf <a href="https://www.instagram.com/zipperwalls.de/" style="color:#1D1D1B;font-weight:700;">Instagram</a>, ausführlicher auf <a href="https://www.linkedin.com/company/zipperwalls" style="color:#1D1D1B;font-weight:700;">LinkedIn</a> und <a href="https://www.facebook.com/zipperwalls" style="color:#1D1D1B;font-weight:700;">Facebook</a>.</p>
+  </td></tr>
+
+  <!-- Gruß -->
+  <tr><td class="pad f" style="padding:28px 40px 40px;font-size:17px;line-height:1.55;color:#1D1D1B;">
+    <p style="margin:0 0 4px;">Viele Grüße aus Herxheim</p>
+    <p style="margin:0;font-weight:700;">Bela und Darien Pfirrmann</p>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td class="pad f" style="padding:28px 40px;background:#1F2725;font-size:13px;line-height:1.6;color:#C9CDD0;">
+    <p style="margin:0 0 8px;color:#FFFFFF;font-weight:700;">Zipperwalls</p>
+    <p style="margin:0 0 8px;">[Firmierung laut Impressum] · Gewerbepark West 13 · 76863 Herxheim<br>+49 7276 4049970 · info@zipperwalls.de</p>
+    <p style="margin:0 0 8px;">Sie erhalten diese Mail, weil Sie sich für die Messepraxis angemeldet haben.</p>
+    <p style="margin:0;"><a href="{$unsubscribe}" style="color:#FFFFFF;">Abmelden</a> · <a href="{$preferences}" style="color:#FFFFFF;">Einstellungen</a> · <a href="https://www.zipperwalls.de/impressum/" style="color:#FFFFFF;">Impressum</a> · <a href="https://www.zipperwalls.de/datenschutz/" style="color:#FFFFFF;">Datenschutz</a></p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
