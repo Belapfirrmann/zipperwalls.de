@@ -6,7 +6,7 @@ Plan, Freigabe, Abhakeliste und Zahlen für Facebook, Instagram und LinkedIn, da
 - **Posten**: Claude Routine, stündlich. Holt freigegebene Posts und veröffentlicht sie mit `scripts/social.js`.
 - **Entwürfe**: Claude Routine, Mo und Mi. Legt die Posts aus dem Redaktionsplan als Entwurf an.
 - **Zahlen**: Claude Routine, täglich.
-- **Jetzt erstellen** (Social-Plan und Newsletter-Plan): schickt über den Connector „Claude Code Remote“ einen Auftrag an eine Claude-Sitzung. Social an die Dashboard-Sitzung, Newsletter an die Newsletter-Sitzung (IDs in `dashboard/app.js`, CLAUDE_TARGETS, oder ohne Neuveröffentlichung im Dokument `status/targets`). Beauftragungen stehen in der Collection `requests`.
+- **Jetzt erstellen** (Social-Plan und Newsletter-Plan): speichert einen Auftrag in der Collection `requests`. Die stündlichen Routinen „Social Posting“ und „Newsletter Versand“ holen ihn werktags 7 bis 19 Uhr ab und legen den Entwurf an (`docs/routinen/auftraege.md`). Kein Connector nötig.
 
 Ablauf: Entwurf erscheint unter "Freigabe" > Bela oder Darien prüfen > "Jetzt posten" oder "Planen" > beim nächsten Lauf veröffentlicht Claude.
 

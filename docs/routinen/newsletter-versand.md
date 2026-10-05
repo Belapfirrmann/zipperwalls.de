@@ -8,7 +8,7 @@ Technik: Auf zipperwalls.de läuft das Code-Snippet „Zipperwalls Newsletter-Sc
 Quelle `wordpress/zipperwalls-newsletter-snippet.php`). Es stellt `/wp-json/zipperwalls/v1/newsletter/*` bereit und nutzt intern
 die MailPoet-Funktionen von „Speichern“ und „Einplanen“. Angesprochen wird es ausschließlich über `scripts/newsletter.js`.
 
-Grundregeln: Nur Newsletter mit Status „Freigegeben“ einplanen. Nie Texte ändern, nie selbst freigeben, nie an andere Listen
+Grundregeln: Nur Newsletter mit Status „Freigegeben“ einplanen. Nie Texte freigegebener Newsletter ändern, nie selbst freigeben, nie an andere Listen
 als `LIST_IDS` (`src/newsletter-sync.js`, Liste 3 „Infopost zipperwalls.de“) senden. Keine eigenen Aufrufe an WordPress oder
 MailPoet, nichts anderes auf der Website verändern. Zugangsdaten (`WP_USER`, `WP_APP_PASSWORD`) nie ausgeben oder speichern.
 
@@ -32,10 +32,11 @@ MailPoet, nichts anderes auf der Website verändern. Zugangsdaten (`WP_USER`, `W
      `sending`: `{ mp_state: "sending" }`. Kein Newsletter gefunden: `{ mp_error: "In MailPoet nicht mehr gefunden.", status: "Freigegeben" }`.
    - `missed`: `{ status: "Verschoben", mp_error: "Termin verpasst (<send_at>), nicht gesendet. Bitte neuen Termin abstimmen und erneut freigeben.", updated_at }`.
    - `error`: `{ mp_error: <reason>, updated_at }`.
-6. Lauf protokollieren: `status/newsletter_runner` setzen auf `{ "last_run": <jetzt>, "ok": true, "summary": "<kurz: eingeplant, versendet, Fehler>" }`.
-7. Bei Fehlern in der Antwort kurz nennen, welcher Newsletter und welche Meldung.
+6. Aufträge aus dem Dashboard (kind `newsletter`) abarbeiten nach `auftraege.md`. Neu angelegte Entwürfe sind „Entwurf“ und werden erst nach Freigabe eingeplant.
+7. Lauf protokollieren: `status/newsletter_runner` setzen auf `{ "last_run": <jetzt>, "ok": true, "summary": "<kurz: eingeplant, versendet, Fehler>" }`.
+8. Bei Fehlern in der Antwort kurz nennen, welcher Newsletter und welche Meldung.
 
-Ohne Aktionen und ohne Fehler: Lauf kurz halten, keine weitere Ausgabe.
+Ohne Aktionen, ohne Aufträge und ohne Fehler: Lauf kurz halten, keine weitere Ausgabe.
 
 ## Testen ohne echte Empfänger
 

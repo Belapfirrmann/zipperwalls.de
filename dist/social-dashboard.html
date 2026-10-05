@@ -729,7 +729,7 @@ const STATUS = {
 const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
-const S = { db: null, assets: null, comments: null, mcp: null, requests: {}, posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, requests: {}, posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -783,12 +783,12 @@ async function write(fn) {
 const postRef = (id) => S.db.collection('posts').doc(id);
 
 // ---------- Claude beauftragen ----------
-// "Jetzt erstellen" schickt einer Claude-Sitzung einen Auftrag: Social-Posts an die Dashboard-Sitzung,
-// Newsletter an die Newsletter-Sitzung. Weg: Connector "Claude Code Remote" (send_message), als Ersatz
-// für Social der Kommentar an Claude. Andere Sitzungen lassen sich ohne Neuveröffentlichung in status/targets eintragen.
-const CLAUDE_TARGETS = { social: 'session_014bDdJteC7Rh81wY3gqmAnX', newsletter: 'session_01Cam1ZQJwTGAuBned7ssdrx' };
-const REMOTE = 'Claude Code Remote';
+// "Jetzt erstellen" legt einen Auftrag in der Collection "requests" ab (requests/<kind>-<nr>, status "offen").
+// Abgeholt wird er von den stündlichen Routinen: Social von "Social Posting" (docs/routinen/posten.md),
+// Newsletter von "Newsletter Versand" (docs/routinen/newsletter-versand.md). Diese setzen status auf
+// "in Arbeit", dann "erledigt" oder "fehler" (mit error).
 const requestId = (kind, nr) => `${kind}-${nr}`;
+const REQUEST_LABEL = { offen: 'Beauftragt', 'in Arbeit': 'Wird erstellt seit', erledigt: 'Erstellt', fehler: 'Fehler beim Erstellen' };
 
 function socialPrompt(e) {
   return `Auftrag aus dem Dashboard: Erstelle jetzt Post Nr. ${e.nr} aus dem Redaktionsplan (${e.day} ${fmtDayLong(e.date)}, „${e.topic}“, Format: ${e.format}). `
@@ -801,53 +801,31 @@ function newsletterPrompt(e) {
     + `Halte dich an docs/routinen/newsletter-entwuerfe.md und lege ihn als ${nlId(e.nr)} im Dashboard zur Freigabe ab.`;
 }
 
-async function askClaude(kind, nr, text, anchorEl) {
-  const sessionId = S.status.targets?.[kind] || CLAUDE_TARGETS[kind];
-  let via = null;
-  let lastErr = null;
-  if (S.mcp) {
-    try {
-      await S.mcp.callTool(REMOTE, 'send_message', { session_id: sessionId, message: text });
-      via = 'session';
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  // Ersatzweg nur für Social: Kommentar landet bei der Dashboard-Sitzung
-  if (!via && kind === 'social' && S.comments && (await S.comments.canSendToClaude().catch(() => 'off')) === 'available') {
-    await S.comments.sendToClaude({ anchor: await S.comments.anchorFor(anchorEl), text });
-    via = 'comment';
-  }
-  if (!via) {
-    const msg = {
-      server_not_connected: `Bitte in claude.ai unter Einstellungen › Connectors „${REMOTE}“ verbinden und erneut senden.`,
-      needs_reauth: `„${REMOTE}“ bitte in claude.ai unter Einstellungen › Connectors neu verbinden.`,
-      not_in_manifest: `Sie haben dem Dashboard den Zugriff auf „${REMOTE}“ nicht erlaubt. Beim nächsten Laden erneut fragen lassen.`,
-      tool_error: 'Die Claude-Sitzung hat den Auftrag abgelehnt (vielleicht archiviert). Bitte Claude Bescheid geben.',
-      server_unavailable: 'Claude ist gerade nicht erreichbar. Bitte gleich noch einmal senden.',
-    }[lastErr?.code];
-    throw new Error(msg || lastErr?.message || 'Auftrag an Claude ist in dieser Ansicht nicht möglich. Bitte das Dashboard auf claude.ai öffnen.');
-  }
-  await write((db) => db.collection('requests').doc(requestId(kind, nr)).set({ kind, nr, via, session: via === 'session' ? sessionId : null, requested_at: nowIso() })).catch(() => {});
-  return via;
+async function askClaude(kind, nr, text) {
+  await write((db) => db.collection('requests').doc(requestId(kind, nr)).set({
+    kind, nr, prompt: text, status: 'offen', requested_at: nowIso(), started_at: null, done_at: null, error: null,
+  }));
 }
 
 // Knopf mit zweistufiger Bestätigung; zeigt, wann schon beauftragt wurde
 function createButton(kind, nr) {
   const r = S.requests[requestId(kind, nr)];
-  const when = r ? new Date(r.requested_at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
-  return `<button class="btn small" type="button" data-create="${kind}" data-nr="${nr}">${r ? 'Erneut beauftragen' : 'Jetzt erstellen'}</button>
-    ${r ? `<span class="muted small create-hint">Beauftragt ${when} Uhr</span>` : ''}`;
+  const status = r?.status || 'offen';
+  const at = r ? (status === 'erledigt' ? r.done_at : status === 'in Arbeit' ? r.started_at : r.requested_at) || r.requested_at : null;
+  const when = at ? new Date(at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
+  const hint = r ? `${REQUEST_LABEL[status] || status}${when && status !== 'fehler' ? ` ${when} Uhr` : ''}${status === 'fehler' && r.error ? `: ${esc(r.error)}` : ''}` : '';
+  return `<button class="btn small" type="button" data-create="${kind}" data-nr="${nr}"${status === 'in Arbeit' ? ' disabled' : ''}>${r ? 'Erneut beauftragen' : 'Jetzt erstellen'}</button>
+    ${r ? `<span class="muted small create-hint">${hint}</span>` : ''}`;
 }
 function bindCreateButtons(find) {
   main.querySelectorAll('[data-create]').forEach((b) => (b.onclick = () => confirmClick(b, 'Claude beauftragen?', async () => {
     const kind = b.dataset.create;
     const e = find(kind, Number(b.dataset.nr));
     b.disabled = true;
-    b.textContent = 'Wird gesendet …';
+    b.textContent = 'Wird gespeichert …';
     try {
-      await askClaude(kind, e.nr, kind === 'social' ? socialPrompt(e) : newsletterPrompt(e), b.closest('article'));
-      toast(kind === 'social' ? 'Auftrag gesendet. Claude erstellt den Post, er erscheint dann unter „Freigabe“.' : 'Auftrag an die Newsletter-Sitzung gesendet. Der Entwurf erscheint dann unter „Freigabe › Newsletter“.');
+      await askClaude(kind, e.nr, kind === 'social' ? socialPrompt(e) : newsletterPrompt(e));
+      toast(`Auftrag gespeichert. Claude erstellt den Entwurf beim nächsten Lauf (werktags stündlich 7 bis 19 Uhr), er erscheint dann unter „Freigabe${kind === 'social' ? '' : ' › Newsletter'}“.`);
     } catch (err) {
       toast(err.message);
     }
@@ -1666,7 +1644,6 @@ async function start() {
   S.db = db;
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
-  S.mcp = await claude.use('mcp').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
   let first = 6;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
