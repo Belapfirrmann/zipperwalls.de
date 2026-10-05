@@ -310,6 +310,9 @@ i.dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .zk .kpi .label { letter-spacing: .06em; overflow-wrap: anywhere; }
 @media (max-width: 620px) { .zc text { font-size: 22px; } .zc .lbl { font-size: 22px; } }
 .zk .kpi .label { display: block; line-height: 1.3; min-height: 2.6em; }
+.entry-act { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.create-hint { text-align: right; max-width: 140px; }
+@media (max-width: 760px) { .entry-act { align-items: flex-start; } .create-hint { text-align: left; } }
 
 </style>
 <div class="shell">
@@ -726,7 +729,7 @@ const STATUS = {
 const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
-const S = { db: null, assets: null, comments: null, posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, mcp: null, requests: {}, posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -778,6 +781,79 @@ async function write(fn) {
   }
 }
 const postRef = (id) => S.db.collection('posts').doc(id);
+
+// ---------- Claude beauftragen ----------
+// "Jetzt erstellen" schickt einer Claude-Sitzung einen Auftrag: Social-Posts an die Dashboard-Sitzung,
+// Newsletter an die Newsletter-Sitzung. Weg: Connector "Claude Code Remote" (send_message), als Ersatz
+// für Social der Kommentar an Claude. Andere Sitzungen lassen sich ohne Neuveröffentlichung in status/targets eintragen.
+const CLAUDE_TARGETS = { social: 'session_014bDdJteC7Rh81wY3gqmAnX', newsletter: 'session_01Cam1ZQJwTGAuBned7ssdrx' };
+const REMOTE = 'Claude Code Remote';
+const requestId = (kind, nr) => `${kind}-${nr}`;
+
+function socialPrompt(e) {
+  return `Auftrag aus dem Dashboard: Erstelle jetzt Post Nr. ${e.nr} aus dem Redaktionsplan (${e.day} ${fmtDayLong(e.date)}, „${e.topic}“, Format: ${e.format}). `
+    + 'Halte dich an docs/routinen/entwuerfe.md (echtes Foto, heller Hintergrund, kein Logo, keine Herkunftsangaben, Tipp-Posts als Karussell mit ausgeführten Punkten, Ratgeber- und Newsletter-Hinweis). '
+    + `Lege ihn als Entwurf posts/plan-${e.nr} mit dem Termin aus dem Plan im Dashboard ab und melde kurz, wenn er zur Freigabe bereit ist.`;
+}
+function newsletterPrompt(e) {
+  return `Auftrag aus dem Dashboard: Erstelle jetzt den Entwurf für Newsletter Nr. ${e.nr} („${e.topic}“, Versand ${e.day} ${fmtDayLong(e.date)} um ${e.time} Uhr`
+    + `${e.post_nr != null ? `, gekoppelt an Social-Post #${e.post_nr} „${e.post_topic}“` : ''}). `
+    + `Halte dich an docs/routinen/newsletter-entwuerfe.md und lege ihn als ${nlId(e.nr)} im Dashboard zur Freigabe ab.`;
+}
+
+async function askClaude(kind, nr, text, anchorEl) {
+  const sessionId = S.status.targets?.[kind] || CLAUDE_TARGETS[kind];
+  let via = null;
+  let lastErr = null;
+  if (S.mcp) {
+    try {
+      await S.mcp.callTool(REMOTE, 'send_message', { session_id: sessionId, message: text });
+      via = 'session';
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  // Ersatzweg nur für Social: Kommentar landet bei der Dashboard-Sitzung
+  if (!via && kind === 'social' && S.comments && (await S.comments.canSendToClaude().catch(() => 'off')) === 'available') {
+    await S.comments.sendToClaude({ anchor: await S.comments.anchorFor(anchorEl), text });
+    via = 'comment';
+  }
+  if (!via) {
+    const msg = {
+      server_not_connected: `Bitte in claude.ai unter Einstellungen › Connectors „${REMOTE}“ verbinden und erneut senden.`,
+      needs_reauth: `„${REMOTE}“ bitte in claude.ai unter Einstellungen › Connectors neu verbinden.`,
+      not_in_manifest: `Sie haben dem Dashboard den Zugriff auf „${REMOTE}“ nicht erlaubt. Beim nächsten Laden erneut fragen lassen.`,
+      tool_error: 'Die Claude-Sitzung hat den Auftrag abgelehnt (vielleicht archiviert). Bitte Claude Bescheid geben.',
+      server_unavailable: 'Claude ist gerade nicht erreichbar. Bitte gleich noch einmal senden.',
+    }[lastErr?.code];
+    throw new Error(msg || lastErr?.message || 'Auftrag an Claude ist in dieser Ansicht nicht möglich. Bitte das Dashboard auf claude.ai öffnen.');
+  }
+  await write((db) => db.collection('requests').doc(requestId(kind, nr)).set({ kind, nr, via, session: via === 'session' ? sessionId : null, requested_at: nowIso() })).catch(() => {});
+  return via;
+}
+
+// Knopf mit zweistufiger Bestätigung; zeigt, wann schon beauftragt wurde
+function createButton(kind, nr) {
+  const r = S.requests[requestId(kind, nr)];
+  const when = r ? new Date(r.requested_at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
+  return `<button class="btn small" type="button" data-create="${kind}" data-nr="${nr}">${r ? 'Erneut beauftragen' : 'Jetzt erstellen'}</button>
+    ${r ? `<span class="muted small create-hint">Beauftragt ${when} Uhr</span>` : ''}`;
+}
+function bindCreateButtons(find) {
+  main.querySelectorAll('[data-create]').forEach((b) => (b.onclick = () => confirmClick(b, 'Claude beauftragen?', async () => {
+    const kind = b.dataset.create;
+    const e = find(kind, Number(b.dataset.nr));
+    b.disabled = true;
+    b.textContent = 'Wird gesendet …';
+    try {
+      await askClaude(kind, e.nr, kind === 'social' ? socialPrompt(e) : newsletterPrompt(e), b.closest('article'));
+      toast(kind === 'social' ? 'Auftrag gesendet. Claude erstellt den Post, er erscheint dann unter „Freigabe“.' : 'Auftrag an die Newsletter-Sitzung gesendet. Der Entwurf erscheint dann unter „Freigabe › Newsletter“.');
+    } catch (err) {
+      toast(err.message);
+    }
+    render();
+  })));
+}
 
 // ---------- Plan ----------
 let planFilter = 'alle';
@@ -838,50 +914,11 @@ function viewPlan() {
                 <details><summary>Texte ansehen</summary>${CHANNEL_KEYS.map((c) => (e[c] ? `<div style="margin-top:10px"><span class="label">${CH[c]}</span><div class="pre">${esc(e[c])}</div></div>` : '')).join('')}
                   <p class="muted small" style="margin-top:8px">${esc(e.hashtags.join(' '))}</p></details>
               </div>
-              <div class="entry-act">${e.post && e.post.status !== 'rejected' ? `<a class="btn ghost small" href="#freigabe">Zum Post</a>` : `<button class="btn small" data-draft="${e.nr}" ${S.db ? '' : 'disabled'}>Als Entwurf anlegen</button>`}</div>
+              <div class="entry-act">${e.post && e.post.status !== 'rejected' ? `<a class="btn ghost small" href="#freigabe">Zum Post</a>` : ['Gepostet', 'Gestrichen'].includes(e.liveStatus) ? '' : createButton('social', e.nr)}</div>
             </article>`).join('')}</div></div>`).join('') : '<div class="card empty">Keine Einträge für diesen Filter.</div>'}
     </section>`;
   main.querySelectorAll('[data-pf]').forEach((b) => (b.onclick = () => { planFilter = b.dataset.pf; render(); }));
-  main.querySelectorAll('[data-draft]').forEach((b) => (b.onclick = async () => {
-    b.disabled = true;
-    try {
-      await draftFromPlan(Number(b.dataset.draft));
-      toast('Entwurf angelegt. Bitte unter „Freigabe“ die Grafiken hochladen.');
-    } catch (e) {
-      toast(e.message);
-      b.disabled = false;
-    }
-  }));
-}
-
-// Plan Eintrag als Entwurf uebernehmen: Texte je Kanal, Hashtags, Termin 09:00 Berliner Zeit
-async function draftFromPlan(nr) {
-  const e = PLAN.entries.find((x) => x.nr === nr);
-  const existing = S.posts.find((p) => p.plan_nr === nr && p.status !== 'rejected');
-  if (existing) throw new Error('Zu diesem Eintrag gibt es schon einen Post.');
-  const notes = [
-    `Plan Nr. ${e.nr}, KW ${e.kw}, ${e.pillar}. Format: ${e.format}.`,
-    e.headline ? `Bildtext: ${e.headline}` : null,
-    e.files?.length ? `Grafiken: ${e.files.join(', ')}` : null,
-    e.note ? `Offen: ${e.note}` : null,
-  ].filter(Boolean).join('\n');
-  await write((db) => db.collection('posts').doc(`plan-${nr}`).set({
-    title: `#${e.nr} ${e.topic}`,
-    plan_nr: e.nr,
-    status: 'draft',
-    body: e.facebook || e.instagram || e.linkedin,
-    variants: { instagram: e.instagram, facebook: e.facebook, linkedin: e.linkedin },
-    hashtags: normalizeHashtags(e.hashtags),
-    channels: CHANNEL_KEYS,
-    image: null,
-    image_linkedin: null,
-    notes,
-    scheduled_at: e.date ? berlinToUtc(e.date, PLAN.rhythm.time) : null,
-    results: {},
-    source: 'plan',
-    created_at: nowIso(),
-    updated_at: nowIso(),
-  }));
+  bindCreateButtons((kind, nr) => entriesAll.find((x) => x.nr === nr));
 }
 
 // ---------- Freigabe ----------
@@ -1305,11 +1342,12 @@ function viewNewsletter() {
                   ${e.image_idea ? `<p class="muted small" style="margin-top:10px"><strong>Bildidee:</strong> ${esc(e.image_idea)}</p>` : ''}
                 </details>
               </div>
-              <div class="entry-act">${e.doc ? `<a class="btn ghost small" href="#freigabe-newsletter" data-goto="${esc(e.id)}">Zur Freigabe</a>` : '<span class="muted small">Noch kein Entwurf</span>'}</div>
+              <div class="entry-act">${e.doc ? `<a class="btn ghost small" href="#freigabe-newsletter" data-goto="${esc(e.id)}">Zur Freigabe</a>` : ['Versendet', 'Gestrichen'].includes(e.status) ? '' : createButton('newsletter', e.nr)}</div>
             </article>`).join('')}</div></div>`).join('') : '<div class="card empty">Keine Ausgaben für diesen Filter.</div>'}
     </section>
     ${NL.sources?.length ? `<details class="card setup"><summary><h2>Quellen</h2></summary><ul class="steps">${NL.sources.map((s) => `<li>${esc(s)}</li>`).join('')}</ul></details>` : ''}`;
   main.querySelectorAll('[data-nlf]').forEach((b) => (b.onclick = () => { nlFilter = b.dataset.nlf; render(); }));
+  bindCreateButtons((kind, nr) => all.find((x) => x.nr === nr));
   main.querySelectorAll('[data-goto]').forEach((a) => (a.onclick = () => {
     const n = all.find((x) => x.id === a.dataset.goto);
     nlFreigabeFilter = Object.keys(NL_GROUPS).find((g) => NL_GROUPS[g].includes(n?.status)) || 'offen';
@@ -1628,13 +1666,15 @@ async function start() {
   S.db = db;
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
+  S.mcp = await claude.use('mcp').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
-  let first = 5;
+  let first = 6;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
   db.collection('posts').onSnapshot((snap) => { S.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('newsletters').onSnapshot((snap) => { S.newsletters = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('metrics').onSnapshot((snap) => { S.metrics = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('status').onSnapshot((snap) => { S.status = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
+  db.collection('requests').onSnapshot((snap) => { S.requests = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
   db.collection('checklist').onSnapshot((snap) => { S.checklist = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
 }
 start();

@@ -305,3 +305,6 @@ i.dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .zk .kpi .label { letter-spacing: .06em; overflow-wrap: anywhere; }
 @media (max-width: 620px) { .zc text { font-size: 22px; } .zc .lbl { font-size: 22px; } }
 .zk .kpi .label { display: block; line-height: 1.3; min-height: 2.6em; }
+.entry-act { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.create-hint { text-align: right; max-width: 140px; }
+@media (max-width: 760px) { .entry-act { align-items: flex-start; } .create-hint { text-align: left; } }
