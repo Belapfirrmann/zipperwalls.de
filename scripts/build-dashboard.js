@@ -67,6 +67,7 @@ const SETUP_STEPS = ${json(SETUP_STEPS)};
 ${stripModule(read('src/text.js'))}
 ${stripModule(read('src/newsletter-render.js'))}
 ${read('dashboard/app.js')}
+${read('dashboard/zahlen.js')}
 </script>
 `;
 

@@ -91,7 +91,7 @@ test('Kennzahlen je Kanal', async () => {
   };
   const r = await metricsJob({ META_PAGE_TOKEN: 'PT', META_PAGE_ID: '1' }, { published: [{ post_id: 'p', channel: 'facebook', external_id: '1_2' }] });
   assert.equal(r.channels.facebook.account.followers, 120);
-  assert.deepEqual(r.channels.facebook.posts.p, { likes: 7, comments: 2, shares: 0 });
+  assert.deepEqual(r.posts.facebook.p, { likes: 7, comments: 2, shares: 0 });
 });
 
 test('LinkedIn ohne Unternehmensseite wird übersprungen, nie aufs persönliche Profil', async () => {

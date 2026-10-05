@@ -1,4 +1,5 @@
 import { apiFetch } from './http.js';
+import { fetchInsights, addSeries, lifetimeValues, unix } from './meta-insights.js';
 
 const base = (env) => `https://graph.facebook.com/${env.GRAPH_VERSION || 'v22.0'}`;
 
@@ -52,20 +53,42 @@ export async function deletePhoto(env, { token, id }) {
   await apiFetch(`${base(env)}/${id}?access_token=${token.accessToken}`, { method: 'DELETE' });
 }
 
-export async function insightsFacebook(env, { token, results }) {
+// Seiten-Kennzahlen je Tag (Name bei Meta -> Feld im Dashboard)
+const FB_DAY = {
+  page_follows: 'followers',
+  page_daily_follows_unique: 'new_follows',
+  page_media_view: 'views',
+  page_total_media_view_unique: 'reach',
+  page_post_engagements: 'engagements',
+  page_views_total: 'page_views',
+  page_total_actions: 'actions',
+};
+const FB_POST = { post_media_view: 'views', post_total_media_view_unique: 'reach', post_clicks: 'clicks' };
+
+/** Konto, Tageswerte der letzten `days` Tage und Werte je Post. Braucht read_insights fuer die Insights. */
+export async function insightsFacebook(env, { token, results, days = 7, now = new Date() }) {
   const { accessToken, meta } = token;
-  const out = { account: {}, posts: {} };
+  const out = { account: {}, daily: {}, posts: {}, missing: [] };
   const page = await apiFetch(`${base(env)}/${meta.pageId}?fields=followers_count,fan_count&access_token=${accessToken}`);
   out.account.followers = page.data.followers_count ?? page.data.fan_count ?? 0;
+
+  const since = unix(new Date(now.getTime() - Math.min(days, 90) * 86400000));
+  const day = await fetchInsights(env, accessToken, meta.pageId, Object.keys(FB_DAY), `period=day&since=${since}&until=${unix(now)}`);
+  if (day.denied) out.missing.push('read_insights');
+  addSeries(out.daily, day.data, FB_DAY);
+
   for (const r of results) {
     try {
       const f = 'reactions.summary(true).limit(0),comments.summary(true).limit(0),shares';
       const { data } = await apiFetch(`${base(env)}/${r.external_id}?fields=${f}&access_token=${accessToken}`);
-      out.posts[r.post_id] = {
+      const stats = {
         likes: data.reactions?.summary?.total_count ?? 0,
         comments: data.comments?.summary?.total_count ?? 0,
         shares: data.shares?.count ?? 0,
       };
+      const ins = await fetchInsights(env, accessToken, r.external_id, Object.keys(FB_POST));
+      Object.assign(stats, lifetimeValues(ins.data, FB_POST));
+      out.posts[r.post_id] = stats;
     } catch {
       /* einzelner Post nicht abrufbar, uebergehen */
     }

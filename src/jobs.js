@@ -85,22 +85,55 @@ export async function publishJob(env, job, { dryRun = false } = {}) {
   return { status, results };
 }
 
-/** job: { published: [{post_id, channel, external_id}] } */
-export async function metricsJob(env, job) {
+/**
+ * Fuehrt neue Kennzahlen mit vorhandenen Tagesdokumenten zusammen.
+ * existing: { 'YYYY-MM-DD': doc } aus metrics/<datum>. Liefert nur die geaenderten Dokumente.
+ * Aufbau je Dokument: { <kanal>: { day: {...}, account: {...}, audience: {...} }, meta: {...} }
+ */
+export function mergeMetricDocs(existing, result) {
+  const docs = {};
+  const doc = (d) => (docs[d] ||= structuredClone(existing?.[d] || {}));
+  for (const [channel, c] of Object.entries(result.channels)) {
+    for (const [d, vals] of Object.entries(c.daily || {})) {
+      const ch = (doc(d)[channel] ||= {});
+      ch.day = { ...ch.day, ...vals };
+    }
+    const ch = (doc(result.date)[channel] ||= {});
+    if (c.account && Object.keys(c.account).length) ch.account = c.account;
+    const audience = Object.fromEntries(Object.entries(c.audience || {}).filter(([, v]) => v != null));
+    if (Object.keys(audience).length) ch.audience = audience;
+  }
+  doc(result.date).meta = { fetched_at: result.fetched_at, missing: result.missing, errors: result.errors };
+  for (const d of Object.values(docs)) delete d.id;
+  return docs;
+}
+
+/**
+ * job: { published: [{post_id, channel, external_id}], days?: 7, existing?: { 'YYYY-MM-DD': doc } }
+ * days: wie viele Tage rueckwirkend (Meta bis 90, Instagram-Tagessummen bis 14). Beim ersten Lauf 90.
+ */
+export async function metricsJob(env, job, now = new Date()) {
   const tokens = tokensFromEnv(env);
   const fns = { facebook: insightsFacebook, instagram: insightsInstagram, linkedin: insightsLinkedIn };
-  const out = { date: new Date().toISOString().slice(0, 10), channels: {}, errors: {} };
+  const out = { date: now.toISOString().slice(0, 10), fetched_at: now.toISOString(), channels: {}, posts: {}, missing: {}, errors: {} };
+  const days = job.days || 7;
   for (const channel of CHANNELS) {
     const token = tokens[channel];
     if (!token) continue;
     try {
-      const t = channel === 'linkedin' ? { ...token, meta: { author: await linkedinAuthor(token) } } : token;
       const results = (job.published || []).filter((r) => r.channel === channel && r.external_id);
-      out.channels[channel] = await fns[channel](env, { token: t, results });
+      // LinkedIn nur mit Unternehmensseite, nie ueber das persoenliche Profil
+      const t = channel === 'linkedin' ? { ...token, meta: { author: isOrgAuthor(env) ? env.LINKEDIN_AUTHOR : null } } : token;
+      const r = await fns[channel](env, { token: t, results, days, now });
+      if (r.missing?.length) out.missing[channel] = r.missing;
+      out.posts[channel] = r.posts;
+      out.channels[channel] = r;
     } catch (e) {
       out.errors[channel] = e.message;
     }
   }
+  out.docs = mergeMetricDocs(job.existing || {}, out);
+  for (const c of Object.values(out.channels)) delete c.posts;
   return out;
 }
 

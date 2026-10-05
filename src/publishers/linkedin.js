@@ -60,25 +60,58 @@ export async function publishLinkedIn(env, { token, text, imageBytes, imageType,
 }
 
 // Zahlen gibt es nur fuer Unternehmensseiten mit genehmigter Community Management API
-export async function insightsLinkedIn(env, { token, results }) {
+// Zeitraum im Rest.li-2.0-Format, Tageswerte
+const timeIntervals = (from, to) => `timeIntervals=(timeRange:(start:${from},end:${to}),timeGranularityType:DAY)`;
+const day = (ms) => new Date(ms).toISOString().slice(0, 10);
+
+/** Nur fuer die Unternehmensseite (Community Management API): Follower, Tageswerte und Werte je Post. */
+export async function insightsLinkedIn(env, { token, results, days = 7, now = new Date() }) {
   const { accessToken, meta } = token;
-  const out = { account: {}, posts: {} };
-  if (!meta.author?.startsWith('urn:li:organization:')) return out;
+  const out = { account: {}, daily: {}, posts: {}, missing: [] };
+  if (!meta.author?.startsWith('urn:li:organization:')) {
+    out.missing.push('organization');
+    return out;
+  }
+  const org = encodeURIComponent(meta.author);
+  const get = (path) => apiFetch(`https://api.linkedin.com/rest/${path}`, { headers: headers(env, accessToken) });
+  const to = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const from = to - Math.min(days, 90) * 86400000;
+  const add = (ms, vals) => Object.assign((out.daily[day(ms)] ||= {}), vals);
   try {
-    const { data } = await apiFetch(
-      `https://api.linkedin.com/rest/networkSizes/${encodeURIComponent(meta.author)}?edgeType=COMPANY_FOLLOWED_BY_MEMBER`,
-      { headers: headers(env, accessToken) },
-    );
-    out.account.followers = data.firstDegreeSize ?? 0;
+    out.account.followers = (await get(`networkSizes/${org}?edgeType=COMPANY_FOLLOWED_BY_MEMBER`)).data.firstDegreeSize ?? 0;
   } catch {
     /* ohne Freigabe nicht verfuegbar */
   }
+  try {
+    const { data } = await get(`organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${org}&${timeIntervals(from, to)}`);
+    for (const e of data.elements || []) {
+      const s = e.totalShareStatistics || {};
+      add(e.timeRange.start, { views: s.impressionCount ?? 0, reach: s.uniqueImpressionsCount ?? 0, clicks: s.clickCount ?? 0, engagements: (s.likeCount ?? 0) + (s.commentCount ?? 0) + (s.shareCount ?? 0) });
+    }
+  } catch {
+    /* uebergehen */
+  }
+  try {
+    const { data } = await get(`organizationalEntityFollowerStatistics?q=organizationalEntity&organizationalEntity=${org}&${timeIntervals(from, to)}`);
+    for (const e of data.elements || []) {
+      const g = e.followerGains || {};
+      add(e.timeRange.start, { new_follows: (g.organicFollowerGain ?? 0) + (g.paidFollowerGain ?? 0) });
+    }
+  } catch {
+    /* uebergehen */
+  }
+  try {
+    const { data } = await get(`organizationPageStatistics?q=organization&organization=${org}&${timeIntervals(from, to)}`);
+    for (const e of data.elements || []) add(e.timeRange.start, { page_views: e.totalPageStatistics?.views?.allPageViews?.pageViews ?? 0 });
+  } catch {
+    /* uebergehen */
+  }
   for (const r of results) {
     try {
-      const q = `q=organizationalEntity&organizationalEntity=${encodeURIComponent(meta.author)}&shares=List(${encodeURIComponent(r.external_id)})`;
-      const { data } = await apiFetch(`https://api.linkedin.com/rest/organizationalEntityShareStatistics?${q}`, { headers: headers(env, accessToken) });
+      const q = `q=organizationalEntity&organizationalEntity=${org}&shares=List(${encodeURIComponent(r.external_id)})`;
+      const { data } = await get(`organizationalEntityShareStatistics?${q}`);
       const s = data.elements?.[0]?.totalShareStatistics;
-      if (s) out.posts[r.post_id] = { reach: s.uniqueImpressionsCount ?? 0, likes: s.likeCount ?? 0, comments: s.commentCount ?? 0, shares: s.shareCount ?? 0 };
+      if (s) out.posts[r.post_id] = { views: s.impressionCount ?? 0, reach: s.uniqueImpressionsCount ?? 0, clicks: s.clickCount ?? 0, likes: s.likeCount ?? 0, comments: s.commentCount ?? 0, shares: s.shareCount ?? 0 };
     } catch {
       /* uebergehen */
     }

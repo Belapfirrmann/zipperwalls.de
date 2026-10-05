@@ -846,55 +846,7 @@ function viewCheckliste() {
   }));
 }
 
-// ---------- Zahlen ----------
-function lineChart(points) {
-  if (points.length < 2) return `<p class="muted small">Verlauf erscheint ab dem zweiten Messtag.</p>`;
-  const W = 520, H = 160, P = 28;
-  const ys = points.map((p) => p.value);
-  const min = Math.min(...ys), max = Math.max(...ys), span = max - min || 1;
-  const x = (i) => P + (i * (W - 2 * P)) / (points.length - 1);
-  const y = (v) => H - P - ((v - min) / span) * (H - 2 * P);
-  const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
-  const last = points[points.length - 1];
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Follower Verlauf">
-    <line class="axis" x1="${P}" x2="${W - P}" y1="${H - P}" y2="${H - P}"/>
-    <path class="line" d="${d}"/>
-    <circle class="dot" cx="${x(points.length - 1)}" cy="${y(last.value)}" r="5"/>
-    <text x="${P}" y="${H - 8}">${esc(points[0].date)}</text><text x="${W - P}" y="${H - 8}" text-anchor="end">${esc(last.date)}</text>
-  </svg>`;
-}
-function viewZahlen() {
-  const series = [...S.metrics].sort((a, b) => a.id.localeCompare(b.id));
-  const published = [];
-  for (const p of S.posts) for (const [c, r] of Object.entries(p.results || {})) if (r.status === 'ok') published.push({ title: p.title, channel: c, ...r });
-  published.sort((a, b) => String(b.at).localeCompare(String(a.at)));
-  const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
-  const recent = published.filter((p) => p.at >= cutoff);
-  const sum = (k) => recent.reduce((s, p) => s + (p.stats?.[k] || 0), 0);
-  const followers = (c) => series.filter((m) => m[c]?.account?.followers != null).map((m) => ({ date: m.id, value: m[c].account.followers }));
-  const has = series.length > 0 || published.length > 0;
-  main.innerHTML = `
-    <div class="head"><h1>Zahlen</h1><p>Follower und Interaktionen je Kanal. Claude holt die Werte jeden Morgen.</p></div>
-    ${!has ? `<div class="card empty"><h2>Noch keine Zahlen</h2><p style="margin-top:10px">Sobald die Konten verbunden und die ersten Posts veröffentlicht sind, erscheinen hier Follower, Reichweite und Interaktionen.</p></div>` : `
-    <section class="section grid g3">
-      <div class="card kpi"><span class="label">Veröffentlichte Posts</span><div class="num">${fmtNum(S.posts.filter((p) => ['published', 'partial'].includes(p.status)).length)}</div></div>
-      <div class="card kpi"><span class="label">Interaktionen (30 Tage)</span><div class="num">${fmtNum(sum('likes') + sum('comments') + sum('shares'))}</div><div class="delta">Likes, Kommentare, Teilen</div></div>
-      <div class="card kpi"><span class="label">Reichweite (30 Tage)</span><div class="num">${fmtNum(sum('reach'))}</div><div class="delta">Instagram und LinkedIn Unternehmensseite</div></div>
-    </section>
-    <section class="section grid g3">${CHANNEL_KEYS.map((c) => {
-      const pts = followers(c);
-      const v = pts.at(-1)?.value;
-      const base = pts.find((p) => p.date >= cutoff.slice(0, 10))?.value;
-      const delta = v != null && base != null ? v - base : null;
-      return `<div class="card kpi"><span class="label">${CH[c]} Follower</span><div class="num">${v != null ? fmtNum(v) : 'k. A.'}</div>
-        <div class="delta">${delta != null ? `${delta >= 0 ? '+' : ''}${fmtNum(delta)} in 30 Tagen` : c === 'linkedin' ? 'Nur mit Unternehmensseite verfügbar' : 'noch keine Daten'}</div>
-        ${pts.length ? lineChart(pts) : ''}</div>`;
-    }).join('')}</section>
-    <section class="section"><h2>Posts</h2><div class="card tablewrap"><table>
-      <thead><tr><th>Post</th><th>Kanal</th><th>Datum</th><th class="n">Reichweite</th><th class="n">Likes</th><th class="n">Komm.</th><th class="n">Geteilt</th></tr></thead>
-      <tbody>${published.map((p) => `<tr><td>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>` : esc(p.title)}</td><td>${CH[p.channel]}</td><td>${fmtDate(p.at)}</td>
-        ${['reach', 'likes', 'comments', 'shares'].map((k) => `<td class="n">${p.stats?.[k] != null ? fmtNum(p.stats[k]) : 'k. A.'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`}`;
-}
+// ---------- Zahlen: siehe dashboard/zahlen.js ----------
 
 // ---------- Verbindungen ----------
 function viewVerbindungen() {
