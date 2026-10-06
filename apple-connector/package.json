@@ -1,0 +1,34 @@
+{
+  "name": "zipperwalls-apple-connector",
+  "version": "1.0.0",
+  "description": "Eigener MCP Server für Claude: iCloud Kalender (CalDAV) und Mail (IMAP/SMTP)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node --env-file=.env dist/index.js",
+    "check": "tsc --noEmit"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "express": "^5.2.1",
+    "ical.js": "^2.2.1",
+    "imapflow": "^2.2.6",
+    "mailparser": "^3.9.36",
+    "nodemailer": "^10.0.15",
+    "tsdav": "^2.4.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/mailparser": "^3.9.0",
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

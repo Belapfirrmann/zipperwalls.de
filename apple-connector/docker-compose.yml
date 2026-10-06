@@ -1,0 +1,30 @@
+# Server + Caddy (holt automatisch ein HTTPS Zertifikat).
+# Vorher: DNS Eintrag (z.B. connector.zipperwalls.de) auf die Server IP zeigen lassen
+# und DOMAIN in .env setzen.
+services:
+  connector:
+    build: .
+    env_file: .env
+    environment:
+      PORT: "3000"
+    volumes:
+      - connector-data:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    command: caddy reverse-proxy --from ${DOMAIN} --to connector:3000
+    volumes:
+      - caddy-data:/data
+    restart: unless-stopped
+    depends_on:
+      - connector
+
+volumes:
+  connector-data:
+  caddy-data:
