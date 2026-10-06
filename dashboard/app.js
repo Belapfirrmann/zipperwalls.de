@@ -404,7 +404,8 @@ const NL_SECTIONS = [
   ['Betreff und Vorschautext', [['subject', 'Betreff', 60], ['subject_alt', 'Betreff Alternative (A/B-Test)', 60], ['preview', 'Vorschautext', 120]], true],
   ['Kopf', [['badge', 'Badge (gelb)'], ['headline', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short']]],
   ['Bild', [['image_url', 'Bild-Adresse für MailPoet (zipperwalls.de)'], ['image_alt', 'Bildbeschreibung (Alt-Text)'], ['image_link', 'Bild verlinkt auf']]],
-  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt)', 0, 'long']], true],
+  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt, eigene Zeile „[Bild 2]“ = weiteres Bild)', 0, 'long']], true],
+  ['Weitere Bilder', [2, 3].flatMap((i) => [[`img${i}_url`, `Bild ${i}: Adresse für MailPoet (zipperwalls.de)`], [`img${i}_alt`, `Bild ${i}: Bildbeschreibung (Alt-Text)`], [`img${i}_caption`, `Bild ${i}: Bildunterschrift`], [`img${i}_link`, `Bild ${i}: verlinkt auf (optional)`]])],
   ['Button', [['button_text', 'Button-Text'], ['button_link', 'Button-Link']]],
   ['Angebot', [['offer_label', 'Angebot Kennzeile'], ['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
   ['Zusatzblock', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
@@ -458,9 +459,10 @@ function nlProblem(n) {
     const ph = findPlaceholder(v);
     if (ph) return `${label}: Platzhalter ${ph} noch ersetzen.`;
     if (max && v.length > max) return `${label} zu lang (${v.length} von ${max} Zeichen).`;
-    if ((f.endsWith('_link') || f.endsWith('image_url')) && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
+    if ((f.endsWith('_link') || f.endsWith('_url')) && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
   }
   for (const [f, label] of [['subject', 'Betreff'], ['preview', 'Vorschautext'], ['text', 'Text']]) if (!n[f]) return `${label} fehlt.`;
+  for (const i of [2, 3]) if (new RegExp(`\\[Bild\\s+${i}\\]`, 'i').test(n.text) && !n[`img${i}_url`]) return `Im Text steht [Bild ${i}], aber Bild ${i} hat keine Adresse.`;
   return null;
 }
 // Nur Hinweis, blockiert nicht: Ortsnamen und Herkunftsangaben sind bei Social Media verboten
@@ -486,6 +488,7 @@ const nlPreviewHtml = (n) => renderNewsletter(n, {
   preview: true, logo: LOGO_FARBIG, logoLight: LOGO_WEISS,
   imageSrc: n.image_asset ? blobUrl(n.image_asset) : null,
   productImages: [1, 2, 3].map((i) => (n[`p${i}_image_asset`] ? blobUrl(n[`p${i}_image_asset`]) : null)),
+  extraImages: Object.fromEntries([2, 3].map((i) => [i, n[`img${i}_asset`] ? blobUrl(n[`img${i}_asset`]) : null])),
 });
 
 async function copyText(text, label) {
@@ -724,6 +727,8 @@ function nlCard(n) {
           ${fields.map(field).join('')}
           ${title === 'Bild' && editable && S.assets ? `<label class="btn ghost small">Bild für die Vorschau hochladen<input type="file" accept="image/jpeg,image/png,image/webp" data-act="nl-image" hidden></label>
             <p class="muted small" style="margin-top:6px">In MailPoet wird das Bild über die Adresse oben eingebunden. Die Vorschau hier braucht eine hochgeladene Kopie.</p>` : ''}
+          ${title === 'Weitere Bilder' && editable && S.assets ? `<div class="row">${[2, 3].map((i) => `<label class="btn ghost small">Bild ${i} für die Vorschau hochladen<input type="file" accept="image/jpeg,image/png,image/webp" data-act="nl-image" data-field="img${i}_asset" hidden></label>`).join('')}</div>
+            <p class="muted small" style="margin-top:6px">Ins Textfeld eine eigene Zeile „[Bild 2]“ schreiben, wo das Bild stehen soll. „[Bild 2] [Bild 3]“ in einer Zeile setzt beide nebeneinander.</p>` : ''}
         </details>`).join('')}
         ${actions}
         ${['Versendet', 'Gestrichen'].includes(n.status) ? '' : improveBlock(n.id, 'Was soll anders werden? Zum Beispiel: Betreff kürzer, anderes Bild, Text sachlicher …')}
@@ -781,7 +786,7 @@ function bindNl(el, n) {
           if (file.size > 8 * 1024 * 1024) throw new Error('Bild größer als 8 MB.');
           toast('Bild wird hochgeladen …');
           const up = await S.assets.upload(file);
-          await saveNl({ ...n, ...collect() }, { image_asset: up.id });
+          await saveNl({ ...n, ...collect() }, { [btn.dataset.field || 'image_asset']: up.id });
           S.dirty.delete(n.id);
           toast('Bild gespeichert.');
         } catch (e) {

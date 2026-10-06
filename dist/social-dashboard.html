@@ -479,6 +479,7 @@ function findForbidden(text) {
 //   Leerzeile trennt Absätze · Zeile in Versalien = Zwischenüberschrift · "1. Titel. Text" = nummerierter Schritt
 //   "Viele Grüße …" = Grußformel · Absatz mit "Telefon" oder E-Mail-Adresse = Kontaktzeile
 //   Absatz, in dem jede Zeile "Wann: Was" ist = Zeitplan · "Tipp:" am Zeilenanfang wird hervorgehoben
+//   Zeile "[Bild 2]" oder "[Bild 3]" = weiteres Bild an dieser Stelle (Felder img2_* / img3_*), "[Bild 2] [Bild 3]" = nebeneinander
 
 const NL_NAME = 'Standpunkt';
 
@@ -506,7 +507,8 @@ function parseNewsletterText(text) {
     const b = raw.trim();
     if (!b) continue;
     const step = /^(\d{1,2})\.\s+([\s\S]+)$/.exec(b);
-    if (/^Viele Grüße|^Mit freundlichen Grüßen|^Beste Grüße/i.test(b)) blocks.push({ type: 'signature', lines: b.split('\n') });
+    if (/^(\[Bild\s+[23]\]\s*)+$/i.test(b)) blocks.push({ type: 'images', nums: [...b.matchAll(/\[Bild\s+([23])\]/gi)].map((m) => Number(m[1])) });
+    else if (/^Viele Grüße|^Mit freundlichen Grüßen|^Beste Grüße/i.test(b)) blocks.push({ type: 'signature', lines: b.split('\n') });
     else if (/^Telefon|^Tel\.|[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(b) && b.length < 240) blocks.push({ type: 'contact', lines: b.split('\n') });
     else if (b.length < 90 && !b.includes('\n') && /[A-ZÄÖÜ]/.test(b) && b === b.toUpperCase()) blocks.push({ type: 'heading', text: b });
     else if (b.includes('\n') && b.split('\n').every((l) => /^[A-ZÄÖÜ0-9][^:\n]{2,28}:\s+\S/.test(l))) blocks.push({ type: 'timeline', items: b.split('\n').map((l) => { const i = l.indexOf(':'); return [l.slice(0, i), l.slice(i + 1).trim()]; }) });
@@ -552,7 +554,7 @@ function stepsBox(steps) {
   </td></tr>`;
 }
 
-// n: Newsletter (Felder wie im Plan plus badge, headline, image_*, offer_*), opts: { logo, imageSrc, preview }
+// n: Newsletter (Felder wie im Plan plus badge, headline, image_*, img2_*, img3_*, offer_*), opts: { logo, imageSrc, extraImages: {2,3}, productImages, preview }
 // Öffentliche Bilder für echte Mails (WordPress-Mediathek, hochgeladen am 04.10.2026). Die Vorschau im Dashboard nutzt eingebettete Varianten.
 const UP = 'https://www.zipperwalls.de/wp-content/uploads/';
 const EXPORT_ASSETS = {
@@ -560,6 +562,28 @@ const EXPORT_ASSETS = {
   logoLight: UP + 'standpunkt-logo-weiss.png',
   icons: { Instagram: UP + 'standpunkt-icon-instagram.png', LinkedIn: UP + 'standpunkt-icon-linkedin.png', Facebook: UP + 'standpunkt-icon-facebook.png' },
 };
+
+// Weitere Bilder im Text (img2_*, img3_*). Ohne Bild entfällt der Marker; in der Vorschau ohne Asset ein Platzhalter.
+const EXTRA_IMAGES = [2, 3];
+function extraImage(n, num, opts, preview) {
+  const url = n[`img${num}_url`];
+  const src = preview ? opts.extraImages?.[num] : url;
+  if (!src && !(preview && url)) return null;
+  return { src, url, alt: n[`img${num}_alt`] || '', caption: n[`img${num}_caption`] || '', link: n[`img${num}_link`] || '' };
+}
+function imagesRow(list) {
+  const caption = (x) => (x.caption ? `<div style="${F}padding-top:8px;font-size:13px;line-height:1.4;color:#4B4F58;">${H(x.caption)}</div>` : '');
+  const pic = (x, h) => {
+    const tag = x.src
+      ? `<img src="${H(x.src)}" alt="${H(x.alt)}" width="${h ? 255 : 520}"${h ? ` height="${h}" class="pimg2"` : ''} style="width:100%;${h ? `height:${h}px;object-fit:cover;` : ''}border-radius:30px 0 30px 0;">`
+      : `<div style="${F}background:#F5F5F5;border-radius:30px 0 30px 0;padding:50px 16px;text-align:center;font-size:13px;color:#4B4F58;">Bild: ${H(x.alt || x.url)}<br>Für die Vorschau bitte hochladen.</div>`;
+    return x.link ? `<a href="${H(x.link)}">${tag}</a>` : tag;
+  };
+  if (list.length === 1) return `<tr><td class="pad" style="padding:24px 40px 0;">${pic(list[0])}${caption(list[0])}</td></tr>`;
+  return `<tr><td class="pad" style="padding:24px 40px 0;"><table role="presentation" width="100%"><tr>${list.map((x, i) => `
+    <td class="col" valign="top" width="50%" style="padding:0 ${i === 0 ? '10px' : '0'} 0 0;">${pic(x, 200)}${caption(x)}</td>`).join('')}
+  </tr></table></td></tr>`;
+}
 
 function renderNewsletter(n, optsIn = {}) {
   const preview = !!optsIn.preview;
@@ -586,7 +610,10 @@ function renderNewsletter(n, optsIn = {}) {
     flush();
     if (b.type === 'heading') rows.push(`<tr><td class="pad" style="padding:30px 40px 0;"><h2 style="${F}margin:0;font-size:24px;line-height:1.1;font-weight:900;text-transform:uppercase;color:#1D1D1B;">${H(b.text)}</h2></td></tr>`);
     else if (b.type === 'p') rows.push(`<tr><td class="pad" style="${F}padding:16px 40px 0;font-size:17px;line-height:1.55;color:#1D1D1B;">${richText(b.text)}</td></tr>`);
-    else if (b.type === 'timeline') rows.push(`<tr><td class="pad" style="padding:16px 40px 0;"><table role="presentation" width="100%">${b.items.map(([when, what]) => `<tr>
+    else if (b.type === 'images') {
+      const list = b.nums.map((num) => extraImage(n, num, opts, preview)).filter(Boolean);
+      if (list.length) rows.push(imagesRow(list));
+    } else if (b.type === 'timeline') rows.push(`<tr><td class="pad" style="padding:16px 40px 0;"><table role="presentation" width="100%">${b.items.map(([when, what]) => `<tr>
         <td valign="top" width="150" class="when" style="${F}padding:10px 12px 10px 0;border-top:2px solid #1D1D1B;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1D1D1B;">${H(when)}</td>
         <td valign="top" style="${F}padding:10px 0;border-top:2px solid #1D1D1B;font-size:16px;line-height:1.5;color:#1D1D1B;">${linkify(H(what))}</td></tr>`).join('')}</table></td></tr>`);
     else if (b.type === 'signature') {
@@ -654,6 +681,7 @@ ${preview ? '<base target="_blank">' : ''}
     .when { width:110px !important; }
     .col { display:block !important; width:100% !important; padding:0 0 14px !important; }
     .pimg { height:190px !important; }
+    .pimg2 { height:auto !important; }
   }
 </style></head>
 <body>
@@ -1113,7 +1141,8 @@ const NL_SECTIONS = [
   ['Betreff und Vorschautext', [['subject', 'Betreff', 60], ['subject_alt', 'Betreff Alternative (A/B-Test)', 60], ['preview', 'Vorschautext', 120]], true],
   ['Kopf', [['badge', 'Badge (gelb)'], ['headline', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short']]],
   ['Bild', [['image_url', 'Bild-Adresse für MailPoet (zipperwalls.de)'], ['image_alt', 'Bildbeschreibung (Alt-Text)'], ['image_link', 'Bild verlinkt auf']]],
-  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt)', 0, 'long']], true],
+  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt, eigene Zeile „[Bild 2]“ = weiteres Bild)', 0, 'long']], true],
+  ['Weitere Bilder', [2, 3].flatMap((i) => [[`img${i}_url`, `Bild ${i}: Adresse für MailPoet (zipperwalls.de)`], [`img${i}_alt`, `Bild ${i}: Bildbeschreibung (Alt-Text)`], [`img${i}_caption`, `Bild ${i}: Bildunterschrift`], [`img${i}_link`, `Bild ${i}: verlinkt auf (optional)`]])],
   ['Button', [['button_text', 'Button-Text'], ['button_link', 'Button-Link']]],
   ['Angebot', [['offer_label', 'Angebot Kennzeile'], ['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
   ['Zusatzblock', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
@@ -1167,9 +1196,10 @@ function nlProblem(n) {
     const ph = findPlaceholder(v);
     if (ph) return `${label}: Platzhalter ${ph} noch ersetzen.`;
     if (max && v.length > max) return `${label} zu lang (${v.length} von ${max} Zeichen).`;
-    if ((f.endsWith('_link') || f.endsWith('image_url')) && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
+    if ((f.endsWith('_link') || f.endsWith('_url')) && v && !/^https:\/\/www\.zipperwalls\.de\//.test(v)) return `${label} muss auf https://www.zipperwalls.de/ zeigen.`;
   }
   for (const [f, label] of [['subject', 'Betreff'], ['preview', 'Vorschautext'], ['text', 'Text']]) if (!n[f]) return `${label} fehlt.`;
+  for (const i of [2, 3]) if (new RegExp(`\\[Bild\\s+${i}\\]`, 'i').test(n.text) && !n[`img${i}_url`]) return `Im Text steht [Bild ${i}], aber Bild ${i} hat keine Adresse.`;
   return null;
 }
 // Nur Hinweis, blockiert nicht: Ortsnamen und Herkunftsangaben sind bei Social Media verboten
@@ -1195,6 +1225,7 @@ const nlPreviewHtml = (n) => renderNewsletter(n, {
   preview: true, logo: LOGO_FARBIG, logoLight: LOGO_WEISS,
   imageSrc: n.image_asset ? blobUrl(n.image_asset) : null,
   productImages: [1, 2, 3].map((i) => (n[`p${i}_image_asset`] ? blobUrl(n[`p${i}_image_asset`]) : null)),
+  extraImages: Object.fromEntries([2, 3].map((i) => [i, n[`img${i}_asset`] ? blobUrl(n[`img${i}_asset`]) : null])),
 });
 
 async function copyText(text, label) {
@@ -1433,6 +1464,8 @@ function nlCard(n) {
           ${fields.map(field).join('')}
           ${title === 'Bild' && editable && S.assets ? `<label class="btn ghost small">Bild für die Vorschau hochladen<input type="file" accept="image/jpeg,image/png,image/webp" data-act="nl-image" hidden></label>
             <p class="muted small" style="margin-top:6px">In MailPoet wird das Bild über die Adresse oben eingebunden. Die Vorschau hier braucht eine hochgeladene Kopie.</p>` : ''}
+          ${title === 'Weitere Bilder' && editable && S.assets ? `<div class="row">${[2, 3].map((i) => `<label class="btn ghost small">Bild ${i} für die Vorschau hochladen<input type="file" accept="image/jpeg,image/png,image/webp" data-act="nl-image" data-field="img${i}_asset" hidden></label>`).join('')}</div>
+            <p class="muted small" style="margin-top:6px">Ins Textfeld eine eigene Zeile „[Bild 2]“ schreiben, wo das Bild stehen soll. „[Bild 2] [Bild 3]“ in einer Zeile setzt beide nebeneinander.</p>` : ''}
         </details>`).join('')}
         ${actions}
         ${['Versendet', 'Gestrichen'].includes(n.status) ? '' : improveBlock(n.id, 'Was soll anders werden? Zum Beispiel: Betreff kürzer, anderes Bild, Text sachlicher …')}
@@ -1490,7 +1523,7 @@ function bindNl(el, n) {
           if (file.size > 8 * 1024 * 1024) throw new Error('Bild größer als 8 MB.');
           toast('Bild wird hochgeladen …');
           const up = await S.assets.upload(file);
-          await saveNl({ ...n, ...collect() }, { image_asset: up.id });
+          await saveNl({ ...n, ...collect() }, { [btn.dataset.field || 'image_asset']: up.id });
           S.dirty.delete(n.id);
           toast('Bild gespeichert.');
         } catch (e) {

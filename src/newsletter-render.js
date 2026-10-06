@@ -4,6 +4,7 @@
 //   Leerzeile trennt Absätze · Zeile in Versalien = Zwischenüberschrift · "1. Titel. Text" = nummerierter Schritt
 //   "Viele Grüße …" = Grußformel · Absatz mit "Telefon" oder E-Mail-Adresse = Kontaktzeile
 //   Absatz, in dem jede Zeile "Wann: Was" ist = Zeitplan · "Tipp:" am Zeilenanfang wird hervorgehoben
+//   Zeile "[Bild 2]" oder "[Bild 3]" = weiteres Bild an dieser Stelle (Felder img2_* / img3_*), "[Bild 2] [Bild 3]" = nebeneinander
 
 export const NL_NAME = 'Standpunkt';
 
@@ -31,7 +32,8 @@ export function parseNewsletterText(text) {
     const b = raw.trim();
     if (!b) continue;
     const step = /^(\d{1,2})\.\s+([\s\S]+)$/.exec(b);
-    if (/^Viele Grüße|^Mit freundlichen Grüßen|^Beste Grüße/i.test(b)) blocks.push({ type: 'signature', lines: b.split('\n') });
+    if (/^(\[Bild\s+[23]\]\s*)+$/i.test(b)) blocks.push({ type: 'images', nums: [...b.matchAll(/\[Bild\s+([23])\]/gi)].map((m) => Number(m[1])) });
+    else if (/^Viele Grüße|^Mit freundlichen Grüßen|^Beste Grüße/i.test(b)) blocks.push({ type: 'signature', lines: b.split('\n') });
     else if (/^Telefon|^Tel\.|[\w.+-]+@[\w-]+\.[a-z]{2,}/i.test(b) && b.length < 240) blocks.push({ type: 'contact', lines: b.split('\n') });
     else if (b.length < 90 && !b.includes('\n') && /[A-ZÄÖÜ]/.test(b) && b === b.toUpperCase()) blocks.push({ type: 'heading', text: b });
     else if (b.includes('\n') && b.split('\n').every((l) => /^[A-ZÄÖÜ0-9][^:\n]{2,28}:\s+\S/.test(l))) blocks.push({ type: 'timeline', items: b.split('\n').map((l) => { const i = l.indexOf(':'); return [l.slice(0, i), l.slice(i + 1).trim()]; }) });
@@ -77,7 +79,7 @@ function stepsBox(steps) {
   </td></tr>`;
 }
 
-// n: Newsletter (Felder wie im Plan plus badge, headline, image_*, offer_*), opts: { logo, imageSrc, preview }
+// n: Newsletter (Felder wie im Plan plus badge, headline, image_*, img2_*, img3_*, offer_*), opts: { logo, imageSrc, extraImages: {2,3}, productImages, preview }
 // Öffentliche Bilder für echte Mails (WordPress-Mediathek, hochgeladen am 04.10.2026). Die Vorschau im Dashboard nutzt eingebettete Varianten.
 const UP = 'https://www.zipperwalls.de/wp-content/uploads/';
 export const EXPORT_ASSETS = {
@@ -85,6 +87,28 @@ export const EXPORT_ASSETS = {
   logoLight: UP + 'standpunkt-logo-weiss.png',
   icons: { Instagram: UP + 'standpunkt-icon-instagram.png', LinkedIn: UP + 'standpunkt-icon-linkedin.png', Facebook: UP + 'standpunkt-icon-facebook.png' },
 };
+
+// Weitere Bilder im Text (img2_*, img3_*). Ohne Bild entfällt der Marker; in der Vorschau ohne Asset ein Platzhalter.
+export const EXTRA_IMAGES = [2, 3];
+function extraImage(n, num, opts, preview) {
+  const url = n[`img${num}_url`];
+  const src = preview ? opts.extraImages?.[num] : url;
+  if (!src && !(preview && url)) return null;
+  return { src, url, alt: n[`img${num}_alt`] || '', caption: n[`img${num}_caption`] || '', link: n[`img${num}_link`] || '' };
+}
+function imagesRow(list) {
+  const caption = (x) => (x.caption ? `<div style="${F}padding-top:8px;font-size:13px;line-height:1.4;color:#4B4F58;">${H(x.caption)}</div>` : '');
+  const pic = (x, h) => {
+    const tag = x.src
+      ? `<img src="${H(x.src)}" alt="${H(x.alt)}" width="${h ? 255 : 520}"${h ? ` height="${h}" class="pimg2"` : ''} style="width:100%;${h ? `height:${h}px;object-fit:cover;` : ''}border-radius:30px 0 30px 0;">`
+      : `<div style="${F}background:#F5F5F5;border-radius:30px 0 30px 0;padding:50px 16px;text-align:center;font-size:13px;color:#4B4F58;">Bild: ${H(x.alt || x.url)}<br>Für die Vorschau bitte hochladen.</div>`;
+    return x.link ? `<a href="${H(x.link)}">${tag}</a>` : tag;
+  };
+  if (list.length === 1) return `<tr><td class="pad" style="padding:24px 40px 0;">${pic(list[0])}${caption(list[0])}</td></tr>`;
+  return `<tr><td class="pad" style="padding:24px 40px 0;"><table role="presentation" width="100%"><tr>${list.map((x, i) => `
+    <td class="col" valign="top" width="50%" style="padding:0 ${i === 0 ? '10px' : '0'} 0 0;">${pic(x, 200)}${caption(x)}</td>`).join('')}
+  </tr></table></td></tr>`;
+}
 
 export function renderNewsletter(n, optsIn = {}) {
   const preview = !!optsIn.preview;
@@ -111,7 +135,10 @@ export function renderNewsletter(n, optsIn = {}) {
     flush();
     if (b.type === 'heading') rows.push(`<tr><td class="pad" style="padding:30px 40px 0;"><h2 style="${F}margin:0;font-size:24px;line-height:1.1;font-weight:900;text-transform:uppercase;color:#1D1D1B;">${H(b.text)}</h2></td></tr>`);
     else if (b.type === 'p') rows.push(`<tr><td class="pad" style="${F}padding:16px 40px 0;font-size:17px;line-height:1.55;color:#1D1D1B;">${richText(b.text)}</td></tr>`);
-    else if (b.type === 'timeline') rows.push(`<tr><td class="pad" style="padding:16px 40px 0;"><table role="presentation" width="100%">${b.items.map(([when, what]) => `<tr>
+    else if (b.type === 'images') {
+      const list = b.nums.map((num) => extraImage(n, num, opts, preview)).filter(Boolean);
+      if (list.length) rows.push(imagesRow(list));
+    } else if (b.type === 'timeline') rows.push(`<tr><td class="pad" style="padding:16px 40px 0;"><table role="presentation" width="100%">${b.items.map(([when, what]) => `<tr>
         <td valign="top" width="150" class="when" style="${F}padding:10px 12px 10px 0;border-top:2px solid #1D1D1B;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1D1D1B;">${H(when)}</td>
         <td valign="top" style="${F}padding:10px 0;border-top:2px solid #1D1D1B;font-size:16px;line-height:1.5;color:#1D1D1B;">${linkify(H(what))}</td></tr>`).join('')}</table></td></tr>`);
     else if (b.type === 'signature') {
@@ -179,6 +206,7 @@ ${preview ? '<base target="_blank">' : ''}
     .when { width:110px !important; }
     .col { display:block !important; width:100% !important; padding:0 0 14px !important; }
     .pimg { height:190px !important; }
+    .pimg2 { height:auto !important; }
   }
 </style></head>
 <body>

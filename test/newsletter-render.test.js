@@ -28,3 +28,20 @@ test('Export behält MailPoet-Links, Vorschau nicht', () => {
 test('Text wird maskiert', () => {
   assert.doesNotMatch(renderNewsletter({ text: '<script>x</script>' }), /<script>x/);
 });
+
+test('Weitere Bilder im Text: einzeln, nebeneinander, ohne Bild entfällt der Marker', () => {
+  const t = 'Einleitung.\n\n[Bild 2]\n\nMitte.\n\n[Bild 2] [Bild 3]\n\nSchluss.';
+  assert.deepEqual(parseNewsletterText(t).map((b) => b.type), ['p', 'images', 'p', 'images', 'p']);
+  assert.deepEqual(parseNewsletterText(t)[3].nums, [2, 3]);
+  const n = { text: t, img2_url: 'https://www.zipperwalls.de/a.webp', img2_alt: 'Aufbau', img2_caption: 'Aufbau in Minuten', img3_url: 'https://www.zipperwalls.de/b.webp' };
+  const out = renderNewsletter(n);
+  assert.equal(out.match(/src="https:\/\/www\.zipperwalls\.de\/a\.webp"/g).length, 2);
+  assert.match(out, /Aufbau in Minuten/);
+  assert.match(out, /class="pimg2"/);
+  assert.doesNotMatch(out, /\[Bild/);
+  const none = renderNewsletter({ text: t });
+  assert.doesNotMatch(none, /\[Bild|Für die Vorschau bitte hochladen/);
+  const prev = renderNewsletter(n, { preview: true, extraImages: { 2: 'blob:x' } });
+  assert.match(prev, /src="blob:x"/);
+  assert.match(prev, /Für die Vorschau bitte hochladen/);
+});
