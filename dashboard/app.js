@@ -225,13 +225,13 @@ function postCard(p, connected) {
   <article class="card post" data-id="${esc(p.id)}">
     <div>
       ${p.slides?.length >= 2 ? `<span class="label">Karussell: ${p.slides.length} Bilder (alle Kanäle)</span>
-      <div class="slides" tabindex="0" aria-label="Karussell-Bilder, seitlich scrollen">${p.slides.map((id, i) => `<img src="${blobUrl(id)}" alt="Bild ${i + 1} von ${p.slides.length}">`).join('')}</div>
-      <p class="muted small" style="margin:6px 0 0">Seitlich wischen, um alle Bilder zu sehen.</p>` : `
+      <div class="slides" tabindex="0" aria-label="Karussell-Bilder, seitlich scrollen">${p.slides.map((id, i) => `<img src="${blobUrl(id)}" alt="Bild ${i + 1} von ${p.slides.length}" data-zoom="${esc(p.id)}">`).join('')}</div>
+      <p class="muted small" style="margin:6px 0 0">Seitlich wischen, um alle Bilder zu sehen. Antippen zeigt sie groß.</p>` : `
       <span class="label">Instagram und Facebook (4:5)</span>
-      ${p.image ? `<img class="img" src="${blobUrl(p.image)}" alt="Bild für Instagram und Facebook">` : `<div class="img">Kein Bild</div>`}
+      ${p.image ? `<img class="img" src="${blobUrl(p.image)}" alt="Bild für Instagram und Facebook" data-zoom="${esc(p.id)}">` : `<div class="img">Kein Bild</div>`}
       ${canUpload ? `<label class="btn ghost small" style="margin-top:8px">Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-field="image" hidden></label>` : ''}
       <span class="label" style="display:block;margin-top:16px">LinkedIn (1:1)</span>
-      ${p.image_linkedin ? `<img class="img sq" src="${blobUrl(p.image_linkedin)}" alt="Bild für LinkedIn">` : `<p class="muted small" style="margin:4px 0">Nutzt das Bild oben.</p>`}
+      ${p.image_linkedin ? `<img class="img sq" src="${blobUrl(p.image_linkedin)}" alt="Bild für LinkedIn" data-zoom="${esc(p.id)}">` : `<p class="muted small" style="margin:4px 0">Nutzt das Bild oben.</p>`}
       ${canUpload ? `<label class="btn ghost small" style="margin-top:8px">LinkedIn Bild hochladen<input type="file" accept="image/jpeg,image/png" data-act="image" data-field="image_linkedin" hidden></label>` : ''}`}
       <p class="muted small" style="margin-top:12px">Erstellt ${fmtDate(p.created_at)}${p.approved_at ? `<br>Freigegeben ${fmtDate(p.approved_at)}` : ''}${p.scheduled_at ? `<br>Termin ${fmtDate(p.scheduled_at)}` : ''}</p>
     </div>
@@ -893,6 +893,75 @@ function viewVerbindungen() {
       ${SETUP_STEPS.map((g) => `<h3 style="margin-top:22px">${esc(g.title)}</h3><ol>${g.steps.map((t) => `<li>${esc(t)}</li>`).join('')}</ol>`).join('')}
     </details>`;
 }
+
+// ---------- Bilder groß ansehen ----------
+// Klick auf ein Bild mit data-zoom öffnet eine Diashow mit allen Bildern derselben Gruppe (Post-ID).
+// Weiter mit Pfeiltasten, Wischen oder den Pfeilen, schließen mit Esc, Klick daneben oder ×.
+const LB = { list: [], i: 0, el: null, lastFocus: null };
+function lightboxEl() {
+  if (LB.el) return LB.el;
+  const el = document.createElement('div');
+  el.className = 'lightbox';
+  el.hidden = true;
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-label', 'Bild groß ansehen');
+  el.innerHTML = `<button class="lb-close" type="button" aria-label="Schließen">×</button>
+    <button class="lb-nav lb-prev" type="button" aria-label="Vorheriges Bild">‹</button>
+    <figure><img alt=""><figcaption class="lb-count"></figcaption></figure>
+    <button class="lb-nav lb-next" type="button" aria-label="Nächstes Bild">›</button>`;
+  el.querySelector('.lb-close').onclick = closeLightbox;
+  el.querySelector('.lb-prev').onclick = () => stepLightbox(-1);
+  el.querySelector('.lb-next').onclick = () => stepLightbox(1);
+  el.addEventListener('click', (e) => { if (e.target === el || e.target.tagName === 'FIGURE') closeLightbox(); });
+  let x0 = null;
+  el.addEventListener('pointerdown', (e) => { x0 = e.clientX; });
+  el.addEventListener('pointerup', (e) => {
+    if (x0 != null && Math.abs(e.clientX - x0) > 50) stepLightbox(e.clientX < x0 ? 1 : -1);
+    x0 = null;
+  });
+  document.body.appendChild(el);
+  return (LB.el = el);
+}
+function showLightbox() {
+  const el = lightboxEl();
+  const cur = LB.list[LB.i];
+  const img = el.querySelector('img');
+  img.src = cur.src;
+  img.alt = cur.alt;
+  el.querySelector('.lb-count').textContent = LB.list.length > 1 ? `${LB.i + 1} / ${LB.list.length}` : cur.alt;
+  el.querySelectorAll('.lb-nav').forEach((b) => (b.hidden = LB.list.length < 2));
+}
+function openLightbox(group, start) {
+  LB.list = [...main.querySelectorAll('img[data-zoom]')].filter((i) => i.dataset.zoom === group).map((i) => ({ src: i.currentSrc || i.src, alt: i.alt }));
+  LB.i = Math.max(0, LB.list.findIndex((x) => x.src === start));
+  LB.lastFocus = document.activeElement;
+  showLightbox();
+  lightboxEl().hidden = false;
+  document.body.classList.add('lb-open');
+  lightboxEl().querySelector('.lb-close').focus();
+}
+function stepLightbox(d) {
+  if (LB.list.length < 2) return;
+  LB.i = (LB.i + d + LB.list.length) % LB.list.length;
+  showLightbox();
+}
+function closeLightbox() {
+  if (!LB.el || LB.el.hidden) return;
+  LB.el.hidden = true;
+  document.body.classList.remove('lb-open');
+  LB.lastFocus?.focus?.();
+}
+main.addEventListener('click', (e) => {
+  const img = e.target.closest('img[data-zoom]');
+  if (img) openLightbox(img.dataset.zoom, img.currentSrc || img.src);
+});
+document.addEventListener('keydown', (e) => {
+  if (!LB.el || LB.el.hidden) return;
+  if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'ArrowRight') stepLightbox(1);
+  else if (e.key === 'ArrowLeft') stepLightbox(-1);
+});
 
 // ---------- Rahmen ----------
 const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };

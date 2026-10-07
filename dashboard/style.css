@@ -308,3 +308,24 @@ i.dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .entry-act { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .create-hint { text-align: right; max-width: 140px; }
 @media (max-width: 760px) { .entry-act { align-items: flex-start; } .create-hint { text-align: left; } }
+
+/* Diashow: Bilder in der Freigabe groß ansehen */
+img[data-zoom] { cursor: zoom-in; }
+.lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(20, 26, 25, .92); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: env(safe-area-inset-top, 0px) 8px env(safe-area-inset-bottom, 0px); touch-action: pan-y; }
+.lightbox[hidden] { display: none; }
+.lightbox figure { margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
+.lightbox img { max-width: 100%; max-height: calc(100vh - 90px); object-fit: contain; border-radius: var(--r) 0 var(--r) 0; box-shadow: 0 0 24px rgba(0,0,0,.4); user-select: none; -webkit-user-drag: none; }
+.lb-count { color: #fff; font-weight: 700; font-size: 15px; letter-spacing: .05em; }
+.lb-nav, .lb-close { background: rgba(255,255,255,.12); color: #fff; border: 0; cursor: pointer; font: 400 40px/1 var(--font); width: 52px; height: 52px; border-radius: 12px 0 12px 0; display: grid; place-items: center; }
+.lb-nav:hover, .lb-close:hover { background: var(--gelb); color: var(--auf-gelb); }
+.lb-nav:focus-visible, .lb-close:focus-visible { outline: 3px solid var(--gelb); outline-offset: 2px; }
+.lb-nav[hidden] { visibility: hidden; display: grid; }
+.lb-close { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; font-size: 34px; }
+body.lb-open { overflow: hidden; }
+@media (max-width: 620px) {
+  .lightbox { display: flex; justify-content: center; }
+  .lightbox figure { width: 100%; }
+  .lb-nav { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+  .lb-prev { left: 14px; } .lb-next { right: 14px; }
+  .lightbox img { max-height: calc(100vh - 150px); }
+}
