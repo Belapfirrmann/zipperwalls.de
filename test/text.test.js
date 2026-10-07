@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeText, validate, escapeLinkedIn, normalizeHashtags, isoWeek, findPlaceholder, berlinToUtc, findForbidden } from '../src/text.js';
+import { composeText, BIO_HINT, validate, escapeLinkedIn, normalizeHashtags, isoWeek, findPlaceholder, berlinToUtc, findForbidden } from '../src/text.js';
 import { PLAN } from '../src/plan.js';
 
 test('Hashtags werden vereinheitlicht und dedupliziert', () => {
@@ -9,8 +9,15 @@ test('Hashtags werden vereinheitlicht und dedupliziert', () => {
 
 test('Kanalvariante hat Vorrang, fehlende Hashtags werden angehaengt', () => {
   const post = { body: 'Basis', variants: { linkedin: 'LinkedIn Text #messe' }, hashtags: ['messe', 'stand'] };
-  assert.equal(composeText(post, 'linkedin'), 'LinkedIn Text #messe\n\n#stand');
-  assert.equal(composeText(post, 'facebook'), 'Basis\n\n#messe #stand');
+  assert.equal(composeText(post, 'linkedin'), `LinkedIn Text #messe\n\n${BIO_HINT.linkedin}\n\n#stand`);
+  assert.equal(composeText(post, 'facebook'), `Basis\n\n${BIO_HINT.facebook}\n\n#messe #stand`);
+});
+
+test('Bio-Hinweis steht vor den Hashtags und nie doppelt', () => {
+  const post = { variants: { instagram: 'Text\n\n#messe #stand', facebook: 'Mehr über den Link in unserer Bio.' }, hashtags: ['messe'] };
+  assert.equal(composeText(post, 'instagram'), `Text\n\n${BIO_HINT.instagram}\n\n#messe #stand`);
+  assert.equal(composeText(post, 'facebook'), 'Mehr über den Link in unserer Bio.\n\n#messe');
+  assert.equal(composeText({ variants: {}, hashtags: [] }, 'instagram'), '');
 });
 
 test('Instagram ohne Bild wird abgelehnt', () => {

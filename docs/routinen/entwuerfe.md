@@ -54,6 +54,11 @@ Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
      „Noch mehr zu diesem Thema gibt es in unserem Newsletter. Anmelden können Sie sich auf zipperwalls.de.“
      Bei Facebook und LinkedIn darf statt „auf zipperwalls.de“ der direkte Link zur Anmeldeseite stehen, aber nur wenn du sie auf
      www.zipperwalls.de gefunden und per curl (HTTP 200) geprüft hast. In `notes` vermerken: „Gekoppelt mit Newsletter Nr. X (Datum)“.
+   - **Bio-Link in jeder Caption** (Vorgabe Bela und Darien, 07.10.2026): Der Hinweis „Unseren Onlineshop und vieles mehr finden
+     Sie über den Link in unserer Bio“ wird beim Veröffentlichen automatisch vor die Hashtags gesetzt (`BIO_HINT` in `src/text.js`,
+     bei Facebook und LinkedIn mit dem Link https://linktr.ee/zipperwalls). Nicht selbst in die Texte schreiben.
+     Deshalb bei Instagram keine Schlusszeilen wie „Mehr auf zipperwalls.de“ (dort nicht klickbar). Bei Facebook und LinkedIn
+     statt „auf zipperwalls.de“ den direkten Link zur passenden Produkt- oder Kategorieseite nennen (per curl auf HTTP 200 prüfen).
    Grafiken bauen mit `node scripts/grafik.mjs <spec.json>` (Layouts title, point, end, quote; vorher
    `npm i --no-save playwright @fontsource/barlow`, Aufbau der spec steht oben im Skript). Das Skript bricht ab, wenn Schrift oder Foto fehlen.
    Ergebnis immer ansehen, bevor es hochgeladen wird.

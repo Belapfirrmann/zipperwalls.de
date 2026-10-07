@@ -409,10 +409,26 @@ function normalizeHashtags(list) {
   return out.map((t) => '#' + t);
 }
 
+// Hinweis auf den Link in der Bio (linktr.ee/zipperwalls, Profil-Link bei Instagram und Facebook), steht in jedem Post
+// vor den Hashtags (Vorgabe Bela und Darien, 07.10.2026). Bei Facebook und LinkedIn ist der Link zusätzlich klickbar.
+const BIO_LINK = 'https://linktr.ee/zipperwalls';
+const BIO_HINT = {
+  instagram: 'Unseren Onlineshop und vieles mehr finden Sie über den Link in unserer Bio.',
+  facebook: `Unseren Onlineshop und vieles mehr finden Sie über den Link in unserer Bio: ${BIO_LINK}`,
+  linkedin: `Unseren Onlineshop und vieles mehr finden Sie hier: ${BIO_LINK}`,
+};
+const hasBioHint = (text) => /linktr\.ee\/zipperwalls|link in unserer bio/i.test(text);
+
 function composeText(post, channel) {
   const variants = typeof post.variants === 'string' ? JSON.parse(post.variants || '{}') : post.variants || {};
   const tags = normalizeHashtags(typeof post.hashtags === 'string' ? JSON.parse(post.hashtags || '[]') : post.hashtags);
   let text = String(variants[channel] || post.body || '').trim();
+  // Hashtags am Ende abtrennen, damit der Hinweis davor steht
+  const tail = text.match(/(?:\n\s*(?:#[\p{L}\p{N}_]+\s*)+)$/u);
+  const trailing = tail ? tail[0].trim() : '';
+  if (tail) text = text.slice(0, tail.index).trim();
+  if (text && BIO_HINT[channel] && !hasBioHint(text)) text += '\n\n' + BIO_HINT[channel];
+  if (trailing) text += '\n\n' + trailing;
   const missing = tags.filter((t) => !text.toLowerCase().includes(t.toLowerCase()));
   if (missing.length) text += '\n\n' + missing.join(' ');
   return text;
