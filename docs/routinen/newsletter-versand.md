@@ -8,6 +8,9 @@ Technik: Auf zipperwalls.de läuft das Code-Snippet „Zipperwalls Newsletter-Sc
 Quelle `wordpress/zipperwalls-newsletter-snippet.php`). Es stellt `/wp-json/zipperwalls/v1/newsletter/*` bereit und nutzt intern
 die MailPoet-Funktionen von „Speichern“ und „Einplanen“. Angesprochen wird es ausschließlich über `scripts/newsletter.js`.
 
+MailPoet-Links im HTML: nur `[link:subscription_unsubscribe_url]`, `[link:subscription_manage_url]` und `[link:newsletter_view_in_browser_url]`
+(`scripts/newsletter.js` bricht bei anderen ab). Ein erfundener Shortcode bleibt in der Mail stehen und führt auf eine tote Adresse.
+
 Grundregeln: Nur Newsletter mit Status „Freigegeben“ einplanen. Nie Texte freigegebener Newsletter ändern, nie selbst freigeben, nie an andere Listen
 als `LIST_IDS` (`src/newsletter-sync.js`, Liste 3 „Infopost zipperwalls.de“) senden. Keine eigenen Aufrufe an WordPress oder
 MailPoet, nichts anderes auf der Website verändern. Zugangsdaten (`WP_USER`, `WP_APP_PASSWORD`) nie ausgeben oder speichern.

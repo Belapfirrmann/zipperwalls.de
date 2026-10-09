@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseNewsletterText, renderNewsletter } from '../src/newsletter-render.js';
+import { parseNewsletterText, renderNewsletter, checkMailpoetLinks, MAILPOET_LINKS } from '../src/newsletter-render.js';
 
 const text = 'Guten Tag,\n\nEinleitung.\n\nMESSE-TIPP #01: DREI SCHRITTE\n\n1. Maße klären. Erst dann planen.\n\n2. Daten anlegen. Mit Korrektur.\n\nViele Grüße\nIhr Team von Zipperwalls\n\nTelefon +49 1\nkontakt@zipperwalls.de | www.zipperwalls.de';
 
@@ -44,4 +44,17 @@ test('Weitere Bilder im Text: einzeln, nebeneinander, ohne Bild entfällt der Ma
   const prev = renderNewsletter(n, { preview: true, extraImages: { 2: 'blob:x' } });
   assert.match(prev, /src="blob:x"/);
   assert.match(prev, /Für die Vorschau bitte hochladen/);
+});
+
+test('Export enthält genau die drei gültigen MailPoet-Links, auch „Im Browser lesen“', () => {
+  const out = renderNewsletter({ nr: 1, text, subject: 'x' });
+  assert.match(out, /href="\[link:newsletter_view_in_browser_url\]"/);
+  assert.doesNotMatch(out, /_action\]/);
+  assert.equal(checkMailpoetLinks(out), null);
+  for (const l of MAILPOET_LINKS) assert.ok(out.includes(`[link:${l}]`), l);
+});
+
+test('checkMailpoetLinks meldet unbekannte und fehlende Links', () => {
+  assert.match(checkMailpoetLinks('[link:newsletter_view_in_browser_action] [link:subscription_unsubscribe_url]'), /Unbekannter.*_action/);
+  assert.match(checkMailpoetLinks('[link:subscription_unsubscribe_url]'), /fehlt/);
 });

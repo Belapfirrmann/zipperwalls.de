@@ -14,11 +14,20 @@ const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'A
 
 // MailPoet-Links: im Export bleiben die Shortcodes, in der Vorschau führen sie ins Leere
 export const MAILPOET = {
-  webversion: '[link:newsletter_view_in_browser_action]',
+  webversion: '[link:newsletter_view_in_browser_url]',
   unsubscribe: '[link:subscription_unsubscribe_url]',
   manage: '[link:subscription_manage_url]',
 };
 const ICON = (glyph) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFFFFF"/>${glyph}</svg>`);
+// Nur diese MailPoet-Links gibt es wirklich; jeder andere Shortcode bleibt in der Mail unersetzt und führt auf eine tote Adresse
+export const MAILPOET_LINKS = ['subscription_unsubscribe_url', 'subscription_manage_url', 'newsletter_view_in_browser_url'];
+export function checkMailpoetLinks(html) {
+  const found = new Set([...String(html).matchAll(/\[link:([a-z_]+)\]/g)].map((m) => m[1]));
+  const unknown = [...found].filter((x) => !MAILPOET_LINKS.includes(x));
+  if (unknown.length) return `Unbekannter MailPoet-Link: ${unknown.map((x) => `[link:${x}]`).join(', ')}. Erlaubt: ${MAILPOET_LINKS.join(', ')}.`;
+  const missing = MAILPOET_LINKS.filter((x) => !found.has(x));
+  return missing.length ? `Im HTML fehlt: ${missing.map((x) => `[link:${x}]`).join(', ')}.` : null;
+}
 export const SOCIAL = [
   ['Instagram', 'https://www.instagram.com/zipperwalls.de/', ICON('<rect x="10" y="10" width="16" height="16" rx="5" fill="none" stroke="#1D1D1B" stroke-width="2.2"/><circle cx="18" cy="18" r="3.8" fill="none" stroke="#1D1D1B" stroke-width="2.2"/><circle cx="22.7" cy="13.3" r="1.2" fill="#1D1D1B"/>')],
   ['LinkedIn', 'https://www.linkedin.com/company/zipperwalls', ICON('<rect x="10.8" y="15" width="3" height="10.5" fill="#1D1D1B"/><circle cx="12.3" cy="11.6" r="1.8" fill="#1D1D1B"/><path d="M16.6 15h2.9v1.5c.6-1 1.8-1.8 3.4-1.8 2.7 0 3.9 1.7 3.9 4.5v6.3h-3v-5.5c0-1.5-.5-2.4-1.8-2.4-1.4 0-2.4 1-2.4 2.5v5.4h-3z" fill="#1D1D1B"/>')],

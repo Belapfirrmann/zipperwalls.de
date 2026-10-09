@@ -11,7 +11,7 @@
 // Zugangsdaten nur aus WP_USER und WP_APP_PASSWORD, Adresse aus WP_URL (Standard https://www.zipperwalls.de).
 // Ausgabe immer JSON auf stdout.
 import { readFileSync } from 'node:fs';
-import { renderNewsletter } from '../src/newsletter-render.js';
+import { renderNewsletter, checkMailpoetLinks } from '../src/newsletter-render.js';
 import { planActions, LIST_IDS } from '../src/newsletter-sync.js';
 
 const BASE = (process.env.WP_URL || 'https://www.zipperwalls.de').replace(/\/$/, '') + '/wp-json/zipperwalls/v1/newsletter';
@@ -32,12 +32,12 @@ async function call(path, body) {
 }
 
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
-const payload = (job) => ({
-  key: job.key,
-  subject: job.doc.subject,
-  preheader: job.doc.preview || '',
-  html: renderNewsletter({ ...job.doc, nr: job.doc.nr }, {}),
-});
+const payload = (job) => {
+  const html = renderNewsletter({ ...job.doc, nr: job.doc.nr }, {});
+  const problem = checkMailpoetLinks(html);
+  if (problem) throw new Error(problem);
+  return { key: job.key, subject: job.doc.subject, preheader: job.doc.preview || '', html };
+};
 
 const [cmd, arg] = process.argv.slice(2);
 try {
