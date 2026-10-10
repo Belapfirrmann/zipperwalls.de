@@ -53,7 +53,9 @@ try {
     out = await call('/schedule', { ...payload(job), send_at: job.send_at, segment_ids: job.segment_ids || LIST_IDS });
   } else if (cmd === 'preview') {
     const job = read(arg);
-    out = await call('/preview', { ...payload(job), email: job.email });
+    // Testmails sind immer als [TEST] gekennzeichnet, damit sie nicht wie ein echter Versand aussehen
+    const p = payload(job);
+    out = await call('/preview', { ...p, subject: /^\[TEST\]/i.test(p.subject) ? p.subject : `[TEST] ${p.subject}`, email: job.email });
   } else if (['status', 'unschedule', 'trash'].includes(cmd)) {
     if (!arg) throw new Error('key fehlt.');
     out = cmd === 'status' ? await call('/status?key=' + encodeURIComponent(arg)) : await call('/' + cmd, { key: arg });

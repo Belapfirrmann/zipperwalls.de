@@ -43,6 +43,7 @@ Ohne Aktionen, ohne Aufträge und ohne Fehler: Lauf kurz halten, keine weitere A
 
 ## Testen ohne echte Empfänger
 
-- Testmail an eine Adresse: `node scripts/newsletter.js preview job.json` mit `{ key: "test-…", doc, email }`.
+- Testmail an eine Adresse: `node scripts/newsletter.js preview job.json` mit `{ key: "test-…", doc, email }`. Der Betreff bekommt automatisch „[TEST] “ vorangestellt. Vorher dem Nutzer Bescheid sagen.
+  Wichtig: Der Link „Im Browser lesen“ einer Testmail zeigt den Inhalt nur, solange der Test-Newsletter existiert. Wird er mit `trash` gelöscht, zeigt der Link eine leere Seite mit Platzhaltertext. Test-Newsletter deshalb erst löschen, wenn der Nutzer fertig geprüft hat.
 - Einplanen an die Testliste: `schedule` mit `"segment_ids": [4]` und einem `key` wie `test-…`; danach `trash test-…`.
 - Nur das HTML ansehen: `node scripts/newsletter.js html job.json`.
