@@ -20,19 +20,25 @@ Auf account.apple.com anmelden, unter "Anmeldung und Sicherheit" ein app-spezifi
 
 Liegt die Mail nicht bei iCloud, sondern bei einem anderen Anbieter, kommen dessen IMAP und SMTP Zugangsdaten in die Mail Felder.
 
-### 2. Server
+### 2. Server (Hetzner)
 
-Gebraucht wird ein kleiner Server mit Docker (z.B. Hetzner Cloud CX22) und eine Subdomain wie `connector.zipperwalls.de`, die per DNS A Eintrag auf die IP des Servers zeigt.
+Beim Domainanbieter eine Subdomain wie `connector.zipperwalls.de` per A Eintrag auf die IP des Servers zeigen lassen. Dann per SSH auf den Server und dort:
 
 ```bash
-git clone <dieses Repo>
-cd zipperwalls-apple-connector
-cp .env.example .env
-nano .env            # Werte eintragen
-docker compose up -d --build
+apt update && apt install -y git gh
+gh auth login                      # GitHub.com, HTTPS, "Login with a web browser", Code im Browser eingeben
+gh repo clone Belapfirrmann/zipperwalls.de
+cd zipperwalls.de/apple-connector
+sudo bash install.sh
 ```
 
-Caddy holt automatisch ein HTTPS Zertifikat. Danach sollte `https://connector.zipperwalls.de/health` mit `{"ok":true}` antworten.
+Das Skript installiert bei Bedarf Docker, fragt Subdomain, Apple ID und app-spezifisches Passwort ab, testet die Zugangsdaten bei Apple und startet den Connector. Ist Port 80/443 frei, holt Caddy automatisch ein HTTPS Zertifikat. Läuft auf dem Server schon ein Webserver, startet der Connector auf `127.0.0.1:3000` und der vorhandene Webserver muss die Subdomain dorthin weiterleiten.
+
+Am Ende zeigt das Skript die Connector URL und das Anmeldepasswort an. Danach sollte `https://connector.zipperwalls.de/health` mit `{"ok":true}` antworten.
+
+Updates einspielen: `git pull && docker compose --profile caddy up -d --build` (ohne Caddy: `docker compose up -d --build`).
+
+Zugangsdaten erneut testen: `docker compose run --rm --no-deps connector node dist/check.js`
 
 Anmeldedaten von Claude (keine Passwörter, nur Token Hashes) liegen im Docker Volume `connector-data`.
 

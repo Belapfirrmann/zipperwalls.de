@@ -1,23 +1,25 @@
-# Server + Caddy (holt automatisch ein HTTPS Zertifikat).
-# Vorher: DNS Eintrag (z.B. connector.zipperwalls.de) auf die Server IP zeigen lassen
-# und DOMAIN in .env setzen.
+# Connector + optional Caddy (holt automatisch ein HTTPS Zertifikat).
+# Mit Caddy:  docker compose --profile caddy up -d --build
+# Ohne Caddy: docker compose up -d --build  (dann leitet ein vorhandener Webserver
+#             auf 127.0.0.1:3000 weiter, siehe README)
 services:
   connector:
     build: .
     env_file: .env
     environment:
       PORT: "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - connector-data:/data
     restart: unless-stopped
 
   caddy:
     image: caddy:2-alpine
+    profiles: ["caddy"]
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      DOMAIN: ${DOMAIN}
     command: caddy reverse-proxy --from ${DOMAIN} --to connector:3000
     volumes:
       - caddy-data:/data
