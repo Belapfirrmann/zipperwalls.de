@@ -20,7 +20,24 @@ Auf account.apple.com anmelden, unter "Anmeldung und Sicherheit" ein app-spezifi
 
 Liegt die Mail nicht bei iCloud, sondern bei einem anderen Anbieter, kommen dessen IMAP und SMTP Zugangsdaten in die Mail Felder.
 
-### 2. Server (Hetzner)
+### 2a. Hetzner Managed Server (konsoleH)
+
+1. In konsoleH die Subdomain `connector.zipperwalls.de` anlegen. Liegt die DNS Verwaltung bei Hetzner, zeigt sie automatisch auf den Server, sonst beim Domainanbieter einen A Eintrag auf die IP des Managed Servers setzen.
+2. Den Ordner `apple-connector` auf den Server bringen, z.B. auf GitHub "Code > Download ZIP", entpacken und den Ordner `apple-connector` per SFTP (FileZilla) ins Home Verzeichnis hochladen.
+3. Per SSH verbinden und ausführen:
+   ```bash
+   cd apple-connector
+   bash setup-managed.sh
+   ```
+   Das Skript baut den Connector, fragt Apple ID und app-spezifisches Passwort ab, speichert sie in `~/.apple-connector.env` (nur für den eigenen Benutzer lesbar) und testet die Verbindung zu Apple.
+4. In konsoleH bei der Subdomain Node.js aktivieren (auf Managed Servern ggf. vorher über die Reseller Funktionen freischalten) und eintragen, was das Skript am Ende anzeigt: Arbeitsverzeichnis `apple-connector`, Skriptpfad `dist/index.js`, Node.js 24. Dann SSL (Let's Encrypt) für die Subdomain aktivieren.
+5. `https://connector.zipperwalls.de/health` muss `{"ok":true}` zeigen.
+
+Updates: neue Dateien hochladen, `bash setup-managed.sh` erneut ausführen (Konfiguration behalten) und die Node.js Anwendung in konsoleH neu starten.
+
+Der Login Zustand liegt in `~/.apple-connector-data/`. Er wird bei jedem Zugriff aus der Datei gelesen, damit es auch funktioniert, wenn konsoleH mehrere Prozesse startet.
+
+### 2b. Eigener Server mit Root Zugriff (Docker)
 
 Beim Domainanbieter eine Subdomain wie `connector.zipperwalls.de` per A Eintrag auf die IP des Servers zeigen lassen. Dann per SSH auf den Server und dort:
 
@@ -34,13 +51,9 @@ sudo bash install.sh
 
 Das Skript installiert bei Bedarf Docker, fragt Subdomain, Apple ID und app-spezifisches Passwort ab, testet die Zugangsdaten bei Apple und startet den Connector. Ist Port 80/443 frei, holt Caddy automatisch ein HTTPS Zertifikat. Läuft auf dem Server schon ein Webserver, startet der Connector auf `127.0.0.1:3000` und der vorhandene Webserver muss die Subdomain dorthin weiterleiten.
 
-Am Ende zeigt das Skript die Connector URL und das Anmeldepasswort an. Danach sollte `https://connector.zipperwalls.de/health` mit `{"ok":true}` antworten.
-
 Updates einspielen: `git pull && docker compose --profile caddy up -d --build` (ohne Caddy: `docker compose up -d --build`).
 
 Zugangsdaten erneut testen: `docker compose run --rm --no-deps connector node dist/check.js`
-
-Anmeldedaten von Claude (keine Passwörter, nur Token Hashes) liegen im Docker Volume `connector-data`.
 
 ### 3. In Claude eintragen
 
@@ -55,9 +68,9 @@ Beim Verbinden öffnet sich die Anmeldeseite des Connectors, dort das `ADMIN_PAS
 
 Der Zugriff ist per OAuth geschützt. Nur wer das `ADMIN_PASSWORD` kennt, kann einen Client freischalten. Nach 5 Fehlversuchen ist die Anmeldung für 15 Minuten gesperrt. Weiterleitungen sind nur zu claude.ai, claude.com und localhost erlaubt (`ALLOWED_REDIRECT_HOSTS`). Access Tokens gelten eine Stunde, Refresh Tokens 90 Tage und werden bei jeder Nutzung erneuert. Gespeichert werden nur Hashes der Tokens.
 
-Die Zugangsdaten zu Apple und zum Mailserver stehen nur in der `.env` auf dem Server. Die Datei gehört nicht ins Repo (steht in `.gitignore`).
+Die Zugangsdaten zu Apple und zum Mailserver stehen nur auf dem Server (`~/.apple-connector.env` bzw. `.env` bei Docker). Die Datei gehört nicht ins Repo (steht in `.gitignore`).
 
-Alle Zugänge sperren: app-spezifisches Passwort bei Apple widerrufen, oder `docker compose down` und das Volume `connector-data` löschen.
+Alle Zugänge sperren: app-spezifisches Passwort bei Apple widerrufen. Alle Claude Anmeldungen löschen: `~/.apple-connector-data/oauth.json` löschen (Docker: Volume `connector-data`).
 
 ## Entwicklung
 

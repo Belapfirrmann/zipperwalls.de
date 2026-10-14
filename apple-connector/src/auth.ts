@@ -15,40 +15,59 @@ const CODE_TTL = 10 * 60 * 1000;
 const PENDING_TTL = 15 * 60 * 1000;
 
 type StoredToken = { kind: "access" | "refresh"; clientId: string; scopes: string[]; expiresAt: number; resource?: string };
-type StoreData = { clients: Record<string, OAuthClientInformationFull>; tokens: Record<string, StoredToken> };
+type StoredParams = { state?: string; scopes?: string[]; codeChallenge: string; redirectUri: string; resource?: string };
+type StoredGrant = { clientId: string; params: StoredParams; expiresAt: number }; // expiresAt in ms
+type StoreData = {
+  clients: Record<string, OAuthClientInformationFull>;
+  tokens: Record<string, StoredToken>;
+  pending: Record<string, StoredGrant>;
+  codes: Record<string, StoredGrant>;
+};
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 const randomToken = () => randomBytes(32).toString("base64url");
 const now = () => Math.floor(Date.now() / 1000);
 
-/** Clients und Tokens (nur als Hash) in einer JSON Datei, damit ein Neustart nicht alle abmeldet. */
+/**
+ * Gesamter Login Zustand (Clients, Token Hashes, offene Anmeldungen) in einer JSON Datei.
+ * Wird bei jedem Zugriff neu gelesen, weil Hosting wie konsoleH mehrere Prozesse
+ * parallel startet und ungenutzte Prozesse beendet.
+ */
 class FileStore {
   private file: string;
-  data: StoreData;
 
   constructor(dir: string) {
-    mkdirSync(dir, { recursive: true });
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
     this.file = join(dir, "oauth.json");
-    try {
-      this.data = JSON.parse(readFileSync(this.file, "utf8"));
-    } catch {
-      this.data = { clients: {}, tokens: {} };
-    }
   }
 
-  save() {
-    const t = now();
-    for (const [key, token] of Object.entries(this.data.tokens)) {
-      if (token.expiresAt < t) delete this.data.tokens[key];
+  read(): StoreData {
+    let data: Partial<StoreData> = {};
+    try {
+      data = JSON.parse(readFileSync(this.file, "utf8"));
+    } catch {
+      // noch keine Datei
     }
-    const tmp = `${this.file}.tmp`;
-    writeFileSync(tmp, JSON.stringify(this.data), { mode: 0o600 });
+    return { clients: data.clients ?? {}, tokens: data.tokens ?? {}, pending: data.pending ?? {}, codes: data.codes ?? {} };
+  }
+
+  update<T>(fn: (data: StoreData) => T): T {
+    const data = this.read();
+    const result = fn(data);
+    const t = Date.now();
+    for (const [k, v] of Object.entries(data.tokens)) if (v.expiresAt * 1000 < t) delete data.tokens[k];
+    for (const [k, v] of Object.entries(data.pending)) if (v.expiresAt < t) delete data.pending[k];
+    for (const [k, v] of Object.entries(data.codes)) if (v.expiresAt < t) delete data.codes[k];
+    const tmp = `${this.file}.${process.pid}.tmp`;
+    writeFileSync(tmp, JSON.stringify(data), { mode: 0o600 });
     renameSync(tmp, this.file);
+    return result;
   }
 }
 
-type PendingRequest = { clientId: string; params: AuthorizationParams; expiresAt: number };
-type AuthCode = { clientId: string; params: AuthorizationParams; expiresAt: number };
+function toStored(params: AuthorizationParams): StoredParams {
+  return { ...params, resource: params.resource?.toString() };
+}
 
 function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -78,13 +97,12 @@ function loginPage(requestId: string, clientName: string, error?: string): strin
 
 export class ConnectorAuthProvider implements OAuthServerProvider {
   private store = new FileStore(config.dataDir);
-  private pending = new Map<string, PendingRequest>();
-  private codes = new Map<string, AuthCode>();
+  // Fehlversuche nur pro Prozess; reicht als Bremse, das Passwort ist lang.
   private failedLogins = new Map<string, { count: number; until: number }>();
 
   get clientsStore(): OAuthRegisteredClientsStore {
     return {
-      getClient: (clientId) => this.store.data.clients[clientId],
+      getClient: (clientId) => this.store.read().clients[clientId],
       registerClient: (client) => {
         const full = client as OAuthClientInformationFull;
         for (const uri of full.redirect_uris) {
@@ -92,8 +110,9 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
           const allowed = config.allowedRedirectHosts.some((h) => host === h || host.endsWith(`.${h}`));
           if (!allowed) throw new InvalidClientMetadataError(`redirect_uri ${uri} ist nicht erlaubt`);
         }
-        this.store.data.clients[full.client_id] = full;
-        this.store.save();
+        this.store.update((data) => {
+          data.clients[full.client_id] = full;
+        });
         return full;
       },
     };
@@ -101,7 +120,9 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
 
   async authorize(client: OAuthClientInformationFull, params: AuthorizationParams, res: Response): Promise<void> {
     const requestId = randomToken();
-    this.pending.set(requestId, { clientId: client.client_id, params, expiresAt: Date.now() + PENDING_TTL });
+    this.store.update((data) => {
+      data.pending[hash(requestId)] = { clientId: client.client_id, params: toStored(params), expiresAt: Date.now() + PENDING_TTL };
+    });
     res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'");
     res.type("html").send(loginPage(requestId, client.client_name ?? "Claude"));
   }
@@ -113,15 +134,14 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
       const ip = req.ip ?? "unknown";
       const lock = this.failedLogins.get(ip);
       const requestId = String(req.body?.request_id ?? "");
-      const pending = this.pending.get(requestId);
+      const data = this.store.read();
+      const pending = data.pending[hash(requestId)];
 
       if (!pending || pending.expiresAt < Date.now()) {
-        this.pending.delete(requestId);
         res.status(400).type("text").send("Anmeldung abgelaufen. Bitte in Claude erneut verbinden.");
         return;
       }
-      const client = this.store.data.clients[pending.clientId];
-      const clientName = client?.client_name ?? "Claude";
+      const clientName = data.clients[pending.clientId]?.client_name ?? "Claude";
 
       if (lock && lock.count >= 5 && lock.until > Date.now()) {
         res.status(429).type("html").send(loginPage(requestId, clientName, "Zu viele Fehlversuche. Bitte 15 Minuten warten."));
@@ -138,9 +158,11 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
       }
 
       this.failedLogins.delete(ip);
-      this.pending.delete(requestId);
       const code = randomToken();
-      this.codes.set(code, { clientId: pending.clientId, params: pending.params, expiresAt: Date.now() + CODE_TTL });
+      this.store.update((d) => {
+        delete d.pending[hash(requestId)];
+        d.codes[hash(code)] = { clientId: pending.clientId, params: pending.params, expiresAt: Date.now() + CODE_TTL };
+      });
 
       const target = new URL(pending.params.redirectUri);
       target.searchParams.set("code", code);
@@ -150,8 +172,8 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
     return router;
   }
 
-  private takeCode(client: OAuthClientInformationFull, code: string): AuthCode {
-    const entry = this.codes.get(code);
+  private findCode(client: OAuthClientInformationFull, code: string): StoredGrant {
+    const entry = this.store.read().codes[hash(code)];
     if (!entry || entry.clientId !== client.client_id || entry.expiresAt < Date.now()) {
       throw new InvalidGrantError("Ungültiger oder abgelaufener Code");
     }
@@ -159,16 +181,15 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
   }
 
   async challengeForAuthorizationCode(client: OAuthClientInformationFull, code: string): Promise<string> {
-    return this.takeCode(client, code).params.codeChallenge;
+    return this.findCode(client, code).params.codeChallenge;
   }
 
-  private issueTokens(clientId: string, scopes: string[], resource?: string): OAuthTokens {
+  private issueTokens(data: StoreData, clientId: string, scopes: string[], resource?: string): OAuthTokens {
     const access = randomToken();
     const refresh = randomToken();
     const t = now();
-    this.store.data.tokens[hash(access)] = { kind: "access", clientId, scopes, expiresAt: t + ACCESS_TOKEN_TTL, resource };
-    this.store.data.tokens[hash(refresh)] = { kind: "refresh", clientId, scopes, expiresAt: t + REFRESH_TOKEN_TTL, resource };
-    this.store.save();
+    data.tokens[hash(access)] = { kind: "access", clientId, scopes, expiresAt: t + ACCESS_TOKEN_TTL, resource };
+    data.tokens[hash(refresh)] = { kind: "refresh", clientId, scopes, expiresAt: t + REFRESH_TOKEN_TTL, resource };
     return {
       access_token: access,
       token_type: "bearer",
@@ -184,27 +205,35 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
     _codeVerifier?: string,
     redirectUri?: string,
   ): Promise<OAuthTokens> {
-    const entry = this.takeCode(client, code);
-    this.codes.delete(code);
-    if (redirectUri && redirectUri !== entry.params.redirectUri) {
-      throw new InvalidGrantError("redirect_uri passt nicht zum Code");
-    }
-    return this.issueTokens(client.client_id, entry.params.scopes ?? [], entry.params.resource?.toString());
+    return this.store.update((data) => {
+      const key = hash(code);
+      const entry = data.codes[key];
+      if (!entry || entry.clientId !== client.client_id || entry.expiresAt < Date.now()) {
+        throw new InvalidGrantError("Ungültiger oder abgelaufener Code");
+      }
+      delete data.codes[key];
+      if (redirectUri && redirectUri !== entry.params.redirectUri) {
+        throw new InvalidGrantError("redirect_uri passt nicht zum Code");
+      }
+      return this.issueTokens(data, client.client_id, entry.params.scopes ?? [], entry.params.resource);
+    });
   }
 
   async exchangeRefreshToken(client: OAuthClientInformationFull, refreshToken: string, scopes?: string[]): Promise<OAuthTokens> {
-    const key = hash(refreshToken);
-    const stored = this.store.data.tokens[key];
-    if (!stored || stored.kind !== "refresh" || stored.clientId !== client.client_id || stored.expiresAt < now()) {
-      throw new InvalidGrantError("Ungültiges Refresh Token");
-    }
-    delete this.store.data.tokens[key]; // Rotation: jedes Refresh Token gilt nur einmal
-    const granted = scopes?.length ? scopes.filter((s) => stored.scopes.includes(s)) : stored.scopes;
-    return this.issueTokens(client.client_id, granted, stored.resource);
+    return this.store.update((data) => {
+      const key = hash(refreshToken);
+      const stored = data.tokens[key];
+      if (!stored || stored.kind !== "refresh" || stored.clientId !== client.client_id || stored.expiresAt < now()) {
+        throw new InvalidGrantError("Ungültiges Refresh Token");
+      }
+      delete data.tokens[key]; // Rotation: jedes Refresh Token gilt nur einmal
+      const granted = scopes?.length ? scopes.filter((s) => stored.scopes.includes(s)) : stored.scopes;
+      return this.issueTokens(data, client.client_id, granted, stored.resource);
+    });
   }
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
-    const stored = this.store.data.tokens[hash(token)];
+    const stored = this.store.read().tokens[hash(token)];
     if (!stored || stored.kind !== "access" || stored.expiresAt < now()) {
       throw new InvalidTokenError("Ungültiges oder abgelaufenes Token");
     }
@@ -218,18 +247,14 @@ export class ConnectorAuthProvider implements OAuthServerProvider {
   }
 
   async revokeToken(_client: OAuthClientInformationFull, request: { token: string }): Promise<void> {
-    const key = hash(request.token);
-    if (this.store.data.tokens[key]) {
-      delete this.store.data.tokens[key];
-      this.store.save();
-    }
+    this.store.update((data) => {
+      delete data.tokens[hash(request.token)];
+    });
   }
 
-  /** Aufräumen abgelaufener Einträge im Speicher. */
+  /** Aufräumen der Fehlversuche im Speicher. */
   sweep() {
     const t = Date.now();
-    for (const [k, v] of this.pending) if (v.expiresAt < t) this.pending.delete(k);
-    for (const [k, v] of this.codes) if (v.expiresAt < t) this.codes.delete(k);
     for (const [k, v] of this.failedLogins) if (v.until < t) this.failedLogins.delete(k);
   }
 }

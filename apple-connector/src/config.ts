@@ -1,3 +1,12 @@
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+// Zugangsdaten aus einer Datei laden, falls vorhanden. Standard ist ~/.apple-connector.env,
+// also außerhalb des Programmordners. Bereits gesetzte Umgebungsvariablen haben Vorrang.
+const envFile = process.env.ENV_FILE || join(homedir(), ".apple-connector.env");
+if (existsSync(envFile)) process.loadEnvFile(envFile);
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Umgebungsvariable ${name} fehlt (siehe .env.example)`);
@@ -21,7 +30,7 @@ export const config = {
   port: Number(optional("PORT", "3000")),
   publicUrl: required("PUBLIC_URL").replace(/\/+$/, ""),
   adminPassword: required("ADMIN_PASSWORD"),
-  dataDir: optional("DATA_DIR", "./data"),
+  dataDir: optional("DATA_DIR", join(homedir(), ".apple-connector-data")),
   timezone: optional("TIMEZONE", "Europe/Berlin"),
   allowedRedirectHosts: optional("ALLOWED_REDIRECT_HOSTS", "claude.ai,claude.com,localhost,127.0.0.1")
     .split(",")
