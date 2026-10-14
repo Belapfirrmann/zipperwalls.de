@@ -20,7 +20,7 @@ const STATUS = {
 const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
-const S = { db: null, assets: null, comments: null, requests: {}, posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -371,9 +371,12 @@ async function sendImprove(btn, el, intro, id) {
     const anchor = await S.comments.anchorFor(el);
     const text = `${intro}:\n${wish}`.slice(0, 3900);
     await S.comments.sendToClaude({ anchor, text });
+    // Eigene Ablage, damit Wunsch und Antwort im Dashboard sichtbar sind (die Kommentarleiste sieht nicht jeder)
+    const wid = `w-${Date.now()}`;
+    await write((db) => db.collection('wishes').doc(wid).set({ target: id, text: wish, status: 'offen', created_at: nowIso() })).catch(() => {});
     box.value = '';
     S.dirty.delete(id);
-    hint.textContent = 'Gesendet. Claude kümmert sich darum, die Änderung erscheint hier automatisch.';
+    hint.textContent = 'Gesendet. Claude kümmert sich darum, die Antwort erscheint unten.';
     toast('An Claude gesendet.');
   } catch (e) {
     const msg = { consent_required: 'Bitte erlauben Sie dem Dashboard einmalig, Kommentare zu schreiben, und senden Sie erneut.', forbidden: 'Kommentieren aus dem Dashboard ist hier ausgeschaltet.', rate_limited: 'Kurz warten, dann erneut senden.', claude_unavailable: 'Claude ist gerade nicht erreichbar. Ihr Text ist noch da, bitte später erneut senden.' }[e?.code];
@@ -389,8 +392,31 @@ const improveBlock = (id, placeholder) => `
           <textarea id="imp-${esc(id)}" data-imp rows="2" maxlength="3000" placeholder="${esc(placeholder)}"></textarea>
           <button class="btn dark" data-act="improve">An Claude senden</button>
         </div>
-        <p class="muted small" data-imp-hint>Geht direkt an Claude im Chat. Claude passt den Entwurf an und antwortet als Kommentar.</p>
+        <p class="muted small" data-imp-hint>Geht direkt an Claude im Chat. Claude passt den Entwurf an und antwortet hier.</p>
+        <div class="wishes" data-wishes="${esc(id)}">${wishList(id)}</div>
       </div>`;
+
+// Wünsche an Claude mit Antwort (Collection "wishes": target, text, status offen|in Arbeit|erledigt, reply, replied_at)
+function wishList(id) {
+  const list = S.wishes.filter((w) => w.target === id).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 5);
+  if (!list.length) return '';
+  const when = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' Uhr' : '');
+  return `<span class="label">Verlauf mit Claude</span>${list.map((w) => {
+    // erledigt: Antwort; Rückfrage: Claude wartet auf euch (keine Animation); sonst: Claude arbeitet
+    const done = w.status === 'erledigt' || w.status === 'Rückfrage';
+    const ask = w.status === 'Rückfrage';
+    return `<div class="wish ${done ? 'done' : 'busy'}">
+      <div class="wish-q"><span class="muted small">${when(w.created_at)}</span><p>${esc(w.text)}</p></div>
+      ${done ? `<div class="wish-a${ask ? ' ask' : ''}"><span class="who">Claude${ask ? ' · Rückfrage an euch' : ''} <span class="muted small">${when(w.replied_at)}</span></span><p>${esc(w.reply || 'Erledigt.')}</p></div>`
+        : `<div class="wish-a working" role="status"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span>${w.status === 'in Arbeit' ? 'Claude arbeitet daran …' : 'Angekommen, Claude ist dran …'}</span>${w.reply ? `<p>${esc(w.reply)}</p>` : ''}</div>`}
+    </div>`;
+  }).join('')}`;
+}
+// Neue Antworten sofort einsetzen, auch wenn die Seite gerade nicht neu gezeichnet wird (z. B. beim Tippen)
+function refreshWishes() {
+  main.querySelectorAll('[data-wishes]').forEach((el) => { el.innerHTML = wishList(el.dataset.wishes); });
+}
 
 // ---------- Newsletter ----------
 // Plan kommt aus dem Newsletter-Plan (xlsx, scripts/import_newsletter.py). Entwürfe liegen in Collection "newsletters"
@@ -1011,12 +1037,13 @@ async function start() {
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
-  let first = 6;
+  let first = 7;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
   db.collection('posts').onSnapshot((snap) => { S.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('newsletters').onSnapshot((snap) => { S.newsletters = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('metrics').onSnapshot((snap) => { S.metrics = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('status').onSnapshot((snap) => { S.status = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
+  db.collection('wishes').onSnapshot((snap) => { S.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })); refreshWishes(); ready(); }, onErr);
   db.collection('requests').onSnapshot((snap) => { S.requests = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
   db.collection('checklist').onSnapshot((snap) => { S.checklist = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
 }

@@ -329,3 +329,21 @@ body.lb-open { overflow: hidden; }
   .lb-prev { left: 14px; } .lb-next { right: 14px; }
   .lightbox img { max-height: calc(100vh - 150px); }
 }
+
+/* Verlauf mit Claude unter "Mit Claude verbessern" */
+.wishes:empty { display: none; }
+.wishes { margin-top: 14px; display: grid; gap: 10px; }
+.wish { display: grid; gap: 6px; }
+.wish p { margin: 2px 0 0; white-space: pre-wrap; font-size: 15px; }
+.wish-q { justify-self: end; max-width: 88%; background: var(--flaeche); padding: 8px 12px; border-radius: 12px 0 12px 0; text-align: left; }
+.wish-a { max-width: 92%; background: var(--card); border-left: 4px solid var(--gelb); box-shadow: var(--shadow); padding: 8px 12px; border-radius: 0 12px 0 12px; }
+.wish-a .who { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.wish-a.working { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; font-size: 15px; }
+.wish-a.working p { flex-basis: 100%; font-weight: 400; }
+.wish-a.ask { border-left-color: var(--c-instagram); }
+.dots { display: inline-flex; gap: 4px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--gelb-dunkel); animation: zw-dot 1.2s infinite ease-in-out; }
+.dots i:nth-child(2) { animation-delay: .15s; }
+.dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes zw-dot { 0%, 80%, 100% { transform: translateY(0); opacity: .35; } 40% { transform: translateY(-6px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dots i { animation: none; opacity: .8; } }

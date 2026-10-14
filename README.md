@@ -7,6 +7,7 @@ Plan, Freigabe, Abhakeliste und Zahlen für Facebook, Instagram und LinkedIn, da
 - **Entwürfe**: Claude Routine, Mo und Mi. Legt die Posts aus dem Redaktionsplan als Entwurf an.
 - **Zahlen**: Claude Routine, täglich.
 - **Jetzt erstellen** (Social-Plan und Newsletter-Plan): speichert einen Auftrag in der Collection `requests`. Die stündlichen Routinen „Social Posting“ und „Newsletter Versand“ holen ihn werktags 7 bis 19 Uhr ab und legen den Entwurf an (`docs/routinen/auftraege.md`). Kein Connector nötig.
+- **Mit Claude verbessern** (Freigabe): schickt den Wunsch als Kommentar an Claude und legt ein Dokument in `wishes` an (`target`, `text`, `status`, `created_at`). Darunter steht der „Verlauf mit Claude“. Wer einen Wunsch bearbeitet, setzt `status` erst auf `in Arbeit` (Animation „Claude arbeitet daran“), danach auf `erledigt` oder `Rückfrage` und schreibt `reply` und `replied_at` dazu, zusätzlich zur Antwort im Kommentar.
 
 Ablauf: Entwurf erscheint unter "Freigabe" > Bela oder Darien prüfen > "Jetzt posten" oder "Planen" > beim nächsten Lauf veröffentlicht Claude.
 
