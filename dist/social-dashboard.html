@@ -1212,12 +1212,13 @@ function berlinParts(iso) {
 
 // Versandtermin: Ein gekoppelter Newsletter geht zeitgleich mit seinem Social-Media-Post raus.
 // Termin des Posts aus dem Dashboard (posts/plan-<nr>.scheduled_at), sonst aus dem Redaktionsplan. Eigenständige behalten ihren Plantermin.
-function nlTiming(e) {
+// Verschobene eigenständige Newsletter: send_at_override im Dokument hat Vorrang vor dem Plantermin
+function nlTiming(e, doc = null) {
   const m = e.type === 'gekoppelt' ? /Post\s*0*(\d+)/i.exec(e.social || '') : null;
   const postNr = m ? Number(m[1]) : null;
   const planPost = postNr != null ? PLAN.entries.find((x) => x.nr === postNr) : null;
   const post = postNr != null ? S.posts.find((x) => x.plan_nr === postNr && x.status !== 'rejected') : null;
-  const iso = post?.scheduled_at || (planPost?.date ? berlinToUtc(planPost.date, PLAN.rhythm?.time || '09:00') : berlinToUtc(e.date, e.time || '09:00'));
+  const iso = post?.scheduled_at || (planPost?.date ? berlinToUtc(planPost.date, PLAN.rhythm?.time || '09:00') : doc?.send_at_override || berlinToUtc(e.date, e.time || '09:00'));
   const t = berlinParts(iso);
   return { ...t, send_at: iso, kw: Number(isoWeek(new Date(t.date + 'T12:00:00Z')).split('-W')[1]), post_nr: planPost ? postNr : null, post_topic: planPost?.topic || null, plan_date: e.date };
 }
@@ -1227,7 +1228,7 @@ function nlEntries() {
   const docs = Object.fromEntries(S.newsletters.map(({ id, ...d }) => [id, d]));
   return NL.entries.map((e) => {
     const doc = docs[nlId(e.nr)] || null;
-    return { ...e, ...(doc || {}), ...nlTiming(e), id: nlId(e.nr), doc, status: doc?.status || e.status || 'Entwurf' };
+    return { ...e, ...(doc || {}), ...nlTiming(e, doc), id: nlId(e.nr), doc, status: doc?.status || e.status || 'Entwurf' };
   }).sort((a, b) => a.send_at.localeCompare(b.send_at));
 }
 // Nur angelegte Entwürfe (für die Freigabe)
