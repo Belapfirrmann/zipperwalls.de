@@ -332,7 +332,7 @@ body.lb-open { overflow: hidden; }
 
 /* Verlauf mit Claude unter "Mit Claude verbessern" */
 .wishes:empty { display: none; }
-.wishes { margin-top: 14px; display: grid; gap: 10px; }
+.wishes { margin-top: 14px; }
 .wish { display: grid; gap: 6px; }
 .wish p { margin: 2px 0 0; white-space: pre-wrap; font-size: 15px; }
 .wish-q { justify-self: end; max-width: 88%; background: var(--flaeche); padding: 8px 12px; border-radius: 12px 0 12px 0; text-align: left; }
@@ -347,3 +347,12 @@ body.lb-open { overflow: hidden; }
 .dots i:nth-child(3) { animation-delay: .3s; }
 @keyframes zw-dot { 0%, 80%, 100% { transform: translateY(0); opacity: .35; } 40% { transform: translateY(-6px); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .dots i { animation: none; opacity: .8; } }
+.wish-box > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 0; }
+.wish-box > summary::-webkit-details-marker { display: none; }
+.wish-box > summary::before { content: '▸'; font-size: 14px; transition: transform .15s; }
+.wish-box[open] > summary::before { transform: rotate(90deg); }
+.wish-box > summary .label { margin: 0; }
+.wish-state { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--grau); }
+.wish-state.busy { color: inherit; }
+.wish-state.ask { color: var(--c-instagram); }
+.wish-list { display: grid; gap: 10px; margin-top: 8px; }

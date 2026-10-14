@@ -20,6 +20,7 @@ const STATUS = {
 const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled: 'Freigegeben', publishing: 'Freigegeben', partial: 'Teilweise gepostet', failed: 'Fehler', published: 'Gepostet', rejected: 'Gestrichen' };
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
+const WISH_OPEN = new Set(); // aufgeklappte „Verlauf mit Claude“-Boxen, bleiben beim Neuzeichnen offen
 const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -401,7 +402,14 @@ function wishList(id) {
   const list = S.wishes.filter((w) => w.target === id).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 5);
   if (!list.length) return '';
   const when = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' Uhr' : '');
-  return `<span class="label">Verlauf mit Claude</span>${list.map((w) => {
+  // Eingeklappt; die Zusammenfassung zeigt den Stand, damit die Animation auch zugeklappt sichtbar ist
+  const busy = list.some((w) => w.status !== 'erledigt' && w.status !== 'Rückfrage');
+  const ask = list.some((w) => w.status === 'Rückfrage');
+  const state = busy ? '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span> Claude arbeitet daran'
+    : ask ? 'Rückfrage an euch' : 'alles erledigt';
+  return `<details class="wish-box"${WISH_OPEN.has(id) ? ' open' : ''} data-wish-box="${esc(id)}">
+    <summary><span class="label">Verlauf mit Claude (${list.length})</span><span class="wish-state${busy ? ' busy' : ask ? ' ask' : ''}">${state}</span></summary>
+    <div class="wish-list">${list.map((w) => {
     // erledigt: Antwort; Rückfrage: Claude wartet auf euch (keine Animation); sonst: Claude arbeitet
     const done = w.status === 'erledigt' || w.status === 'Rückfrage';
     const ask = w.status === 'Rückfrage';
@@ -411,9 +419,13 @@ function wishList(id) {
         : `<div class="wish-a working" role="status"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <span>${w.status === 'in Arbeit' ? 'Claude arbeitet daran …' : 'Angekommen, Claude ist dran …'}</span>${w.reply ? `<p>${esc(w.reply)}</p>` : ''}</div>`}
     </div>`;
-  }).join('')}`;
+  }).join('')}</div></details>`;
 }
 // Neue Antworten sofort einsetzen, auch wenn die Seite gerade nicht neu gezeichnet wird (z. B. beim Tippen)
+main.addEventListener('toggle', (e) => {
+  const id = e.target.dataset?.wishBox;
+  if (id) e.target.open ? WISH_OPEN.add(id) : WISH_OPEN.delete(id);
+}, true);
 function refreshWishes() {
   main.querySelectorAll('[data-wishes]').forEach((el) => { el.innerHTML = wishList(el.dataset.wishes); });
 }
