@@ -362,6 +362,67 @@ body.lb-open { overflow: hidden; }
 .wish-state.ask { color: var(--c-instagram); }
 .wish-list { display: grid; gap: 10px; margin-top: 8px; }
 
+/* ---------- Bewegung ----------
+   Alles nur Deckkraft und Transform, nichts verändert das Layout. Bei reduzierter Bewegung bleibt die Seite statisch.
+   Eintritt: #main.enter wird nur beim Wechsel der Ansicht gesetzt (app.js, playEnter), Elemente tragen .zw-in und --i. */
+@media (prefers-reduced-motion: no-preference) {
+  :root { --ease: cubic-bezier(.22, .8, .3, 1); }
+
+  /* Ansicht kommt herein: Blöcke steigen gestaffelt auf */
+  #main.enter .zw-in { animation: zw-rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 50ms - var(--t, 0ms)); }
+  @keyframes zw-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes zw-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes zw-drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes zw-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
+  /* Balken und Verteilungen wachsen von der Grundlinie */
+  #main.enter .pillars { animation: zw-wipe .9s var(--ease) calc(200ms - var(--t, 0ms)) both; }
+  @keyframes zw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  #main.enter .hb-track span, #main.enter .progress div { transform-origin: left center; animation: zw-grow-x .8s var(--ease) calc(300ms - var(--t, 0ms)) both; }
+  @keyframes zw-grow-x { from { transform: scaleX(0); } to { transform: none; } }
+  #main.enter .hbar span { transform-origin: center bottom; animation: zw-grow-y .7s var(--ease) calc(300ms - var(--t, 0ms)) both; }
+  @keyframes zw-grow-y { from { transform: scaleY(0); } to { transform: none; } }
+  #main.enter .hc.on { animation: zw-fade .6s ease calc(300ms - var(--t, 0ms)) both; }
+
+  /* Liniendiagramm zeichnet sich, Endpunkte und Werte folgen */
+  #main.enter .zc .ln { stroke-dasharray: 1; animation: zw-draw 1.2s cubic-bezier(.4, 0, .2, 1) calc(250ms - var(--t, 0ms)) both; }
+  @keyframes zw-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  #main.enter .zc .end, #main.enter .zc .lbl { animation: zw-fade .4s ease calc(1200ms - var(--t, 0ms)) both; }
+
+  /* Rückmeldung bei Hover und Klick */
+  .btn { transition: background .2s, transform .15s var(--ease), box-shadow .2s; }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, .14); }
+  .btn:active:not(:disabled) { transform: scale(.97); box-shadow: none; }
+  .tab { transition: background .2s, color .2s, transform .15s var(--ease); }
+  .tab:active { transform: scale(.96); }
+  nav a { transition: background .25s, color .25s, transform .2s var(--ease); }
+  nav a:hover:not(.active) { transform: translateX(3px); }
+  .entry, .top, .part, .zk .kpi { transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .2s; }
+  .entry:hover, .top:hover, .zk .kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+  .part:hover:not(.on) { transform: translateY(-1px); }
+  .count.pop { animation: zw-pop .45s var(--ease); }
+  .box { transition: background .2s, border-color .2s, transform .15s var(--ease); }
+  .check:active .box { transform: scale(.9); }
+  input[type=text], input[type=datetime-local], textarea { transition: border-color .2s, box-shadow .2s; }
+  input[type=text]:focus, input[type=datetime-local]:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(239, 184, 0, .25); }
+  .hb { transition: opacity .2s; }
+  .hbars:hover .hb:not(:hover) { opacity: .6; }
+  .hbar span, .hb-track span { transition: opacity .15s; }
+  .post .img, .slides img, .top img { transition: transform .35s var(--ease), filter .35s; }
+  .slides img:hover, .post .img:hover { transform: scale(1.015); }
+
+  /* Aufklappen per Klick, Hinweis oben, Overlays */
+  details.zw-open > :not(summary) { animation: zw-drop .35s var(--ease) both; }
+  .pending:not([hidden]) { animation: zw-drop .3s var(--ease); }
+  .lightbox:not([hidden]) { animation: zw-fade .2s ease; }
+  .lightbox:not([hidden]) figure { animation: zw-rise .35s var(--ease) both; }
+  .nl-full { animation: zw-fade .2s ease; }
+  .nl-full-frame { animation: zw-rise .4s var(--ease) both; }
+  .card.loading h2 { animation: zw-load 1.6s ease-in-out infinite; }
+  @keyframes zw-load { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+  .toast.show { animation: zw-fade .2s ease; }
+}
+
 </style>
 <div class="shell">
   <aside class="side">
@@ -1812,6 +1873,59 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowLeft') stepLightbox(-1);
 });
 
+// ---------- Bewegung ----------
+// Eintrittsanimation nur beim Wechsel der Ansicht (nicht bei jedem Datenabruf), alles per CSS, bei reduzierter Bewegung statisch
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const ENTER_SEL = '.head, .notice, .parts, .filters, .card, .entry, .kw, .post, .nl, .top, .part';
+function countUp(root) {
+  root.querySelectorAll('.kpi .num, .topnum .num').forEach((el) => {
+    if (el.children.length) return;
+    const text = el.textContent.trim();
+    const m = /^(\D*)(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?(\D*)$/.exec(text);
+    if (!m) return;
+    const [, pre, int, dec = '', post] = m;
+    const target = parseFloat(int.replace(/\./g, '') + (dec ? '.' + dec : ''));
+    if (!Number.isFinite(target) || target === 0) return;
+    const fmt = (v) => pre + v.toLocaleString('de-DE', { minimumFractionDigits: dec.length, maximumFractionDigits: dec.length }) + post;
+    const t0 = performance.now() + 150;
+    const step = (now) => {
+      if (!el.isConnected) return;
+      const k = Math.min(1, Math.max(0, (now - t0) / 800));
+      el.textContent = k >= 1 ? text : fmt(target * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    el.textContent = fmt(0);
+    requestAnimationFrame(step);
+  });
+}
+// resume: Neuzeichnen mitten in der Animation (z. B. weil Daten ankommen): neue Elemente setzen an der gleichen Stelle fort
+let enterStart = 0;
+function playEnter(resume) {
+  if (reduceMotion.matches) return;
+  const elapsed = resume ? performance.now() - enterStart : 0;
+  if (!resume) enterStart = performance.now();
+  const items = [...main.querySelectorAll(ENTER_SEL)].filter((el) => !el.parentElement.closest(ENTER_SEL));
+  items.slice(0, 40).forEach((el, i) => { el.classList.add('zw-in'); el.style.setProperty('--i', Math.min(i, 12)); });
+  main.querySelectorAll('.zc .ln').forEach((p) => p.setAttribute('pathLength', '1'));
+  main.style.setProperty('--t', Math.round(elapsed) + 'ms');
+  main.classList.add('enter');
+  if (resume) return;
+  countUp(main);
+  clearTimeout(playEnter.t);
+  playEnter.t = setTimeout(() => main.classList.remove('enter'), 2200);
+}
+// Aufklappen: Inhalt gleitet ein (nur bei Klick, nicht bei jedem Neuzeichnen)
+document.addEventListener('click', (e) => {
+  const sum = e.target.closest?.('summary');
+  if (!sum || reduceMotion.matches) return;
+  const d = sum.parentElement;
+  requestAnimationFrame(() => {
+    if (!d.open) return;
+    d.classList.add('zw-open');
+    setTimeout(() => d.classList.remove('zw-open'), 500);
+  });
+});
+
 // ---------- Rahmen ----------
 const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
 // #freigabe-newsletter ist der Newsletter-Teil der Freigabe-Seite
@@ -1832,16 +1946,30 @@ function render() {
   // Zähler: offene Social-Entwürfe plus Newsletter, die in den nächsten 14 Tagen rausgehen und noch nicht freigegeben sind
   const open = socialOpen() + nlDue();
   const c = document.getElementById('count-freigabe');
+  const prevCount = c.textContent;
   c.hidden = !open;
   c.textContent = open;
+  if (open && S.loaded && String(open) !== prevCount && !reduceMotion.matches) {
+    c.classList.remove('pop');
+    void c.offsetWidth;
+    c.classList.add('pop');
+  }
   const runner = S.status.runner;
   document.getElementById('runner').textContent = runner?.last_run ? `Letzter Lauf ${fmtDate(runner.last_run)}` : '';
-  if (!S.loaded && !['plan', 'newsletter', 'checkliste'].includes(view)) {
-    main.innerHTML = `<div class="card empty"><h2>Daten werden geladen</h2><p style="margin-top:10px">${S.offline ? 'Die Datenbank ist in dieser Ansicht nicht erreichbar. Öffnen Sie das Dashboard angemeldet auf claude.ai.' : 'Einen Moment bitte.'}</p></div>`;
+  const preload = ['plan', 'newsletter', 'checkliste'].includes(view);
+  const key = (location.hash || '#freigabe') + (S.loaded || preload ? '' : ':laedt');
+  const fresh = key !== lastEnterKey;
+  lastEnterKey = key;
+  const resume = !fresh && main.classList.contains('enter');
+  if (!S.loaded && !preload) {
+    main.innerHTML = `<div class="card empty${S.offline ? '' : ' loading'}"><h2>Daten werden geladen</h2><p style="margin-top:10px">${S.offline ? 'Die Datenbank ist in dieser Ansicht nicht erreichbar. Öffnen Sie das Dashboard angemeldet auf claude.ai.' : 'Einen Moment bitte.'}</p></div>`;
+    if (fresh || resume) playEnter(resume);
     return;
   }
   views[view]();
+  if (fresh || resume) playEnter(resume);
 }
+let lastEnterKey = null;
 
 window.addEventListener('hashchange', () => { S.dirty.clear(); render(); });
 document.getElementById('pending-btn').onclick = () => { S.dirty.clear(); render(); };

@@ -1002,6 +1002,59 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowLeft') stepLightbox(-1);
 });
 
+// ---------- Bewegung ----------
+// Eintrittsanimation nur beim Wechsel der Ansicht (nicht bei jedem Datenabruf), alles per CSS, bei reduzierter Bewegung statisch
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const ENTER_SEL = '.head, .notice, .parts, .filters, .card, .entry, .kw, .post, .nl, .top, .part';
+function countUp(root) {
+  root.querySelectorAll('.kpi .num, .topnum .num').forEach((el) => {
+    if (el.children.length) return;
+    const text = el.textContent.trim();
+    const m = /^(\D*)(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?(\D*)$/.exec(text);
+    if (!m) return;
+    const [, pre, int, dec = '', post] = m;
+    const target = parseFloat(int.replace(/\./g, '') + (dec ? '.' + dec : ''));
+    if (!Number.isFinite(target) || target === 0) return;
+    const fmt = (v) => pre + v.toLocaleString('de-DE', { minimumFractionDigits: dec.length, maximumFractionDigits: dec.length }) + post;
+    const t0 = performance.now() + 150;
+    const step = (now) => {
+      if (!el.isConnected) return;
+      const k = Math.min(1, Math.max(0, (now - t0) / 800));
+      el.textContent = k >= 1 ? text : fmt(target * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    el.textContent = fmt(0);
+    requestAnimationFrame(step);
+  });
+}
+// resume: Neuzeichnen mitten in der Animation (z. B. weil Daten ankommen): neue Elemente setzen an der gleichen Stelle fort
+let enterStart = 0;
+function playEnter(resume) {
+  if (reduceMotion.matches) return;
+  const elapsed = resume ? performance.now() - enterStart : 0;
+  if (!resume) enterStart = performance.now();
+  const items = [...main.querySelectorAll(ENTER_SEL)].filter((el) => !el.parentElement.closest(ENTER_SEL));
+  items.slice(0, 40).forEach((el, i) => { el.classList.add('zw-in'); el.style.setProperty('--i', Math.min(i, 12)); });
+  main.querySelectorAll('.zc .ln').forEach((p) => p.setAttribute('pathLength', '1'));
+  main.style.setProperty('--t', Math.round(elapsed) + 'ms');
+  main.classList.add('enter');
+  if (resume) return;
+  countUp(main);
+  clearTimeout(playEnter.t);
+  playEnter.t = setTimeout(() => main.classList.remove('enter'), 2200);
+}
+// Aufklappen: Inhalt gleitet ein (nur bei Klick, nicht bei jedem Neuzeichnen)
+document.addEventListener('click', (e) => {
+  const sum = e.target.closest?.('summary');
+  if (!sum || reduceMotion.matches) return;
+  const d = sum.parentElement;
+  requestAnimationFrame(() => {
+    if (!d.open) return;
+    d.classList.add('zw-open');
+    setTimeout(() => d.classList.remove('zw-open'), 500);
+  });
+});
+
 // ---------- Rahmen ----------
 const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
 // #freigabe-newsletter ist der Newsletter-Teil der Freigabe-Seite
@@ -1022,16 +1075,30 @@ function render() {
   // Zähler: offene Social-Entwürfe plus Newsletter, die in den nächsten 14 Tagen rausgehen und noch nicht freigegeben sind
   const open = socialOpen() + nlDue();
   const c = document.getElementById('count-freigabe');
+  const prevCount = c.textContent;
   c.hidden = !open;
   c.textContent = open;
+  if (open && S.loaded && String(open) !== prevCount && !reduceMotion.matches) {
+    c.classList.remove('pop');
+    void c.offsetWidth;
+    c.classList.add('pop');
+  }
   const runner = S.status.runner;
   document.getElementById('runner').textContent = runner?.last_run ? `Letzter Lauf ${fmtDate(runner.last_run)}` : '';
-  if (!S.loaded && !['plan', 'newsletter', 'checkliste'].includes(view)) {
-    main.innerHTML = `<div class="card empty"><h2>Daten werden geladen</h2><p style="margin-top:10px">${S.offline ? 'Die Datenbank ist in dieser Ansicht nicht erreichbar. Öffnen Sie das Dashboard angemeldet auf claude.ai.' : 'Einen Moment bitte.'}</p></div>`;
+  const preload = ['plan', 'newsletter', 'checkliste'].includes(view);
+  const key = (location.hash || '#freigabe') + (S.loaded || preload ? '' : ':laedt');
+  const fresh = key !== lastEnterKey;
+  lastEnterKey = key;
+  const resume = !fresh && main.classList.contains('enter');
+  if (!S.loaded && !preload) {
+    main.innerHTML = `<div class="card empty${S.offline ? '' : ' loading'}"><h2>Daten werden geladen</h2><p style="margin-top:10px">${S.offline ? 'Die Datenbank ist in dieser Ansicht nicht erreichbar. Öffnen Sie das Dashboard angemeldet auf claude.ai.' : 'Einen Moment bitte.'}</p></div>`;
+    if (fresh || resume) playEnter(resume);
     return;
   }
   views[view]();
+  if (fresh || resume) playEnter(resume);
 }
+let lastEnterKey = null;
 
 window.addEventListener('hashchange', () => { S.dirty.clear(); render(); });
 document.getElementById('pending-btn').onclick = () => { S.dirty.clear(); render(); };

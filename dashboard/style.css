@@ -356,3 +356,64 @@ body.lb-open { overflow: hidden; }
 .wish-state.busy { color: inherit; }
 .wish-state.ask { color: var(--c-instagram); }
 .wish-list { display: grid; gap: 10px; margin-top: 8px; }
+
+/* ---------- Bewegung ----------
+   Alles nur Deckkraft und Transform, nichts verändert das Layout. Bei reduzierter Bewegung bleibt die Seite statisch.
+   Eintritt: #main.enter wird nur beim Wechsel der Ansicht gesetzt (app.js, playEnter), Elemente tragen .zw-in und --i. */
+@media (prefers-reduced-motion: no-preference) {
+  :root { --ease: cubic-bezier(.22, .8, .3, 1); }
+
+  /* Ansicht kommt herein: Blöcke steigen gestaffelt auf */
+  #main.enter .zw-in { animation: zw-rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 50ms - var(--t, 0ms)); }
+  @keyframes zw-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes zw-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes zw-drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes zw-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
+  /* Balken und Verteilungen wachsen von der Grundlinie */
+  #main.enter .pillars { animation: zw-wipe .9s var(--ease) calc(200ms - var(--t, 0ms)) both; }
+  @keyframes zw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  #main.enter .hb-track span, #main.enter .progress div { transform-origin: left center; animation: zw-grow-x .8s var(--ease) calc(300ms - var(--t, 0ms)) both; }
+  @keyframes zw-grow-x { from { transform: scaleX(0); } to { transform: none; } }
+  #main.enter .hbar span { transform-origin: center bottom; animation: zw-grow-y .7s var(--ease) calc(300ms - var(--t, 0ms)) both; }
+  @keyframes zw-grow-y { from { transform: scaleY(0); } to { transform: none; } }
+  #main.enter .hc.on { animation: zw-fade .6s ease calc(300ms - var(--t, 0ms)) both; }
+
+  /* Liniendiagramm zeichnet sich, Endpunkte und Werte folgen */
+  #main.enter .zc .ln { stroke-dasharray: 1; animation: zw-draw 1.2s cubic-bezier(.4, 0, .2, 1) calc(250ms - var(--t, 0ms)) both; }
+  @keyframes zw-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  #main.enter .zc .end, #main.enter .zc .lbl { animation: zw-fade .4s ease calc(1200ms - var(--t, 0ms)) both; }
+
+  /* Rückmeldung bei Hover und Klick */
+  .btn { transition: background .2s, transform .15s var(--ease), box-shadow .2s; }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, .14); }
+  .btn:active:not(:disabled) { transform: scale(.97); box-shadow: none; }
+  .tab { transition: background .2s, color .2s, transform .15s var(--ease); }
+  .tab:active { transform: scale(.96); }
+  nav a { transition: background .25s, color .25s, transform .2s var(--ease); }
+  nav a:hover:not(.active) { transform: translateX(3px); }
+  .entry, .top, .part, .zk .kpi { transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .2s; }
+  .entry:hover, .top:hover, .zk .kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+  .part:hover:not(.on) { transform: translateY(-1px); }
+  .count.pop { animation: zw-pop .45s var(--ease); }
+  .box { transition: background .2s, border-color .2s, transform .15s var(--ease); }
+  .check:active .box { transform: scale(.9); }
+  input[type=text], input[type=datetime-local], textarea { transition: border-color .2s, box-shadow .2s; }
+  input[type=text]:focus, input[type=datetime-local]:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(239, 184, 0, .25); }
+  .hb { transition: opacity .2s; }
+  .hbars:hover .hb:not(:hover) { opacity: .6; }
+  .hbar span, .hb-track span { transition: opacity .15s; }
+  .post .img, .slides img, .top img { transition: transform .35s var(--ease), filter .35s; }
+  .slides img:hover, .post .img:hover { transform: scale(1.015); }
+
+  /* Aufklappen per Klick, Hinweis oben, Overlays */
+  details.zw-open > :not(summary) { animation: zw-drop .35s var(--ease) both; }
+  .pending:not([hidden]) { animation: zw-drop .3s var(--ease); }
+  .lightbox:not([hidden]) { animation: zw-fade .2s ease; }
+  .lightbox:not([hidden]) figure { animation: zw-rise .35s var(--ease) both; }
+  .nl-full { animation: zw-fade .2s ease; }
+  .nl-full-frame { animation: zw-rise .4s var(--ease) both; }
+  .card.loading h2 { animation: zw-load 1.6s ease-in-out infinite; }
+  @keyframes zw-load { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+  .toast.show { animation: zw-fade .2s ease; }
+}
