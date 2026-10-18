@@ -10,15 +10,18 @@ function hashId(s) {
   return h.toString(36);
 }
 
-// Öffentliche Trusted Shops Schnittstelle (v2.4, geprüft 18.10.2026): response.data.shop.reviews mit UID, mark ("5.00"),
-// comment, creationDate, criteria. Shop-Antworten sind nicht enthalten. Andere Feldnamen werden vorsorglich mit akzeptiert.
+// Zwei Quellen:
+// Öffentliche Schnittstelle (v2.4, geprüft 18.10.2026): response.data.shop.reviews mit UID, mark ("5.00"), comment,
+//   creationDate. Ohne Shop-Antworten.
+// eTrusted Händler-Schnittstelle (laut Doku, noch nicht gegen das Konto geprüft): items mit id ("rev-..."), rating,
+//   title, comment, submittedAt, status, reply.comment.
 // Unbrauchbare Einträge (ohne Note) werden verworfen.
 export function normalizeReview(raw) {
-  if (!raw || typeof raw !== 'object') return null;
+  if (!raw || typeof raw !== 'object' || raw.status === 'REJECTED') return null;
   const stars = Number(raw.mark ?? raw.rating ?? raw.stars);
   if (!Number.isFinite(stars) || stars < 1 || stars > 5) return null;
-  const text = String(raw.comment ?? raw.text ?? raw.description ?? '').trim();
-  const created = String(raw.creationDate ?? raw.createdAt ?? raw.date ?? '').trim();
+  const text = String(raw.comment ?? raw.text ?? raw.description ?? raw.title ?? '').trim();
+  const created = String(raw.creationDate ?? raw.submittedAt ?? raw.createdAt ?? raw.date ?? '').trim();
   const day = created.slice(0, 10);
   const uid = raw.UID ?? raw.uid ?? raw.reviewUid ?? raw.id;
   return {
@@ -27,14 +30,14 @@ export function normalizeReview(raw) {
     text,
     date: day,
     order_date: String(raw.orderDate ?? '').slice(0, 10),
-    reply_existing: String(raw.shopReply ?? raw.reply ?? raw.merchantReply ?? '').trim(),
+    reply_existing: String(raw.reply?.comment ?? (typeof raw.reply === 'string' ? raw.reply : '') ?? '').trim(),
   };
 }
 
 // Aus der Antwort der Schnittstelle die Liste ziehen (verschachtelt oder flach)
 export function extractReviews(json) {
   const data = json?.response?.data ?? json?.data ?? json;
-  const list = data?.shop?.reviews ?? data?.reviews ?? (Array.isArray(data) ? data : []);
+  const list = data?.shop?.reviews ?? data?.reviews ?? data?.items ?? (Array.isArray(data) ? data : []);
   return list.map(normalizeReview).filter(Boolean);
 }
 
@@ -42,6 +45,11 @@ export function extractReviews(json) {
 export function newReviews(fetched, knownIds) {
   const known = new Set(knownIds);
   return fetched.filter((r) => !known.has(r.id));
+}
+
+// Gleiche Bewertung aus beiden Quellen erkennen (die IDs unterscheiden sich): Tag, Note und Text
+export function matchKey(r) {
+  return `${r.date}|${r.stars}|${String(r.text || '').replace(/\s+/g, ' ').trim()}`;
 }
 
 // Tonart je Note: bestimmt, welche Regeln aus docs/bewertungen/schreibstil.md gelten

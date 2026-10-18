@@ -22,3 +22,7 @@ LINKEDIN_TOKEN=
 
 # Ablaufdatum des LinkedIn Tokens, 60 Tage nach Erstellung, Format JJJJ-MM-TT, z. B. 2026-12-01
 LINKEDIN_TOKEN_EXPIRES=
+
+# Trusted Shops (eTrusted Control Center > API-Zugangsdaten), für automatisches Veröffentlichen der Antworten
+ETRUSTED_CLIENT_ID=
+ETRUSTED_CLIENT_SECRET=

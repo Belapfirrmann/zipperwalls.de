@@ -30,6 +30,7 @@ Einrichtung: `docs/SETUP.md`. Anleitungen der Routinen: `docs/routinen/`.
 
 Reiter **Bewertungen** im Dashboard (`dashboard/bewertungen.js`, `dashboard/bewertungen.css`): pro Bewertung zwei Felder
 (Bewertung von Trusted Shops, Antwortvorschlag von Claude) und darunter **Freigeben** und **Verbessern**.
+Freigegebene Antworten veröffentlicht die Routine automatisch bei Trusted Shops (eTrusted API, `ETRUSTED_CLIENT_ID`/`ETRUSTED_CLIENT_SECRET`).
 Routine und Datenmodell (Collection `reviews`): `docs/routinen/bewertungen.md`. Schreibstil und Recherche: `docs/bewertungen/schreibstil.md`.
 Abruf: `TRUSTED_SHOPS_ID=X... node scripts/bewertungen.js fetch`.
 
@@ -77,7 +78,7 @@ npm test && npm run build
 | Social Entwürfe | Mo und Mi 7:22 | trig_01C3paD3D2UCSy8iNpyYGsSe |
 | Social Zahlen | täglich 6:22 | trig_01AED9zLW4vaZ67DP7Kj6G5B |
 | Freigabe-Erinnerung | täglich 16:54, in der Dashboard-Sitzung (Gmail) | trig_01JGztETJzgpdLQFro54bcbR |
-| Bewertungen (Trusted Shops) | Mo bis Fr 8:48 und 14:48 | trig_01BwpLHotEx1BxWMw4TtESSC |
+| Bewertungen (Trusted Shops) | Mo bis Fr, stündlich 7:48 bis 19:48 | trig_01BwpLHotEx1BxWMw4TtESSC |
 | Newsletter Versand | Mo bis Fr, stündlich 7:12 bis 19:12 | trig_017ZCmKkwwBohkyF9PbG72Sc |
 
 Newsletter-Versand: Freigegebene Newsletter plant die Routine über das Code-Snippet Nr. 95 „Zipperwalls Newsletter-Schnittstelle (Claude)“ auf zipperwalls.de in MailPoet ein (Liste 3 „Infopost zipperwalls.de“, Termin des gekoppelten Posts). Anleitung: `docs/routinen/newsletter-versand.md`, Snippet-Quelle: `wordpress/zipperwalls-newsletter-snippet.php`. Abschalten: Snippet in Code Snippets deaktivieren.

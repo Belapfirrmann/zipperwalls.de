@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeReview, extractReviews, newReviews, tone, upsertEntry, obsidianPath, styleProblems } from '../src/bewertungen.js';
+import { normalizeReview, extractReviews, matchKey, newReviews, tone, upsertEntry, obsidianPath, styleProblems } from '../src/bewertungen.js';
 
 const raw = { mark: 5, comment: 'Top Service.', creationDate: '2026-10-12T10:00:00+02:00', orderDate: '2026-10-01' };
 
@@ -23,6 +23,18 @@ test('normalizeReview: Format der Trusted Shops API (UID, mark als Text)', () =>
   assert.equal(r.stars, 4);
   assert.equal(r.text, '');
   assert.equal(r.date, '2026-10-03');
+});
+
+test('eTrusted Format: items, rev-ID, bestehende Antwort, abgelehnte verworfen', () => {
+  const list = extractReviews({ items: [
+    { id: 'rev-1', rating: 5, comment: 'Gut', submittedAt: '2026-10-03T17:00:06.000Z', reply: { comment: 'Danke' } },
+    { id: 'rev-2', rating: 1, comment: 'x', submittedAt: '2026-10-04T10:00:00Z', status: 'REJECTED' },
+  ] });
+  assert.equal(list.length, 1);
+  assert.equal(list[0].id, 'rev-1');
+  assert.equal(list[0].reply_existing, 'Danke');
+  const pub = normalizeReview({ UID: 'abc', mark: '5.00', comment: 'Gut', creationDate: '2026-10-03T19:00:06+02:00' });
+  assert.equal(matchKey(pub), matchKey(list[0]));
 });
 
 test('extractReviews: verschachtelt und flach', () => {

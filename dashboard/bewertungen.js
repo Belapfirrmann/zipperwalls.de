@@ -1,20 +1,21 @@
 // Ansicht "Bewertungen" (Trusted Shops): pro Bewertung zwei Felder (Bewertung, Antwortvorschlag von Claude)
 // und darunter Freigeben und Verbessern. Läuft im Zipperwalls Dashboard, nutzt dessen S, main, esc, toast, nowIso.
 // Daten in der Artefakt-Datenbank:
-//   reviews/<id>  stars, text, date, tone, status (neu|Entwurf|Freigegeben|Veröffentlicht|Übersprungen), reply, reply_note,
-//                 approved_at, published_at, created_at
+//   reviews/<id>  stars, text, date, tone, status (neu|Entwurf|Freigegeben|Wird veröffentlicht|Veröffentlicht|Fehler|Übersprungen),
+//                 reply, reply_note, reply_error, approved_at, published_at, created_at, etrusted_id
+// Freigegebene Antworten veröffentlicht die Routine automatisch bei Trusted Shops.
 //   wishes/<id>   target (Review-ID), text, status (offen|in Arbeit|erledigt|Rückfrage), reply, replied_at, created_at
 // Routine und Ablauf: docs/routinen/bewertungen.md. tone, sterne, styleProblems kommen aus src/bewertungen.js.
 const RV = { filter: 'offen', open: new Set() };
 const rvWhen = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' Uhr' : '');
 const rvDay = (d) => (d ? new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '');
-const rvIsOpen = (r) => r.status === 'neu' || r.status === 'Entwurf';
-const RV_BADGE = { neu: '', Entwurf: '', Freigegeben: 'dark', Veröffentlicht: 'grey', Übersprungen: 'grey' };
+const rvIsOpen = (r) => r.status === 'neu' || r.status === 'Entwurf' || r.status === 'Fehler';
+const RV_BADGE = { neu: '', Entwurf: '', Fehler: '', Freigegeben: 'dark', 'Wird veröffentlicht': 'dark', Veröffentlicht: 'grey', Übersprungen: 'grey' };
 const RV_TONE = { positiv: 'positive Bewertung', gemischt: 'gemischte Bewertung', kritisch: 'kritische Bewertung' };
 const rvOpenCount = () => S.reviews.filter(rvIsOpen).length;
 
 function rvVisible() {
-  const list = S.reviews.filter((r) => (RV.filter === 'offen' ? rvIsOpen(r) || r.status === 'Freigegeben' : true));
+  const list = S.reviews.filter((r) => (RV.filter === 'offen' ? rvIsOpen(r) || r.status === 'Freigegeben' || r.status === 'Wird veröffentlicht' : true));
   return list.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.created_at).localeCompare(String(a.created_at)));
 }
 
@@ -35,7 +36,7 @@ function rvCard(r) {
   const hasReply = !!(r.reply && r.reply.trim());
   const problems = hasReply ? styleProblems(r.reply) : [];
   const stage = r.status;
-  const approved = stage === 'Freigegeben' || stage === 'Veröffentlicht';
+  const approved = stage === 'Freigegeben' || stage === 'Wird veröffentlicht' || stage === 'Veröffentlicht';
   return `<article class="card rv" data-id="${esc(r.id)}">
     <header class="rv-head">
       <span class="stars" role="img" aria-label="${r.stars} von 5 Sternen">${sterne(r.stars)}</span>
@@ -51,16 +52,18 @@ function rvCard(r) {
         <h3 class="label">Vorgeschlagene Antwort von Claude</h3>
         ${hasReply ? `<p class="rv-text">${esc(r.reply)}</p>
           ${r.reply_note ? `<p class="muted small">Hinweis von Claude: ${esc(r.reply_note)}</p>` : ''}
-          ${problems.length ? `<p class="open-point">Stil: ${esc(problems.join(', '))}. Bitte verbessern lassen.</p>` : ''}`
+          ${problems.length ? `<p class="open-point">Stil: ${esc(problems.join(', '))}. Bitte verbessern lassen.</p>` : ''}
+          ${stage === 'Fehler' ? `<p class="open-point">Veröffentlichen hat nicht geklappt${r.reply_error ? ': ' + esc(r.reply_error) : ''}. Erneut freigeben versucht es beim nächsten Lauf noch einmal.</p>` : ''}`
         : `<p class="muted">${r.reply_note ? 'Hinweis von Claude: ' + esc(r.reply_note) : 'Claude schreibt den Entwurf beim nächsten Lauf.'}</p>`}
       </section>
     </div>
     <div class="rv-actions">
       ${approved
-        ? `<button class="btn ghost" data-rv="copy">Antwort kopieren</button>
-           ${stage === 'Freigegeben' ? '<button class="btn dark" data-rv="published">In Trusted Shops eingestellt</button>' : '<span class="muted small">Veröffentlicht ' + esc(rvWhen(r.published_at)) + '</span>'}
-           <button class="btn ghost small" data-rv="reopen">Zurück in den Entwurf</button>`
-        : `<button class="btn" data-rv="approve"${hasReply && !problems.length ? '' : ' disabled'}>Freigeben</button>
+        ? (stage === 'Veröffentlicht'
+          ? `<span class="muted small">Bei Trusted Shops veröffentlicht ${esc(rvWhen(r.published_at))}</span>`
+          : `<span class="muted small">${stage === 'Freigegeben' ? 'Freigegeben. Claude veröffentlicht die Antwort beim nächsten Lauf (werktags stündlich) bei Trusted Shops.' : 'Wird gerade bei Trusted Shops veröffentlicht …'}</span>
+             ${stage === 'Freigegeben' ? '<button class="btn ghost small" data-rv="reopen">Zurück in den Entwurf</button>' : ''}`)
+        : `<button class="btn" data-rv="approve"${hasReply && !problems.length ? '' : ' disabled'}>${stage === 'Fehler' ? 'Erneut freigeben' : 'Freigeben und veröffentlichen'}</button>
            <button class="btn dark" data-rv="improve-toggle"${hasReply ? '' : ' disabled'}>Verbessern</button>
            <button class="btn ghost small" data-rv="skip">Keine Antwort nötig</button>`}
     </div>
@@ -141,8 +144,8 @@ main.addEventListener('click', async (e) => {
       case 'approve': {
         const p = styleProblems(r.reply || '');
         if (p.length) return toast('Antwort ' + p.join(', ') + '.');
-        await rvPatch(r.id, { status: 'Freigegeben', approved_at: nowIso() });
-        toast('Freigegeben. Antwort kopieren und bei Trusted Shops einstellen.');
+        await rvPatch(r.id, { status: 'Freigegeben', approved_at: nowIso(), reply_error: null });
+        toast('Freigegeben. Claude veröffentlicht die Antwort beim nächsten Lauf bei Trusted Shops.');
         break;
       }
       case 'improve-toggle': {
@@ -153,12 +156,9 @@ main.addEventListener('click', async (e) => {
         break;
       }
       case 'improve': await rvSendImprove(btn, el, r); break;
-      case 'copy':
-        try { await navigator.clipboard.writeText(r.reply); toast('Antwort kopiert.'); }
-        catch { toast('Kopieren nicht möglich. Bitte den Text markieren und von Hand kopieren.'); }
-        break;
-      case 'published': await rvPatch(r.id, { status: 'Veröffentlicht', published_at: nowIso() }); toast('Als eingestellt markiert.'); break;
-      case 'reopen': await rvPatch(r.id, { status: 'Entwurf', approved_at: null }); break;
+      case 'reopen':
+        if (r.status !== 'Freigegeben') return toast('Wird schon veröffentlicht, Zurückholen geht nicht mehr.');
+        await rvPatch(r.id, { status: 'Entwurf', approved_at: null }); break;
       case 'skip': await rvPatch(r.id, { status: 'Übersprungen' }); toast('Übersprungen.'); break;
     }
   } catch (err) {
