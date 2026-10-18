@@ -77,7 +77,7 @@ npm test && npm run build
 | Social Entwürfe | Mo und Mi 7:22 | trig_01C3paD3D2UCSy8iNpyYGsSe |
 | Social Zahlen | täglich 6:22 | trig_01AED9zLW4vaZ67DP7Kj6G5B |
 | Freigabe-Erinnerung | täglich 16:54, in der Dashboard-Sitzung (Gmail) | trig_01JGztETJzgpdLQFro54bcbR |
-| Bewertungen (Trusted Shops) | Mo bis Fr 8:48 und 14:48 | siehe unten |
+| Bewertungen (Trusted Shops) | Mo bis Fr 8:48 und 14:48 | trig_01BwpLHotEx1BxWMw4TtESSC |
 | Newsletter Versand | Mo bis Fr, stündlich 7:12 bis 19:12 | trig_017ZCmKkwwBohkyF9PbG72Sc |
 
 Newsletter-Versand: Freigegebene Newsletter plant die Routine über das Code-Snippet Nr. 95 „Zipperwalls Newsletter-Schnittstelle (Claude)“ auf zipperwalls.de in MailPoet ein (Liste 3 „Infopost zipperwalls.de“, Termin des gekoppelten Posts). Anleitung: `docs/routinen/newsletter-versand.md`, Snippet-Quelle: `wordpress/zipperwalls-newsletter-snippet.php`. Abschalten: Snippet in Code Snippets deaktivieren.
