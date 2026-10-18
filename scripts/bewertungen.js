@@ -3,9 +3,16 @@
 //   node scripts/bewertungen.js fetch            alle abrufbaren Bewertungen
 //   node scripts/bewertungen.js fetch --known id1,id2   nur neue
 // Braucht TRUSTED_SHOPS_ID (TS-ID, beginnt mit X) und Netzwerkzugriff auf api.trustedshops.com.
-// Die öffentliche Schnittstelle liefert laut Drittquellen nur die letzten 12 Monate. Antwortformat noch nicht gegen
-// das echte Konto geprüft: Weicht es ab, die Rohantwort mit `fetch --raw` ansehen und src/bewertungen.js anpassen.
+// Die öffentliche Schnittstelle liefert nur die 10 neuesten Bewertungen der letzten 12 Monate bis gestern (Parameter für
+// Seiten oder Größe werden ignoriert, geprüft 18.10.2026). Bei zwei Läufen am Tag reicht das.
+import { spawnSync } from 'node:child_process';
 import { extractReviews, newReviews } from '../src/bewertungen.js';
+
+// Node fetch nutzt den Proxy der Cloud-Umgebung nur mit NODE_USE_ENV_PROXY=1, deshalb bei Bedarf neu starten
+if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY) {
+  const r = spawnSync(process.execPath, ['--no-warnings', ...process.argv.slice(1)], { stdio: 'inherit', env: { ...process.env, NODE_USE_ENV_PROXY: '1' } });
+  process.exit(r.status ?? 1);
+}
 
 const [cmd, ...args] = process.argv.slice(2);
 const id = process.env.TRUSTED_SHOPS_ID;

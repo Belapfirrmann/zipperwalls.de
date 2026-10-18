@@ -17,6 +17,14 @@ test('normalizeReview: ohne Note verworfen, uid bevorzugt', () => {
   assert.equal(normalizeReview({ ...raw, uid: 'abc' }).id, 'abc');
 });
 
+test('normalizeReview: Format der Trusted Shops API (UID, mark als Text)', () => {
+  const r = normalizeReview({ UID: 'u1', mark: '4.00', comment: '', creationDate: '2026-10-03T19:00:06+02:00', criteria: [] });
+  assert.equal(r.id, 'u1');
+  assert.equal(r.stars, 4);
+  assert.equal(r.text, '');
+  assert.equal(r.date, '2026-10-03');
+});
+
 test('extractReviews: verschachtelt und flach', () => {
   assert.equal(extractReviews({ response: { data: { shop: { reviews: [raw] } } } }).length, 1);
   assert.equal(extractReviews({ reviews: [raw, {}] }).length, 1);

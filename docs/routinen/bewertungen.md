@@ -12,7 +12,7 @@ Voraussetzungen (einmalig):
 ## Ablauf je Lauf (werktags 8:48 und 14:48 Uhr)
 
 1. Bekannte IDs holen: ArtifactData `list` auf `reviews` (nur die IDs).
-2. Neue holen: `node scripts/bewertungen.js fetch --known <id1,id2,...>`. Fehler (Format, Netz): im Dashboard nichts ändern, Lauf mit Meldung beenden.
+2. Neue holen: `node scripts/bewertungen.js fetch --known <id1,id2,...>` (liefert höchstens die 10 neuesten, bis gestern). Fehler (Format, Netz): im Dashboard nichts ändern, Lauf mit Meldung beenden.
    Weicht die Antwort von Trusted Shops vom erwarteten Format ab, `fetch --raw` ansehen und `src/bewertungen.js` anpassen.
    Schon beantwortet: Hat eine Bewertung `reply_existing` (Antwort bereits bei Trusted Shops), nur anlegen mit
    `status: "Veröffentlicht", reply: <reply_existing>`, keinen Entwurf schreiben.

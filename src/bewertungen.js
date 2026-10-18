@@ -10,8 +10,9 @@ function hashId(s) {
   return h.toString(36);
 }
 
-// Die öffentliche Trusted Shops Schnittstelle liefert je nach Version leicht andere Feldnamen.
-// Deshalb werden mehrere Namen akzeptiert. Unbrauchbare Einträge (ohne Note) werden verworfen.
+// Öffentliche Trusted Shops Schnittstelle (v2.4, geprüft 18.10.2026): response.data.shop.reviews mit UID, mark ("5.00"),
+// comment, creationDate, criteria. Shop-Antworten sind nicht enthalten. Andere Feldnamen werden vorsorglich mit akzeptiert.
+// Unbrauchbare Einträge (ohne Note) werden verworfen.
 export function normalizeReview(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const stars = Number(raw.mark ?? raw.rating ?? raw.stars);
@@ -19,7 +20,7 @@ export function normalizeReview(raw) {
   const text = String(raw.comment ?? raw.text ?? raw.description ?? '').trim();
   const created = String(raw.creationDate ?? raw.createdAt ?? raw.date ?? '').trim();
   const day = created.slice(0, 10);
-  const uid = raw.uid ?? raw.reviewUid ?? raw.id;
+  const uid = raw.UID ?? raw.uid ?? raw.reviewUid ?? raw.id;
   return {
     id: String(uid || `ts-${day}-${hashId(created + text)}`),
     stars: Math.round(stars),
