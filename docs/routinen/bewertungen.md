@@ -1,6 +1,6 @@
 # Routine „Bewertungen“ (Trusted Shops)
 
-Holt neue Bewertungen, legt sie im Dashboard „Zipperwalls Bewertungen“ und in Obsidian ab und schreibt einen Antwortvorschlag.
+Holt neue Bewertungen, legt sie im Dashboard (Reiter „Bewertungen“) und in Obsidian ab und schreibt einen Antwortvorschlag.
 Veröffentlicht wird nie von Claude. Freigabe und Einstellen bei Trusted Shops machen Bela oder Darien.
 
 Voraussetzungen (einmalig):

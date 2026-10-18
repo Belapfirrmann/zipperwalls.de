@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Baut das Dashboard als eine einzige HTML Datei fuer das Claude Artefakt:
+// Baut das Dashboard (Social, Newsletter, Bewertungen) als eine einzige HTML Datei fuer das Claude Artefakt:
 // Stylesheet, Logo, Redaktionsplan, Newsletter-Plan und die gemeinsame Textlogik aus src/ werden eingebettet.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { REDAKTIONSPLAN } from '../src/redaktionsplan.js';
@@ -28,12 +28,13 @@ const logo = inlineSvg(read('dashboard/assets/logo-weiss.svg'));
 const logoFarbig = 'data:image/svg+xml;base64,' + Buffer.from(read('dashboard/assets/logo-farbig.svg')).toString('base64');
 const logoWeiss = 'data:image/svg+xml;base64,' + Buffer.from(read('dashboard/assets/logo-weiss.svg')).toString('base64');
 
-const html = `<title>Zipperwalls Social Media</title>
+const html = `<title>Zipperwalls Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,700;0,800;0,900;1,900&display=swap">
 <style>
 ${read('dashboard/style.css')}
+${read('dashboard/bewertungen.css')}
 </style>
 <div class="shell">
   <aside class="side">
@@ -42,6 +43,7 @@ ${read('dashboard/style.css')}
       <a href="#plan" data-view="plan">Social-Plan</a>
       <a href="#newsletter" data-view="newsletter">Newsletter-Plan</a>
       <a href="#freigabe" data-view="freigabe">Freigabe <span class="count" id="count-freigabe" hidden></span></a>
+      <a href="#bewertungen" data-view="bewertungen">Bewertungen <span class="count" id="count-bewertungen" hidden></span></a>
       <a href="#checkliste" data-view="checkliste">Abhakeliste</a>
       <a href="#zahlen" data-view="zahlen">Zahlen</a>
       <a href="#verbindungen" data-view="verbindungen">Verbindungen</a>
@@ -66,8 +68,11 @@ const SETUP_TEMPLATE = ${json(SETUP_TEMPLATE)};
 const SETUP_STEPS = ${json(SETUP_STEPS)};
 ${stripModule(read('src/text.js'))}
 ${stripModule(read('src/newsletter-render.js'))}
+${stripModule(read('src/bewertungen.js'))}
 ${read('dashboard/app.js')}
 ${read('dashboard/zahlen.js')}
+${read('dashboard/bewertungen.js')}
+start();
 </script>
 `;
 

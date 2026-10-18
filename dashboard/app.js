@@ -21,7 +21,7 @@ const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled:
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
 const WISH_OPEN = new Set(); // aufgeklappte „Verlauf mit Claude“-Boxen, bleiben beim Neuzeichnen offen
-const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], reviews: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -1056,7 +1056,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------- Rahmen ----------
-const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
+const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, bewertungen: viewBewertungen, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
 // #freigabe-newsletter ist der Newsletter-Teil der Freigabe-Seite
 const viewKey = () => (location.hash === '#freigabe-newsletter' ? 'freigabe' : location.hash.slice(1));
 const currentView = () => (views[viewKey()] ? viewKey() : 'freigabe');
@@ -1068,6 +1068,8 @@ function render() {
     document.getElementById('pending').hidden = false;
     return;
   }
+  // Auch bei Bewertungen nicht neu zeichnen, solange in einem Textfeld getippt wird
+  if (currentView() === 'bewertungen' && S.loaded && document.activeElement?.tagName === 'TEXTAREA' && main.contains(document.activeElement)) return;
   S.pending = false;
   document.getElementById('pending').hidden = true;
   const view = currentView();
@@ -1083,6 +1085,10 @@ function render() {
     void c.offsetWidth;
     c.classList.add('pop');
   }
+  const rvOpen = rvOpenCount();
+  const rc = document.getElementById('count-bewertungen');
+  rc.hidden = !rvOpen;
+  rc.textContent = rvOpen;
   const runner = S.status.runner;
   document.getElementById('runner').textContent = runner?.last_run ? `Letzter Lauf ${fmtDate(runner.last_run)}` : '';
   const preload = ['plan', 'newsletter', 'checkliste'].includes(view);
@@ -1116,14 +1122,15 @@ async function start() {
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
-  let first = 7;
+  let first = 8;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
   db.collection('posts').onSnapshot((snap) => { S.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
+  db.collection('reviews').onSnapshot((snap) => { S.reviews = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('newsletters').onSnapshot((snap) => { S.newsletters = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('metrics').onSnapshot((snap) => { S.metrics = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('status').onSnapshot((snap) => { S.status = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
-  db.collection('wishes').onSnapshot((snap) => { S.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })); refreshWishes(); ready(); }, onErr);
+  db.collection('wishes').onSnapshot((snap) => { S.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })); refreshWishes(); refreshRvWishes(); ready(); }, onErr);
   db.collection('requests').onSnapshot((snap) => { S.requests = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
   db.collection('checklist').onSnapshot((snap) => { S.checklist = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
 }
-start();
+// start() wird beim Bauen ganz am Ende aufgerufen (scripts/build-dashboard.js), damit alle Ansichten definiert sind
