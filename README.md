@@ -26,6 +26,13 @@ Einrichtung: `docs/SETUP.md`. Anleitungen der Routinen: `docs/routinen/`.
 | `src/newsletter-render.js` | Newsletter als E-Mail-HTML im Zipperwalls-Design (Vorschau im Dashboard) |
 | `test/` | Tests (`npm test`) |
 
+## Bewertungen (Trusted Shops)
+
+Eigenes Dashboard **Zipperwalls Bewertungen** (`dist/bewertungen.html`, Quellen `bewertungen/`, Build `node scripts/build-bewertungen.js`):
+pro Bewertung zwei Felder (Bewertung von Trusted Shops, Antwortvorschlag von Claude) und darunter **Freigeben** und **Verbessern**.
+Routine und Datenmodell: `docs/routinen/bewertungen.md`. Schreibstil und Recherche: `docs/bewertungen/schreibstil.md`.
+Abruf: `TRUSTED_SHOPS_ID=X... node scripts/bewertungen.js fetch`.
+
 ## Redaktionsplan aktualisieren
 
 ```bash

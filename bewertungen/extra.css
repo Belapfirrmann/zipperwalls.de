@@ -1,0 +1,18 @@
+/* Bewertungs-Dashboard: Bewertung links, Antwortvorschlag rechts, darunter Aktionen. Auf dem Handy untereinander. */
+.rv-list { display: grid; gap: 22px; }
+.rv-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.rv-head .badge { margin-left: auto; }
+.stars { font-size: 22px; letter-spacing: 3px; color: var(--gelb-dunkel); line-height: 1; }
+.rv-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.rv-box { background: var(--flaeche); padding: 16px 18px; border-radius: var(--r) 0 var(--r) 0; min-width: 0; }
+.rv-box.reply { border-left: 4px solid var(--gelb); }
+.rv-box .label { margin: 0 0 8px; display: block; }
+.rv-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.rv-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.rv-actions .btn.ghost.small { margin-left: auto; }
+.rv-box .open-point { margin-top: 12px; }
+.head .tabs { margin-top: 18px; }
+@media (max-width: 760px) {
+  .rv-cols { grid-template-columns: minmax(0, 1fr); }
+  .rv-actions .btn.ghost.small { margin-left: 0; }
+}
