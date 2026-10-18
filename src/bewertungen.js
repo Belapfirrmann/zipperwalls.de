@@ -25,13 +25,20 @@ export function normalizeReview(raw) {
   const day = created.slice(0, 10);
   const uid = raw.UID ?? raw.uid ?? raw.reviewUid ?? raw.id;
   return {
-    id: String(uid || `ts-${day}-${hashId(created + text)}`),
+    id: uid ? etrustedId(String(uid)) : `ts-${day}-${hashId(created + text)}`,
     stars: Math.round(stars),
     text,
     date: day,
     order_date: String(raw.orderDate ?? '').slice(0, 10),
     reply_existing: String(raw.reply?.comment ?? (typeof raw.reply === 'string' ? raw.reply : '') ?? '').trim(),
   };
+}
+
+// Die UID der öffentlichen Schnittstelle ist die eTrusted ID ohne Bindestriche (geprüft 18.10.2026):
+// 91e858c069ef4ed29b153cf00dd1006c entspricht rev-91e858c0-69ef-4ed2-9b15-3cf00dd1006c. So haben beide Quellen dieselbe ID.
+export function etrustedId(uid) {
+  const m = /^(?:rev-)?([0-9a-f]{8})-?([0-9a-f]{4})-?([0-9a-f]{4})-?([0-9a-f]{4})-?([0-9a-f]{12})$/i.exec(uid);
+  return m ? `rev-${m.slice(1).join('-')}`.toLowerCase() : uid;
 }
 
 // Aus der Antwort der Schnittstelle die Liste ziehen (verschachtelt oder flach)

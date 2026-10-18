@@ -17,7 +17,7 @@ Voraussetzungen (einmalig):
 1. Stand holen: ArtifactData `list` auf `reviews` (alle Dokumente).
 2. Freigegebene veröffentlichen (nur mit eTrusted Zugang), Status `Freigegeben`, höchstens 10 pro Lauf:
    1. Sperre: `update` mit `if_version` auf `{ status: "Wird veröffentlicht" }`. Schlägt das fehl: überspringen.
-   2. ID: `etrusted_id`, sonst die Dokument-ID, wenn sie mit `rev-` beginnt. Fehlt beides (noch kein Abgleich, siehe Schritt 4):
+   2. ID: `etrusted_id`, sonst die Dokument-ID, wenn sie mit `rev-` beginnt, sonst `etrustedId(<Dokument-ID>)`. Fehlt beides (noch kein Abgleich, siehe Schritt 4):
       zurück auf `Freigegeben` und im nächsten Lauf erneut versuchen. Nach 24 Stunden ohne ID: `Fehler`, `reply_error: "Bewertung bei Trusted Shops nicht gefunden"`.
    3. `styleProblems(reply)` nochmals prüfen. Bei Treffern nicht senden, `Fehler` mit dem Grund.
    4. Den Text von `reply` unverändert in eine Datei schreiben und `node scripts/bewertungen.js reply <rev-ID> < datei` ausführen.
@@ -29,7 +29,8 @@ Voraussetzungen (einmalig):
 4. Abgleich je abgerufener Bewertung (ältere zuerst):
    - Gibt es das Dokument mit dieser ID: nur `reply_existing` übernehmen. Steht dort eine Antwort und ist der Status `neu`, `Entwurf` oder `Fehler`,
      auf `Veröffentlicht` mit `reply: <reply_existing>` setzen (wurde von Hand beantwortet).
-   - eTrusted ID (`rev-…`) und ein bestehendes Dokument mit gleichem `matchKey` (Tag, Note, Text; Tag notfalls ±1): dort `etrusted_id` eintragen
+   - Ältere Dokumente aus der öffentlichen Schnittstelle haben eine ID ohne `rev-` und Bindestriche, `etrustedId(<Dokument-ID>)` ergibt die eTrusted ID.
+     Passt sie (oder notfalls `matchKey`: Tag, Note, Text; Tag ±1) zu einer abgerufenen Bewertung: dort `etrusted_id` eintragen
      und `reply_existing` wie oben übernehmen, keine neue Bewertung anlegen. So werden die Bewertungen aus der öffentlichen Schnittstelle übernommen.
    - Schon beantwortet (`reply_existing`): anlegen mit `status: "Veröffentlicht", reply: <reply_existing>`, ohne Entwurf.
    - Erster Lauf (Collection `reviews` leer): alle älter als 14 Tage nur mit `status: "Übersprungen"` anlegen

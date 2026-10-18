@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeReview, extractReviews, matchKey, newReviews, tone, upsertEntry, obsidianPath, styleProblems } from '../src/bewertungen.js';
+import { normalizeReview, extractReviews, matchKey, etrustedId, newReviews, tone, upsertEntry, obsidianPath, styleProblems } from '../src/bewertungen.js';
 
 const raw = { mark: 5, comment: 'Top Service.', creationDate: '2026-10-12T10:00:00+02:00', orderDate: '2026-10-01' };
 
@@ -15,6 +15,8 @@ test('normalizeReview: Felder und stabile ID', () => {
 test('normalizeReview: ohne Note verworfen, uid bevorzugt', () => {
   assert.equal(normalizeReview({ comment: 'x' }), null);
   assert.equal(normalizeReview({ ...raw, uid: 'abc' }).id, 'abc');
+  assert.equal(etrustedId('91e858c069ef4ed29b153cf00dd1006c'), 'rev-91e858c0-69ef-4ed2-9b15-3cf00dd1006c');
+  assert.equal(etrustedId('rev-91e858c0-69ef-4ed2-9b15-3cf00dd1006c'), 'rev-91e858c0-69ef-4ed2-9b15-3cf00dd1006c');
 });
 
 test('normalizeReview: Format der Trusted Shops API (UID, mark als Text)', () => {
