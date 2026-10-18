@@ -33,30 +33,53 @@ und gehört zum Auftritt des Shops. Deshalb schreiben wir für zwei Leser: den V
 Gedankenstriche (– oder —, auch „ - “ als Satzzeichen) · Floskeln wie „wir freuen uns über Ihr Feedback und nehmen es sehr ernst“ ·
 Großbuchstaben und Ausrufezeichenketten · Rechtfertigungen · Fachjargon · mehr als ein Ausrufezeichen · immer derselbe Einstieg.
 
-## B. Zipperwalls Stimme (Annahmen, bitte bestätigen oder korrigieren)
+## B. Zipperwalls Stimme (aus 9 echten Antworten, siehe `beispiele.md`)
 
-- Anrede: **Sie** (wie in den Social Posts). Offen: Du bei Stammkunden?
-- Ton: freundlich, direkt, bodenständig, ohne Pathos. Messebau ist Praxis: Termine, Lieferung, Beratung.
-- Unser Profil bei Trusted Shops lobt vor allem **schnelle Antworten** und **persönliche Erreichbarkeit am Telefon**. Das darf in Antworten wiederkehren, aber nur wenn es zur Bewertung passt.
-- Unterschrift: **„Bela und Darien von Zipperwalls“** bzw. nur ein Name, wenn der Verfasser direkt angesprochen wurde. Offen: Wer unterschreibt?
-- Kontaktweg bei Kritik: **Offen**, bitte Telefonnummer und Mailadresse für die öffentliche Antwort festlegen.
-- Keine Gedankenstriche, auch nicht in der Unterschrift.
+Was eure Antworten schon gut machen und was wir beibehalten:
+- **Sie-Form.** Mit Namen anreden, wenn er bekannt ist („Hallo Frau Z.“, „Guten Tag Herr K.“, „Lieber Herr R.“ bei Stammkunden). Ohne Namen direkt mit dem Dank beginnen.
+- **Dank an erster Stelle:** „Vielen Dank für …“, „Herzlichen Dank für …“, „Besten Dank für …“. Wechseln, nie dreimal hintereinander dasselbe.
+- **Kernsatz „Es freut uns sehr, dass …“** mit dem konkreten Lob des Kunden in eigenen Worten (Beratung, Erreichbarkeit, Lieferung, Druckqualität, einfacher Aufbau). Produktnamen nennen, wenn sie in der Bewertung stehen (Promotiontheke, Lightbox Poster, Messewand VIVA).
+- **Kurze Bestätigungssätze** wie „Genau das ist unser Anspruch.“ oder „Genau so soll es sein.“ Höchstens einer pro Antwort.
+- **Schluss nach vorn:** „Viel Erfolg damit“, „Wir wünschen Ihnen viel Erfolg bei Ihren Einsätzen“, „bis zum nächsten Mal“, bei Stammkunden „Besten Dank für Ihr Vertrauen“. Ein persönlicher Gruß passt, wenn es einen Anlass gibt („Beste Grüße in die Schweiz“).
+- **Länge nach Bewertung:** Nur Sterne ohne Text: ein bis zwei Sätze. Kurzer Text: zwei bis drei Sätze. Ausführliche Bewertung: drei bis fünf Sätze.
+- **Höchstens ein Ausrufezeichen**, ein Smiley `:)` nur bei sehr herzlichem Lob und höchstens einmal pro Antwort.
+- **Ehrlich bei Anregungen:** Vorschläge ernst nehmen, ehrlich sagen, was damit passiert („leiten wir an unsere Lieferanten weiter“). Nur zusagen, was Zipperwalls wirklich tut.
 
-### Beispiele (Muster, werden durch eure echten Antworten ersetzt)
+Was wir gegenüber den bisherigen Antworten besser machen:
+- Antworten 5, 8 und 9 sind austauschbar („Herzlichen Dank für Ihre tolle Bewertung“). Gibt die Bewertung ein Detail her (Produkt, Beratung, Land, Stammkunde), greifen wir es auf. Steht nur eine Note da, bleibt die Antwort kurz und erfindet nichts.
+- Der Einstieg „Vielen Dank für Ihr tolles Feedback“ nicht bei jeder Antwort. Abwechseln.
+- Zeichensetzung korrigieren: „Dank, dass Sie“ statt „Dank das Sie“, „Um so mehr“ zusammen als „umso mehr“, „bis zum nächsten Mal“ groß.
+- Bei echter Kritik (Mangel, Verzögerung, Fehler) zusätzlich: Bedauern, Lösungsangebot und der Kontaktweg. Dafür gibt es noch kein Beispiel, die Vorlage unten gilt.
 
-Positiv (5 Sterne, „Top Kundenservice, schnelle Lieferung“):
-> Vielen Dank für Ihre Bewertung. Es freut uns, dass die Lieferung pünktlich zur Messe da war und die Beratung weitergeholfen hat. Bei der nächsten Messe sind wir gern wieder für Sie da.
-> Bela und Darien von Zipperwalls
+Kontakt in Antworten auf Kritik: **Telefon +49 7276 4049970, E-Mail kontakt@zipperwalls.de**. Keine Bestellnummern, Adressen oder Vertragsdetails öffentlich.
 
-Kritisch (2 Sterne, „Wand kam mit Kratzer an“):
-> Vielen Dank für Ihre Rückmeldung. Es tut uns leid, dass die Wand mit einem Kratzer bei Ihnen ankam, gerade kurz vor einem Messetermin ist das ärgerlich. Wir kümmern uns um Ersatz oder eine Lösung, die zu Ihrem Termin passt. Bitte melden Sie sich kurz unter [Kontakt], damit wir sofort loslegen können.
-> Bela und Darien von Zipperwalls
+Unterschrift (Annahme, bitte bestätigen):
+- Positive Bewertungen: **„Ihr zipperwalls.de Team“** wie bisher, bei kurzen Antworten darf sie entfallen.
+- Kritik, Anregungen und gemischte Bewertungen: **„Darien Pfirrmann, Geschäftsführer, zipperwalls.de“**. In Antworten steht nicht die GmbH, nur der Shop.
 
-## Wie wir den Stil schärfen
+Keine Gedankenstriche, auch nicht in der Unterschrift.
 
-1. Bela und Darien schicken 10 bis 20 eigene Antworten von Trusted Shops (Kopie genügt), darunter mindestens 2 auf Kritik.
-2. Claude vergleicht, was sich wiederholt (Anrede, Einstieg, Länge, Schluss, Unterschrift) und ergänzt Teil B.
-3. Im Dashboard schickt „Verbessern“ jede Korrektur an Claude. Wiederkehrende Korrekturen übernimmt Claude hier in Teil B.
+### Beispiele
+
+Positiv, 5 Sterne, „Super Beratung, schnelle Lieferung, Messewand VIVA sieht klasse aus“:
+> Vielen Dank für Ihr schönes Feedback! Es freut uns sehr, dass Beratung und Lieferung gepasst haben und Ihre Messewand VIVA so gut aussieht. Wir wünschen Ihnen viel Erfolg auf der Messe.
+> Ihr zipperwalls.de Team
+
+Positiv, nur Sterne, kein Text:
+> Besten Dank für diese 5 Sterne Bewertung.
+> Ihr zipperwalls.de Team
+
+Anregung, 4 Sterne („Aufbau einfach, aber eine Tragetasche mit Rollen fehlt“):
+> Hallo Frau M., vielen Dank für Ihr ehrliches Feedback! Es freut uns, dass Aufbau und Stabilität überzeugt haben. Ihre Anregung zur Tragetasche mit Rollen nehmen wir ernst und geben sie an unsere Lieferanten weiter. Wir wünschen Ihnen viel Erfolg bei Ihren Einsätzen.
+> Darien Pfirrmann, Geschäftsführer, zipperwalls.de
+
+Kritisch, 2 Sterne („Wand kam mit Kratzer an“):
+> Guten Tag Herr S., vielen Dank für Ihre Rückmeldung. Es tut uns leid, dass die Wand mit einem Kratzer bei Ihnen ankam, gerade vor einem Messetermin ist das ärgerlich. Wir finden gemeinsam eine Lösung, die zu Ihrem Termin passt. Bitte melden Sie sich kurz unter +49 7276 4049970 oder kontakt@zipperwalls.de, dann legen wir sofort los.
+> Darien Pfirrmann, Geschäftsführer, zipperwalls.de
+
+## Wie wir den Stil weiter schärfen
+
+Im Dashboard schickt „Verbessern“ jede Korrektur an Claude. Kehrt dieselbe Korrektur wieder, fragt Claude kurz nach und übernimmt sie in Teil B.
 
 ## Quellen der Recherche
 
