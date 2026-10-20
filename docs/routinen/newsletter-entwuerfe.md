@@ -3,6 +3,20 @@
 Ein Entwurf pro Ausgabe, erst wenn Bela oder Darien darum bitten oder der Versand näher rückt. Nur angelegte Entwürfe
 erscheinen unter Freigabe › Newsletter. Dashboard (Artefakt): https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6
 
+## Ausrichtung (Wunsch von Bela und Darien, 20.10.2026)
+
+- **Verkauf im Vordergrund.** Jede Ausgabe stellt ein Produkt, eine Produktfamilie oder einen Lieferanten in den Mittelpunkt
+  (z. B. PIXLIP GO, eine Messewand-Serie, Messestand-Sets) und zählt dessen Vorteile auf, dazu passende Produkte.
+  Das Thema aus dem Plan liefert nur den Anlass oder den Aufhänger, nicht den Inhalt.
+- **Wenig Text.** Einleitung 2 bis 3 Sätze, dann 4 bis 6 Vorteile als kurze Punkte („1. Titel. Ein bis zwei Sätze“), dann Produkte.
+  Keine langen Ratgeber, keine Checklisten über Dinge, die erst nach dem Kauf wichtig sind (z. B. Druckdaten).
+- **Fachthema nur unten und kurz** im Zusatzblock (`extra_*`): Messe, Druckdaten, Transport, was gerade passt, 2 bis 3 Sätze mit Link.
+- **Keine Eyebrows:** keine Nummern 01/02, keine Etiketten-Pillen, keine kleinen Versal-Zeilen über Überschriften.
+  Felder `badge`, `offer_label`, `products_label` leer lassen (werden nicht mehr angezeigt).
+- **Aktionen und Rabatte** (z. B. „PIXLIP Wochen“ mit Rabatt auf LED-Messewände oder kleine komplette Stände) sind erwünscht,
+  aber nur mit Angaben von Bela oder Darien (Höhe, Zeitraum, Code, welche Produkte). Nie selbst einen Rabatt erfinden;
+  fehlt die Angabe, in `notes` nachfragen.
+
 ## Ablauf
 
 1. Repo bereitstellen (wie in `posten.md`). Plan: `src/newsletterplan.js` (`NEWSLETTERPLAN.entries`).
@@ -24,19 +38,17 @@ erscheinen unter Freigabe › Newsletter. Dashboard (Artefakt): https://claude.a
    `nr, kw, date, time, status: "Entwurf", subject, subject_alt, preview, badge, headline, image_url, image_asset, image_alt, image_link,
    text, button_text, button_link, offer_label, offer_title, offer_text, offer_button_text, offer_button_link, extra_title, extra_text,
    extra_link, source: "claude", notes, created_at, updated_at`.
-   - `badge` und `headline` wie die Grafik des Social-Media-Posts (z. B. „Messe-Tipp #01“, „Frühjahrsmesse?\nJetzt planen.“).
-   - **Inhalt vor Werbung:** Der Leser soll danach etwas gelernt haben. Jeden Schritt ausführlich erklären (3 bis 5 Sätze: warum,
-     wie genau, worauf achten), dazu je eine Zeile „Tipp: …“ mit einem konkreten Praxistipp. Wo es passt, einen Zeitplan
-     („Mitte November: …“ je Zeile) oder eine Checkliste ergänzen. Nur belegte Fakten (Plan, Shop, Ratgeber, Druckvorgaben).
-   - `text` aus dem Plan als Grundlage, ausgebaut wie oben. Gliederung: Leerzeile = Absatz, Zeile in VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt,
+   - `headline` kurz und auf das Produkt bezogen (z. B. „Leuchtet.\nIn Minuten.“). `badge` leer lassen.
+   - Inhalt nach „Ausrichtung“ oben. Nur belegte Fakten (Shop, Plan, Produktseiten, Lieferantenangaben).
+   - `text` nach „Ausrichtung“. Gliederung: Leerzeile = Absatz, Zeile in VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt,
      „Viele Grüße …“ = Grußformel, Telefon/E-Mail = Kontaktzeile. Grußformel ohne Ortsnamen („Viele Grüße“, nicht „aus Herxheim“).
-   - Angebot: Hilfe bei der Standerstellung ist erwünscht (z. B. Kasten „Wir planen Ihre Frühjahrsmesse mit“: Messe, Standmaße und
-     Termin nennen, Zipperwalls schlägt die Ausstattung vor), dazu Grafikservice oder Beratung zu Produkten. Kein Rabatt-Ton.
-   - Produktempfehlungen (gelber Block über der Fußzeile): `products_label`, `products_title` und drei Produkte `p1_*` bis `p3_*`
+   - Angebot: eine echte Aktion von Bela oder Darien, sonst Hilfe bei der Standerstellung (z. B. Kasten „Wir planen Ihren Stand mit“:
+     Messe, Standmaße und Termin nennen, Zipperwalls schlägt die Ausstattung vor), Grafikservice oder Beratung zu Produkten.
+   - Produktempfehlungen (gelber Block über der Fußzeile): `products_title` und drei Produkte `p1_*` bis `p3_*`
      (`name`, `price` als ab-Preis netto aus dem Shop, z. B. „ab 169,60 € netto“, vor jeder Ausgabe auf der Produktseite prüfen,
      `text` mit einem belegten Nutzen, `link` auf die Produktseite, `image_url` aus dem Shop). Die Bilder zusätzlich als Assets
      hochladen und als `p1_image_asset` usw. eintragen. Passend zum Thema der Ausgabe.
-     **Abwechslung:** aus mindestens zwei Bereichen mischen (Messewände, Theken, LED und Lightboxen, Banner und Roll-ups,
+     **Abwechslung:** bei einer Ausgabe zu einem Lieferanten oder einer Familie dürfen alle drei aus dieser Familie sein, sonst aus mindestens zwei Bereichen mischen (Messewände, Theken, LED und Lightboxen, Banner und Roll-ups,
      Zubehör wie Transport, Licht, Prospektständer) und kein Produkt aus den letzten zwei Ausgaben wiederholen (`p*_name` von
      `nl-<nr-1>` und `nl-<nr-2>` lesen). Die Produktbilder dürfen nicht dieselben sein wie das Aufmacherbild oder die Bilder im Text.
    - Alle Links auf https://www.zipperwalls.de/ und vorher mit curl auf HTTP 200 prüfen.

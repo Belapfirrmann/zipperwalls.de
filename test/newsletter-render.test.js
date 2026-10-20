@@ -17,7 +17,8 @@ test('Export behält MailPoet-Links, Vorschau nicht', () => {
   const out = renderNewsletter(n);
   assert.match(out, /\[link:subscription_unsubscribe_url\]/);
   assert.match(out, /src="https:\/\/www\.zipperwalls\.de\/bild\.webp"/);
-  assert.match(out, /Ausgabe 01 · Oktober 2026/);
+  assert.match(out, /Ausgabe 1 · Oktober 2026/);
+  assert.doesNotMatch(out, />0[1-9]</);
   assert.match(out, /href="https:\/\/www\.zipperwalls\.de"/);
   const prev = renderNewsletter(n, { preview: true });
   assert.doesNotMatch(prev, /\[link:/);

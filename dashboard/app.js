@@ -440,14 +440,14 @@ const NL_GROUPS = { offen: ['Entwurf', 'Verschoben'], geplant: ['Freigegeben', '
 // [Feld, Beschriftung, max. Zeichen, Art]
 const NL_SECTIONS = [
   ['Betreff und Vorschautext', [['subject', 'Betreff', 60], ['subject_alt', 'Betreff Alternative (A/B-Test)', 60], ['preview', 'Vorschautext', 120]], true],
-  ['Kopf', [['badge', 'Badge (gelb)'], ['headline', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short']]],
+  ['Kopf', [['headline', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short']]],
   ['Bild', [['image_url', 'Bild-Adresse für MailPoet (zipperwalls.de)'], ['image_alt', 'Bildbeschreibung (Alt-Text)'], ['image_link', 'Bild verlinkt auf']]],
-  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Schritt, eigene Zeile „[Bild 2]“ = weiteres Bild)', 0, 'long']], true],
+  ['Text', [['text', 'Text (Leerzeile = neuer Absatz, VERSALIEN = Zwischenüberschrift, „1. Titel. Text“ = Listenpunkt ohne Nummer, eigene Zeile „[Bild 2]“ = weiteres Bild)', 0, 'long']], true],
   ['Weitere Bilder', [2, 3].flatMap((i) => [[`img${i}_url`, `Bild ${i}: Adresse für MailPoet (zipperwalls.de)`], [`img${i}_alt`, `Bild ${i}: Bildbeschreibung (Alt-Text)`], [`img${i}_caption`, `Bild ${i}: Bildunterschrift`], [`img${i}_link`, `Bild ${i}: verlinkt auf (optional)`]])],
   ['Button', [['button_text', 'Button-Text'], ['button_link', 'Button-Link']]],
-  ['Angebot', [['offer_label', 'Angebot Kennzeile'], ['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
-  ['Zusatzblock', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
-  ['Produktempfehlungen (gelber Block)', [['products_label', 'Kennzeile'], ['products_title', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short'],
+  ['Angebot', [['offer_title', 'Angebot Überschrift'], ['offer_text', 'Angebot Text', 0, 'short'], ['offer_button_text', 'Angebot Button-Text'], ['offer_button_link', 'Angebot Button-Link']]],
+  ['Zusatzblock (kurzes Fachthema unten)', [['extra_title', 'Zusatzblock Titel'], ['extra_text', 'Zusatzblock Text', 0, 'short'], ['extra_link', 'Zusatzblock Link']]],
+  ['Produktempfehlungen (gelber Block)', [['products_title', 'Überschrift (Zeilenumbruch erlaubt)', 0, 'short'],
     ...[1, 2, 3].flatMap((i) => [[`p${i}_name`, `Produkt ${i}: Name`], [`p${i}_price`, `Produkt ${i}: Preis (z. B. ab 169,60 € netto)`], [`p${i}_text`, `Produkt ${i}: Kurztext`, 0, 'short'], [`p${i}_link`, `Produkt ${i}: Link`], [`p${i}_image_url`, `Produkt ${i}: Bild-Adresse (zipperwalls.de)`]])]],
 ];
 const NL_FIELDS = NL_SECTIONS.flatMap(([, fields]) => fields);

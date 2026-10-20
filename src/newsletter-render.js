@@ -1,7 +1,7 @@
 // Newsletter "Standpunkt" als E-Mail-HTML im Zipperwalls-Design (Grundlage: newsletter/messepraxis-vorlage.html auf main).
 // Reine Funktionen ohne Netzwerk: das Dashboard nutzt sie für die Vorschau, Tests prüfen sie.
 // Der Fließtext bleibt einfacher Text und wird so gegliedert:
-//   Leerzeile trennt Absätze · Zeile in Versalien = Zwischenüberschrift · "1. Titel. Text" = nummerierter Schritt
+//   Leerzeile trennt Absätze · Zeile in Versalien = Zwischenüberschrift · "1. Titel. Text" = Listenpunkt (ohne sichtbare Nummer)
 //   "Viele Grüße …" = Grußformel · Absatz mit "Telefon" oder E-Mail-Adresse = Kontaktzeile
 //   Absatz, in dem jede Zeile "Wann: Was" ist = Zeitplan · "Tipp:" am Zeilenanfang wird hervorgehoben
 //   Zeile "[Bild 2]" oder "[Bild 3]" = weiteres Bild an dieser Stelle (Felder img2_* / img3_*), "[Bild 2] [Bild 3]" = nebeneinander
@@ -80,15 +80,17 @@ function stepsBox(steps) {
     <table role="presentation" width="100%" style="background:#F5F5F5;border-radius:30px 0 30px 0;"><tr><td class="box" style="padding:24px 24px 8px;">
       <table role="presentation" width="100%">${steps.map((s) => `
         <tr>
-          <td valign="top" width="54" class="num" style="${F}padding:0 12px 18px 0;font-size:34px;line-height:1;font-weight:900;font-style:italic;color:#1D1D1B;">${String(s.num).padStart(2, '0')}</td>
-          <td valign="top" style="${F}padding:2px 0 18px;font-size:16px;line-height:1.5;color:#1D1D1B;"><strong>${H(s.title)}</strong>${s.text ? ` ${richText(s.text)}` : ''}</td>
+          <td valign="top" width="6" style="padding:4px 0 18px;"><div style="width:6px;height:22px;background:#FFCC20;font-size:0;line-height:0;">&nbsp;</div></td>
+          <td valign="top" style="${F}padding:2px 0 18px 14px;font-size:16px;line-height:1.5;color:#1D1D1B;"><strong>${H(s.title)}</strong>${s.text ? ` ${richText(s.text)}` : ''}</td>
         </tr>`).join('')}
       </table>
     </td></tr></table>
   </td></tr>`;
 }
 
-// n: Newsletter (Felder wie im Plan plus badge, headline, image_*, img2_*, img3_*, offer_*), opts: { logo, imageSrc, extraImages: {2,3}, productImages, preview }
+// Keine Eyebrows: keine Nummern wie 01/02, keine Etiketten-Pillen (badge), keine kleinen Versal-Zeilen über Überschriften
+// (offer_label und products_label werden nicht angezeigt). Wunsch von Bela und Darien, 20.10.2026.
+// n: Newsletter (Felder wie im Plan plus headline, image_*, img2_*, img3_*, offer_*), opts: { logo, imageSrc, extraImages: {2,3}, productImages, preview }
 // Öffentliche Bilder für echte Mails (WordPress-Mediathek, hochgeladen am 04.10.2026). Die Vorschau im Dashboard nutzt eingebettete Varianten.
 const UP = 'https://www.zipperwalls.de/wp-content/uploads/';
 export const EXPORT_ASSETS = {
@@ -124,7 +126,7 @@ export function renderNewsletter(n, optsIn = {}) {
   const opts = preview ? optsIn : { ...EXPORT_ASSETS, ...optsIn };
   const link = (key) => (preview ? '#' : MAILPOET[key]);
   const d = n.date ? new Date(n.date + 'T12:00:00Z') : null;
-  const issue = `Ausgabe ${String(n.nr ?? '').padStart(2, '0')}${d ? ` · ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : ''}`;
+  const issue = `Ausgabe ${n.nr ?? ''}${d ? ` · ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : ''}`;
   // In der Vorschau nur Bilder, die das Dashboard laden darf; sonst ein Platzhalter
   const img = preview ? opts.imageSrc : n.image_url;
   const imgMissing = preview && !img && n.image_url;
@@ -161,8 +163,7 @@ export function renderNewsletter(n, optsIn = {}) {
   const offer = n.offer_title ? `
   <tr><td class="pad" style="padding:36px 40px 0;">
     <table role="presentation" width="100%" style="background:#1F2725;border-radius:30px 0 30px 0;"><tr><td class="box" style="${F}padding:26px 28px;">
-      <div style="font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#FFCC20;">${H(n.offer_label || 'Persönliche Beratung')}</div>
-      <h2 style="${F}margin:8px 0 10px;font-size:24px;line-height:1.1;font-weight:900;text-transform:uppercase;color:#FFFFFF;">${H(n.offer_title)}</h2>
+      <h2 style="${F}margin:0 0 10px;font-size:24px;line-height:1.1;font-weight:900;text-transform:uppercase;color:#FFFFFF;">${H(n.offer_title)}</h2>
       ${n.offer_text ? `<p style="margin:0 0 18px;font-size:16px;line-height:1.55;color:#E6E8EA;">${nl2br(H(n.offer_text))}</p>` : ''}
       ${button(n.offer_button_text, n.offer_button_link)}
     </td></tr></table>
@@ -172,8 +173,7 @@ export function renderNewsletter(n, optsIn = {}) {
   const prods = [1, 2, 3].map((i) => ({ name: n[`p${i}_name`], price: n[`p${i}_price`], text: n[`p${i}_text`], link: n[`p${i}_link`], img: preview ? opts.productImages?.[i - 1] : n[`p${i}_image_url`] })).filter((x) => x.name);
   const products = prods.length ? `
   <tr><td class="pad" style="padding:0 40px 36px;background:#FFCC20;">
-    <div style="${F}padding-top:32px;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#1D1D1B;">${H(n.products_label || 'Unsere Empfehlung')}</div>
-    <h2 style="${F}margin:8px 0 20px;font-size:26px;line-height:1.05;font-weight:900;font-style:italic;text-transform:uppercase;color:#1D1D1B;">${nl2br(H(n.products_title || ''))}</h2>
+    <h2 style="${F}margin:0;padding-top:32px;margin-bottom:20px;font-size:26px;line-height:1.05;font-weight:900;font-style:italic;text-transform:uppercase;color:#1D1D1B;">${nl2br(H(n.products_title || ''))}</h2>
     <table role="presentation" width="100%"><tr>${prods.map((x, i) => `
       <td class="col" valign="top" width="33%" style="padding:0 ${i < prods.length - 1 ? '10px' : '0'} 0 0;">
         <table role="presentation" width="100%" style="background:#FFFFFF;border-radius:20px 0 20px 0;"><tr><td style="padding:0;">
@@ -191,7 +191,7 @@ export function renderNewsletter(n, optsIn = {}) {
   const extra = n.extra_title ? `
   <tr><td class="pad" style="padding:36px 40px 0;"><div style="border-top:1px solid #D9DDE0;font-size:0;line-height:0;">&nbsp;</div></td></tr>
   <tr><td class="pad" style="${F}padding:24px 40px 0;">
-    <div style="font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#4B4F58;">${H(n.extra_title)}</div>
+    <h3 style="${F}margin:0;font-size:20px;line-height:1.15;font-weight:900;color:#1D1D1B;">${H(n.extra_title)}</h3>
     <p style="margin:8px 0 0;font-size:17px;line-height:1.55;color:#1D1D1B;">${nl2br(linkify(H(n.extra_text || '')))}${n.extra_link ? ` <a href="${H(n.extra_link)}" style="color:#1D1D1B;font-weight:700;">Mehr dazu</a>` : ''}</p>
   </td></tr>` : '';
 
@@ -211,7 +211,6 @@ ${preview ? '<base target="_blank">' : ''}
     .pad { padding-left:20px !important; padding-right:20px !important; }
     .box { padding-left:16px !important; padding-right:16px !important; }
     .h1 { font-size:30px !important; }
-    .num { width:40px !important; font-size:28px !important; }
     .when { width:110px !important; }
     .col { display:block !important; width:100% !important; padding:0 0 14px !important; }
     .pimg { height:190px !important; }
@@ -242,10 +241,7 @@ ${preview ? '<base target="_blank">' : ''}
   </td></tr>` : ''}
   ${imgMissing ? `<tr><td class="pad" style="padding:28px 40px 0;"><div style="${F}background:#F5F5F5;border-radius:30px 0 30px 0;padding:60px 20px;text-align:center;font-size:14px;color:#4B4F58;">Bild: ${H(n.image_alt || n.image_url)}<br>Für die Vorschau im Dashboard bitte hochladen.</div></td></tr>` : ''}
 
-  ${n.badge ? `<tr><td class="pad" style="padding:28px 40px 0;">
-    <table role="presentation"><tr><td style="${F}background:#FFCC20;color:#1D1D1B;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:5px 12px;border-radius:8px 0 8px 0;">${H(n.badge)}</td></tr></table>
-  </td></tr>` : ''}
-  ${n.headline ? `<tr><td class="pad" style="padding:14px 40px 0;">
+  ${n.headline ? `<tr><td class="pad" style="padding:28px 40px 0;">
     <h1 class="h1" style="${F}margin:0;font-size:40px;line-height:1;font-weight:900;font-style:italic;text-transform:uppercase;color:#1D1D1B;">${nl2br(H(n.headline))}</h1>
   </td></tr>` : ''}
 
