@@ -3,14 +3,17 @@
 //   node scripts/bewertungen.js fetch [--raw] [--known id1,id2]   Bewertungen vereinheitlicht als JSON
 //   node scripts/bewertungen.js reply <reviewId> < antwort.txt     Antwort bei Trusted Shops veröffentlichen
 //   node scripts/bewertungen.js check                              Zugang prüfen
+//   node scripts/bewertungen.js obsidian <reviews-ordner> <vault>  Bewertungen in die Jahresnotizen im Obsidian-Vault schreiben
+//     (<reviews-ordner>: ArtifactData list reviews mit out_dir, eine JSON-Datei je Bewertung, Dateiname = ID)
 //
 // Mit ETRUSTED_CLIENT_ID und ETRUSTED_CLIENT_SECRET (Händler-Schnittstelle eTrusted, Netzwerk: login.etrusted.com,
 // api.etrusted.com) kommen bis zu 100 Bewertungen samt bestehender Antworten, und `reply` funktioniert.
 // Ohne diese Zugangsdaten nur lesend über die öffentliche Schnittstelle (TRUSTED_SHOPS_ID, api.trustedshops.com):
 // nur die 10 neuesten bis gestern, ohne Antworten (geprüft 18.10.2026).
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { extractReviews, newReviews } from '../src/bewertungen.js';
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { extractReviews, newReviews, obsidianPath, upsertEntry } from '../src/bewertungen.js';
 
 // Node fetch nutzt den Proxy der Cloud-Umgebung nur mit NODE_USE_ENV_PROXY=1, deshalb bei Bedarf neu starten
 if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY) {
@@ -73,11 +76,33 @@ async function main() {
     await json(res, 'Antwort');
     return console.log(JSON.stringify({ ok: true, id }));
   }
+  if (cmd === 'obsidian') {
+    const [dir, vault] = args;
+    if (!dir || !vault || !existsSync(join(vault, '.obsidian'))) throw new Error('Aufruf: node scripts/bewertungen.js obsidian <reviews-ordner> <vault-ordner mit .obsidian>');
+    const notes = new Map();
+    const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
+    for (const f of files) {
+      const raw = JSON.parse(readFileSync(join(dir, f), 'utf8'));
+      const r = { id: f.slice(0, -5), ...(raw.data ?? raw) };
+      if (!r.date || !r.stars) continue;
+      const path = join(vault, obsidianPath(r.date));
+      if (!notes.has(path)) notes.set(path, existsSync(path) ? readFileSync(path, 'utf8') : '');
+      notes.set(path, upsertEntry(notes.get(path), r));
+    }
+    const changed = [];
+    for (const [path, text] of notes) {
+      if (existsSync(path) && readFileSync(path, 'utf8') === text) continue;
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, text);
+      changed.push(path);
+    }
+    return console.log(JSON.stringify({ reviews: files.length, changed }, null, 2));
+  }
   if (cmd === 'check') {
     if (!hasEtrusted) return console.log('Nur lesend (öffentliche Schnittstelle). Für automatisches Veröffentlichen fehlen ETRUSTED_CLIENT_ID und ETRUSTED_CLIENT_SECRET.');
     const n = extractReviews(await fetchEtrusted()).length;
     return console.log(`eTrusted Zugang ok, ${n} Bewertungen abrufbar.`);
   }
-  throw new Error('Aufruf: node scripts/bewertungen.js fetch|reply|check');
+  throw new Error('Aufruf: node scripts/bewertungen.js fetch|reply|check|obsidian');
 }
 main().catch((e) => { console.error(e.message); process.exit(1); });

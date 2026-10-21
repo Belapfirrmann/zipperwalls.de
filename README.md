@@ -32,7 +32,7 @@ Reiter **Bewertungen** im Dashboard (`dashboard/bewertungen.js`, `dashboard/bewe
 (Bewertung von Trusted Shops, Antwortvorschlag von Claude) und darunter **Freigeben** und **Verbessern**.
 Freigegebene Antworten veröffentlicht die Routine automatisch bei Trusted Shops (eTrusted API, `ETRUSTED_CLIENT_ID`/`ETRUSTED_CLIENT_SECRET`).
 Routine und Datenmodell (Collection `reviews`): `docs/routinen/bewertungen.md`. Schreibstil und Recherche: `docs/bewertungen/schreibstil.md`.
-Abruf: `TRUSTED_SHOPS_ID=X... node scripts/bewertungen.js fetch`.
+Abruf: `node scripts/bewertungen.js fetch`. Archiv im Obsidian-Vault: `Themen/Trusted Shops Bewertungen/Bewertungen <Jahr>.md` (`node scripts/bewertungen.js obsidian <reviews-ordner> <vault>`).
 
 ## Redaktionsplan aktualisieren
 

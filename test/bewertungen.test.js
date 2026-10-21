@@ -52,16 +52,22 @@ test('newReviews und tone', () => {
   assert.deepEqual([5, 4, 3, 2, 1].map(tone), ['positiv', 'positiv', 'gemischt', 'kritisch', 'kritisch']);
 });
 
-test('upsertEntry: legt an und ersetzt ohne Doppel', () => {
-  const r = { ...normalizeReview(raw), status: 'neu' };
+test('upsertEntry: Jahresnotiz, ersetzt ohne Doppel, nach Datum sortiert, eigener Kopf bleibt', () => {
+  const r = { ...normalizeReview(raw), status: 'Entwurf', reply: 'Danke!' };
   let note = upsertEntry('', r);
-  assert.match(note, /^# Bewertungen 2026-10/);
-  note = upsertEntry(note, { ...r, status: 'Freigegeben', reply: 'Danke!' });
-  assert.equal(note.match(/## 2026-10-12/g).length, 1);
-  assert.match(note, /Status: Freigegeben/);
+  assert.match(note, /^---\ntags:/);
+  assert.match(note, /# Trusted Shops Bewertungen 2026/);
+  assert.match(note, /Antwort \(Entwurf\)/);
+  note = note.replace('# Trusted Shops Bewertungen 2026', '# Trusted Shops Bewertungen 2026\n\nEigene Notiz.');
+  note = upsertEntry(note, { ...r, status: 'Veröffentlicht', published_at: '2026-10-21T21:00:00Z' });
+  assert.equal(note.match(/^## /gm).length, 1);
+  assert.match(note, /Status: Veröffentlicht am 21\.10\.2026/);
+  assert.match(note, /Eigene Notiz\./);
   note = upsertEntry(note, { ...r, id: 'zweite', date: '2026-10-14' });
-  assert.equal(note.match(/^## /gm).length, 2);
-  assert.equal(obsidianPath('2026-10-12'), 'Claude/Bewertungen/2026-10.md');
+  note = upsertEntry(note, { ...r, id: 'dritte', date: '2026-01-02' });
+  assert.deepEqual(note.match(/^## \S+/gm), ['## 14.10.2026', '## 12.10.2026', '## 02.01.2026']);
+  assert.equal(obsidianPath('2026-10-12'), 'Themen/Trusted Shops Bewertungen/Bewertungen 2026.md');
+  assert.doesNotMatch(note, /[–—]/);
 });
 
 test('styleProblems: Gedankenstrich und Länge', () => {

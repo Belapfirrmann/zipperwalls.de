@@ -957,34 +957,44 @@ function sterne(n) {
   return '★'.repeat(n) + '☆'.repeat(5 - n);
 }
 
-// Obsidian Notiz für einen Monat: Claude/Bewertungen/YYYY-MM.md
+// Obsidian (Vault github.com/Belapfirrmann/obsidian-vault): eine Notiz pro Jahr, Namensregeln des Vaults
+// (sprechender Titel ohne Datums-Präfix, Datum im Frontmatter, keine Gedankenstriche).
+const OBSIDIAN_DIR = 'Themen/Trusted Shops Bewertungen';
 function obsidianPath(date) {
-  return `Claude/Bewertungen/${String(date).slice(0, 7)}.md`;
+  return `${OBSIDIAN_DIR}/Bewertungen ${String(date).slice(0, 4)}.md`;
 }
 
+const deDate = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}` : d || '');
+const quote = (t) => t.split('\n').map((l) => `> ${l}`).join('\n');
+
 function obsidianEntry(r) {
-  const lines = [
-    `## ${r.date} ${sterne(r.stars)} (${r.stars}/5) <!-- ${r.id} -->`,
-    '',
-    r.text ? r.text.split('\n').map((l) => `> ${l}`).join('\n') : '> (ohne Text)',
-    '',
-    `Status: ${r.status || 'neu'}`,
-  ];
-  if (r.reply) lines.push('', '**Antwort**', '', r.reply.split('\n').map((l) => `> ${l}`).join('\n'));
+  const lines = [`## ${deDate(r.date)} ${sterne(r.stars)} <!-- ${r.id} ${r.date} -->`, '', r.text ? quote(r.text) : '> (nur Sterne, ohne Text)', ''];
+  const when = r.published_at ? ` am ${deDate(String(r.published_at).slice(0, 10))}` : '';
+  lines.push(`Status: ${r.status || 'neu'}${r.status === 'Veröffentlicht' ? when : ''}`);
+  if (r.reply) lines.push('', `**Antwort${r.status === 'Veröffentlicht' ? '' : ' (Entwurf)'}**`, '', quote(r.reply));
   return lines.join('\n') + '\n';
 }
 
-// Einträge in bestehende Monatsnotiz einfügen. Ein Eintrag ist an seinem <!-- id --> Kommentar erkennbar
-// und wird ersetzt statt doppelt angelegt.
+function noteHead(year) {
+  return `---\ntags: [trusted-shops, bewertungen, kunden]\ndatum: ${new Date().toISOString().slice(0, 10)}\n---\n\n` +
+    `# Trusted Shops Bewertungen ${year}\n\n` +
+    'Wird von der Claude Routine „Bewertungen (Trusted Shops)“ gepflegt (Repo zipperwalls.de, docs/routinen/bewertungen.md). ' +
+    'Freigegeben wird im Zipperwalls Dashboard, Reiter Bewertungen. Schreibstil: [[Stimme des Kunden]] und docs/bewertungen/schreibstil.md.\n';
+}
+
+// Eintrag einfügen oder ersetzen (erkennbar am <!-- id datum --> Kommentar), Einträge nach Datum absteigend.
+// Alles vor dem ersten Eintrag (Frontmatter, Einleitung, eigene Notizen) bleibt unverändert.
 function upsertEntry(note, r) {
-  const entry = obsidianEntry(r);
-  const marker = `<!-- ${r.id} -->`;
-  if (!note) return `# Bewertungen ${String(r.date).slice(0, 7)}\n\n${entry}`;
-  const parts = note.split(/\n(?=## )/);
-  const i = parts.findIndex((p) => p.includes(marker));
-  if (i >= 0) parts[i] = entry.trimEnd();
-  else parts.push(entry.trimEnd());
-  return parts.join('\n\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+  const entry = obsidianEntry(r).trimEnd();
+  const parts = (note || noteHead(String(r.date).slice(0, 4))).split(/\n(?=## )/);
+  const head = parts[0].trimEnd();
+  const entries = parts.slice(1).map((e) => e.trimEnd());
+  const key = (e) => (/<!-- (\S+) (\S+) -->/.exec(e) || [])[1];
+  const date = (e) => (/<!-- \S+ (\S+) -->/.exec(e) || [])[1] || '';
+  const i = entries.findIndex((e) => key(e) === r.id);
+  if (i >= 0) entries[i] = entry; else entries.push(entry);
+  entries.sort((a, b) => date(b).localeCompare(date(a)));
+  return [head, ...entries].join('\n\n') + '\n';
 }
 
 // Gedankenstriche sind im Zipperwalls Schreibstil tabu. Prüfung vor jeder Anzeige und Freigabe.
