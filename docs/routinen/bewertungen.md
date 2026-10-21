@@ -2,7 +2,7 @@
 
 Holt neue Bewertungen, schreibt einen Antwortvorschlag in den Reiter „Bewertungen“ des Dashboards und veröffentlicht
 freigegebene Antworten automatisch bei Trusted Shops. Freigeben machen nur Bela oder Darien im Dashboard.
-Zusätzlich landet jede Bewertung mit Status und Antwort im Obsidian-Vault (Schritt 8).
+Zusätzlich landet jede Bewertung mit Status und Antwort im Obsidian-Vault (Schritt 8, eigene Aufgabe am Abend).
 
 Läuft werktags stündlich 7:48 bis 19:48 Uhr.
 
@@ -44,17 +44,19 @@ Voraussetzungen (einmalig):
       Braucht eine Bewertung keine Antwort (Beleidigung, falscher Shop): Status `neu` ohne `reply`, Grund in `reply_note`.
 6. Offene Wünsche, die keine Sitzung beantwortet hat: ArtifactData `query` auf `wishes` mit `status == "offen"`, nur mit `target` aus `reviews`.
    Bearbeiten wie unten.
-7. Kurze Meldung: neue Bewertungen, Entwürfe, veröffentlichte Antworten, Fehler, Obsidian (geändert ja oder nein).
+7. Kurze Meldung: neue Bewertungen, Entwürfe, veröffentlichte Antworten, Fehler.
 
-8. Obsidian (Vault github.com/Belapfirrmann/obsidian-vault, Auto-Merge nach main per GitHub Action). Am Ende jedes Laufs,
-   auch wenn sich nichts geändert hat (der Abgleich ist dann leer):
+8. Obsidian (Vault github.com/Belapfirrmann/obsidian-vault, Auto-Merge nach main per GitHub Action).
+   Die stündliche Routine hat keinen Zugriff auf den Vault (Repos lassen sich bei Routinen nicht nachtragen). Sie überspringt diesen Schritt
+   ohne Fehlermeldung. Den Abgleich macht die geplante Aufgabe „Bewertungen nach Obsidian“ (werktags 19:56 Uhr) in der Sitzung
+   „Trusted Shops Bewertungs-Routine“, die den Vault angehängt hat. Ablauf dort:
    1. Vault klonen, falls noch nicht da: `git clone --depth 1 https://github.com/Belapfirrmann/obsidian-vault ../obsidian-vault`.
       Klappt das nicht, das Repo mit `add_repo` (owner `Belapfirrmann`, repo `obsidian-vault`, access `push`) zur Sitzung hinzufügen und einmal erneut klonen.
    2. ArtifactData `list` auf `reviews` mit `out_dir` (z. B. `/tmp/bw`) und dann
       `node scripts/bewertungen.js obsidian /tmp/bw/reviews ../obsidian-vault`. Schreibt nur `Themen/Trusted Shops Bewertungen/Bewertungen <Jahr>.md`.
    3. Ist `changed` leer: fertig. Sonst im Vault einen neuen Branch `claude/bewertungen-<JJJJMMTT-HHMM>` anlegen, nur diese Dateien committen
       (Nachricht z. B. „Trusted Shops Bewertungen aktualisiert“) und pushen. Nie direkt auf `main`, nie andere Notizen ändern.
-   4. Schlägt Klonen oder Pushen fehl: in der Meldung nennen, die Arbeit im Dashboard bleibt gültig.
+   4. Schlägt Klonen oder Pushen fehl: kurz melden, die Arbeit im Dashboard bleibt gültig.
 
 ## Wünsche aus „Verbessern“
 
