@@ -1,0 +1,20 @@
+/* To-dos: zwei Spalten (Bela, Darien), auf dem Handy untereinander */
+.td-col h2 { margin-bottom: 0; }
+.td-add { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 4px; }
+.td-add input[type=text] { flex: 1 1 200px; width: auto; }
+.td-add input[type=date] { flex: 0 1 160px; font: 400 16px var(--font); padding: 9px 10px; border: 1px solid var(--rahmen); border-radius: var(--r-klein) 0 var(--r-klein) 0; background: var(--card); color: var(--text); min-width: 0; }
+.td-item { display: flex; gap: 10px; align-items: flex-start; border-bottom: 1px solid var(--linie); }
+.td-item:last-child { border-bottom: 0; }
+.td-item .check { flex: 1 1 auto; border-bottom: 0; min-width: 0; }
+.td-item .t { overflow-wrap: anywhere; }
+.td-act { display: flex; gap: 6px; padding-top: 12px; flex: none; opacity: .55; transition: opacity .2s; }
+.td-item:hover .td-act, .td-act:focus-within { opacity: 1; }
+.td-late { background: var(--c-instagram); color: #FFFFFF; }
+.td-done { margin: 14px 0 0; }
+.td-done summary { color: var(--grau); }
+@media (max-width: 620px) {
+  .td-item { flex-wrap: wrap; gap: 0; }
+  .td-act { padding: 0 0 12px 42px; opacity: 1; }
+  .td-add input[type=date] { flex: 1 1 140px; }
+}
+@media (hover: none) { .td-act { opacity: 1; } }
