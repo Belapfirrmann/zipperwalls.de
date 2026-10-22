@@ -21,7 +21,7 @@ const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled:
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
 const WISH_OPEN = new Set(); // aufgeklappte „Verlauf mit Claude“-Boxen, bleiben beim Neuzeichnen offen
-const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], reviews: [], todos: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], reviews: [], todos: [], ideas: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -136,7 +136,19 @@ function planEntries() {
   });
 }
 
+// Umschalter oben auf der Plan-Seite: #plan (Social Media) und #plan-newsletter
+function planParts(active) {
+  const today = new Date().toISOString().slice(0, 10);
+  const s = PLAN.entries.filter((e) => e.date >= today).length;
+  const n = NL.entries.filter((e) => e.date >= today).length;
+  return `<div class="parts" role="tablist" aria-label="Bereich des Plans">
+    <a role="tab" href="#plan" class="part ${active === 'social' ? 'on' : ''}" aria-selected="${active === 'social'}">Social Media <span class="part-n">${s} kommend</span></a>
+    <a role="tab" href="#plan-newsletter" class="part ${active === 'newsletter' ? 'on' : ''}" aria-selected="${active === 'newsletter'}">Newsletter <span class="part-n">${n} kommend</span></a>
+  </div>`;
+}
+
 function viewPlan() {
+  if (location.hash === '#plan-newsletter' || location.hash === '#newsletter') return viewNewsletter();
   const entriesAll = planEntries();
   const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
   const on = new Set(PLAN.rhythm?.days || []);
@@ -153,7 +165,7 @@ function viewPlan() {
   const fmtDay = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 
   main.innerHTML = `
-    <div class="head"><span class="label">Quelle ${esc(PLAN.source)} · ${PLAN.entries.length} Posts</span><h1>${esc(PLAN.title)}</h1><p>${esc(PLAN.intro || '')}</p></div>
+    <div class="head"><span class="label">Quelle ${esc(PLAN.source)} · ${PLAN.entries.length} Posts</span><h1>${esc(PLAN.title)}</h1>${planParts('social')}<p>${esc(PLAN.intro || '')}</p></div>
     <section class="section grid g3">
       <div class="card kpi"><span class="label">Nächster Post</span>${next ? `<div class="num" style="font-size:34px">${esc(next.day)} ${fmtDay(next.date)}</div><p style="margin-top:8px">${esc(next.topic)}</p>` : '<p>Kein offener Termin.</p>'}</div>
       <div class="card kpi"><span class="label">Status</span>
@@ -619,7 +631,7 @@ function viewNewsletter() {
   const fmtDay = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 
   main.innerHTML = `
-    <div class="head"><span class="label">Quelle ${esc(NL.source)} · ${NL.entries.length} Ausgaben</span><h1>${esc(NL.title)}</h1><p>${esc(NL.intro || '')}</p></div>
+    <div class="head"><span class="label">Quelle ${esc(NL.source)} · ${NL.entries.length} Ausgaben</span><h1>${esc(NL.title)}</h1>${planParts('newsletter')}<p>${esc(NL.intro || '')}</p></div>
     <section class="section grid g3">
       <div class="card kpi"><span class="label">Nächster Newsletter</span>${next ? `<div class="num" style="font-size:34px">${esc(next.day.slice(0, 2))} ${fmtDay(next.date)}</div><p style="margin-top:8px">${esc(next.subject || next.topic)}</p>` : '<p>Kein offener Termin.</p>'}</div>
       <div class="card kpi"><span class="label">Status</span>
@@ -689,7 +701,7 @@ function viewFreigabeNewsletter() {
     <div class="row" style="margin-bottom:22px">
       ${Object.keys(NL_GROUPS).map((k) => `<button class="btn small ${nlFreigabeFilter === k ? 'dark' : 'ghost'}" data-filter="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join('')}
     </div>
-    <div id="posts">${list.length ? list.map(nlCard).join('') : `<div class="card empty">${nlFreigabeFilter === 'offen' ? 'Kein Newsletter-Entwurf offen. Claude legt die Entwürfe einzeln an, den Versandplan sehen Sie unter <a href="#newsletter">Newsletter-Plan</a>.' : 'Nichts vorhanden.'}</div>`}</div>`;
+    <div id="posts">${list.length ? list.map(nlCard).join('') : `<div class="card empty">${nlFreigabeFilter === 'offen' ? 'Kein Newsletter-Entwurf offen. Claude legt die Entwürfe einzeln an, den Versandplan sehen Sie unter <a href="#plan-newsletter">Plan › Newsletter</a>.' : 'Nichts vorhanden.'}</div>`}</div>`;
   main.querySelectorAll('[data-filter]').forEach((b) => (b.onclick = () => { nlFreigabeFilter = b.dataset.filter; render(); }));
   main.querySelectorAll('.nl').forEach((el) => bindNl(el, all.find((n) => n.id === el.dataset.id)));
   if (nlFocus) {
@@ -1056,10 +1068,11 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------- Rahmen ----------
-const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, bewertungen: viewBewertungen, todos: viewTodos, zahlen: viewZahlen, verbindungen: viewVerbindungen };
-// #freigabe-newsletter ist der Newsletter-Teil der Freigabe-Seite
-const viewKey = () => (location.hash === '#freigabe-newsletter' ? 'freigabe' : location.hash.slice(1));
-const currentView = () => (views[viewKey()] ? viewKey() : 'freigabe');
+const views = { heute: viewHeute, plan: viewPlan, freigabe: viewFreigabe, bewertungen: viewBewertungen, todos: viewTodos, ideen: viewIdeen, zahlen: viewZahlen, verbindungen: viewVerbindungen };
+// #freigabe-newsletter und #plan-newsletter sind die Newsletter-Teile von Freigabe und Plan (#newsletter: alter Link)
+const VIEW_ALIAS = { '#freigabe-newsletter': 'freigabe', '#plan-newsletter': 'plan', '#newsletter': 'plan' };
+const viewKey = () => VIEW_ALIAS[location.hash] || location.hash.slice(1);
+const currentView = () => (views[viewKey()] ? viewKey() : 'heute');
 
 function render() {
   // Waehrend in der Freigabe getippt wird, nicht neu zeichnen
@@ -1069,6 +1082,7 @@ function render() {
     return;
   }
   // Auch bei Bewertungen nicht neu zeichnen, solange in einem Textfeld getippt wird
+  if (currentView() === 'ideen' && S.loaded && document.activeElement?.id === 'idea-text' && document.activeElement.value.trim()) return;
   if (currentView() === 'bewertungen' && S.loaded && document.activeElement?.tagName === 'TEXTAREA' && main.contains(document.activeElement)) return;
   S.pending = false;
   document.getElementById('pending').hidden = true;
@@ -1089,14 +1103,17 @@ function render() {
   const rc = document.getElementById('count-bewertungen');
   rc.hidden = !rvOpen;
   rc.textContent = rvOpen;
+  const ic = document.getElementById('count-ideen');
+  ic.hidden = !ideasNew().length;
+  ic.textContent = ideasNew().length;
   const tdOpen = todoCount();
   const tc = document.getElementById('count-todos');
   tc.hidden = !tdOpen;
   tc.textContent = tdOpen;
   const runner = S.status.runner;
   document.getElementById('runner').textContent = runner?.last_run ? `Letzter Lauf ${fmtDate(runner.last_run)}` : '';
-  const preload = ['plan', 'newsletter'].includes(view);
-  const key = (location.hash || '#freigabe') + (S.loaded || preload ? '' : ':laedt');
+  const preload = view === 'plan';
+  const key = (location.hash || '#heute') + (S.loaded || preload ? '' : ':laedt');
   const fresh = key !== lastEnterKey;
   lastEnterKey = key;
   const resume = !fresh && main.classList.contains('enter');
@@ -1126,7 +1143,7 @@ async function start() {
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
-  let first = 9;
+  let first = 10;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
   db.collection('posts').onSnapshot((snap) => { S.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('reviews').onSnapshot((snap) => { S.reviews = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
@@ -1135,6 +1152,7 @@ async function start() {
   db.collection('status').onSnapshot((snap) => { S.status = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
   db.collection('wishes').onSnapshot((snap) => { S.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })); refreshWishes(); refreshRvWishes(); ready(); }, onErr);
   db.collection('requests').onSnapshot((snap) => { S.requests = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
+  db.collection('ideas').onSnapshot((snap) => { S.ideas = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('todos').onSnapshot((snap) => { S.todos = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('checklist').onSnapshot((snap) => { S.checklist = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
 }

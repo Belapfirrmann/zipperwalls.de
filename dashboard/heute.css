@@ -1,0 +1,21 @@
+/* Startseite "Heute" */
+.hd-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1000px) { .hd-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hd-tile { text-decoration: none; color: var(--text); padding: 20px; }
+.hd-tile .num { font-size: 40px; margin: 6px 0 4px; color: var(--grau-hell); }
+.hd-tile.on .num { color: var(--text); }
+.hd-tile.on { border-left: 6px solid var(--gelb); }
+.hd-list { margin-top: 8px; }
+.hd-row { display: grid; grid-template-columns: 110px 100px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 12px 8px; border-bottom: 1px solid var(--linie); color: var(--text); text-decoration: none; border-radius: var(--r-klein) 0 var(--r-klein) 0; }
+.hd-row:last-child { border-bottom: 0; }
+.hd-row:hover { background: var(--flaeche); }
+.hd-when { display: flex; flex-direction: column; line-height: 1.25; }
+.hd-kind { font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; color: var(--grau); }
+.hd-title { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; overflow-wrap: anywhere; min-width: 0; }
+.hd-status { text-align: right; }
+@media (max-width: 760px) {
+  .hd-row { grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; }
+  .hd-kind { grid-column: 2; grid-row: 1; }
+  .hd-title { grid-column: 2; }
+  .hd-status { grid-column: 2; text-align: left; }
+}

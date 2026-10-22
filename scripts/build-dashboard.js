@@ -36,15 +36,18 @@ const html = `<title>Zipperwalls Dashboard</title>
 ${read('dashboard/style.css')}
 ${read('dashboard/bewertungen.css')}
 ${read('dashboard/todos.css')}
+${read('dashboard/heute.css')}
+${read('dashboard/ideen.css')}
 </style>
 <div class="shell">
   <aside class="side">
     <div class="logo">${logo}</div>
     <nav id="nav">
-      <a href="#plan" data-view="plan">Social-Plan</a>
-      <a href="#newsletter" data-view="newsletter">Newsletter-Plan</a>
+      <a href="#heute" data-view="heute">Heute</a>
+      <a href="#plan" data-view="plan">Plan</a>
       <a href="#freigabe" data-view="freigabe">Freigabe <span class="count" id="count-freigabe" hidden></span></a>
       <a href="#bewertungen" data-view="bewertungen">Bewertungen <span class="count" id="count-bewertungen" hidden></span></a>
+      <a href="#ideen" data-view="ideen">Ideen <span class="count" id="count-ideen" hidden></span></a>
       <a href="#todos" data-view="todos">To-dos <span class="count" id="count-todos" hidden></span></a>
       <a href="#zahlen" data-view="zahlen">Zahlen</a>
       <a href="#verbindungen" data-view="verbindungen">Verbindungen</a>
@@ -74,6 +77,8 @@ ${read('dashboard/app.js')}
 ${read('dashboard/zahlen.js')}
 ${read('dashboard/bewertungen.js')}
 ${read('dashboard/todos.js')}
+${read('dashboard/ideen.js')}
+${read('dashboard/heute.js')}
 start();
 </script>
 `;

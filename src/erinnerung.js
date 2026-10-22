@@ -35,6 +35,12 @@ export function dueReminders({ posts = [], newsletters = [], now = new Date(), p
     items.push({ kind: 'Social-Media-Post', nr: e.nr, title: post?.title || `#${e.nr} ${e.topic}`, time: berlin(iso).time, state: post ? 'Entwurf wartet auf Freigabe' : 'noch kein Entwurf im Dashboard' });
   }
 
+  // Posts ohne Plan-Nummer (z. B. aus dem Reiter Ideen): Termin aus dem Dokument
+  for (const p of posts) {
+    if (p.plan_nr != null || !p.scheduled_at || berlin(p.scheduled_at).date !== tomorrow || SOCIAL_DONE.includes(p.status)) continue;
+    items.push({ kind: 'Social-Media-Post', nr: null, title: p.title || p.id, time: berlin(p.scheduled_at).time, state: 'Entwurf wartet auf Freigabe' });
+  }
+
   // Newsletter: gekoppelte zum Termin ihres Posts, eigenständige zum (ggf. verschobenen) eigenen Termin
   for (const e of nlPlan.entries) {
     const doc = newsletters.find((n) => n.id === `nl-${e.nr}`) || null;

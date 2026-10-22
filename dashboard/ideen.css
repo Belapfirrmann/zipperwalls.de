@@ -1,0 +1,7 @@
+/* Ideen */
+.idea-add textarea { min-height: 90px; }
+.idea { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 20px; align-items: start; }
+.idea:not(:has(.idea-img)) { grid-template-columns: minmax(0, 1fr); }
+.idea-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--r) 0 var(--r) 0; background: var(--flaeche); }
+.idea-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+@media (max-width: 620px) { .idea { grid-template-columns: minmax(0, 1fr); } .idea-img { max-width: 220px; } }

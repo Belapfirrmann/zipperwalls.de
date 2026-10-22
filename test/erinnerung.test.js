@@ -49,3 +49,8 @@ test('Gekoppelter Newsletter folgt dem Termin seines Posts', () => {
   });
   assert.deepEqual(r.items.map((i) => [i.kind, i.nr]), [['Newsletter', 3]]);
 });
+
+test('Post aus einer Idee (ohne Plan-Nummer) wird erinnert', () => {
+  const r = dueReminders({ plan, nlPlan, now: NOW, posts: [{ id: 'idee-i-1', status: 'draft', title: 'Idee: Theke im Kombi', scheduled_at: '2026-10-15T07:00:00.000Z' }], newsletters: [] });
+  assert.ok(r.items.some((i) => i.title === 'Idee: Theke im Kombi'));
+});
