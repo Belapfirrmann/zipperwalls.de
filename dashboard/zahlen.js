@@ -84,8 +84,8 @@ function niceMax(v) {
 const tipAttr = (title, rows) => `data-tip="${esc(JSON.stringify({ title, rows }))}" tabindex="0"`;
 
 // Gestapelte Balken je Tag und Kanal
-function stackedBars(dates, series, label) {
-  const W = 760, H = 240, L = 44, R = 8, T = 12, B = 28;
+function stackedBars(dates, series, label, { left = 44 } = {}) {
+  const W = 760, H = 240, L = left, R = 8, T = 12, B = 28;
   const totals = dates.map((_, i) => sumBy(series, (s) => s.values[i]));
   const max = niceMax(Math.max(...totals));
   const bw = (W - L - R) / dates.length;
@@ -176,11 +176,13 @@ function delta(cur, prev) {
 }
 
 function viewZahlen() {
+  if (location.hash === '#zahlen-shop') return viewZahlenShop();
+  if (location.hash === '#zahlen-newsletter') return viewZahlenNewsletter();
   const D = zData();
   const items = publishedItems();
   const has = S.metrics.length > 0 || items.length > 0;
   if (!has) {
-    main.innerHTML = `<div class="head"><h1>Zahlen</h1><p>Reichweite, Follower und Interaktionen über alle Plattformen. Claude holt die Werte jeden Morgen.</p></div>
+    main.innerHTML = `<div class="head"><h1>Zahlen</h1>${zahlenParts('social')}<p>Reichweite, Follower und Interaktionen über alle Plattformen. Claude holt die Werte jeden Morgen.</p></div>
       <div class="card empty"><h2>Noch keine Zahlen</h2><p style="margin-top:10px">Sobald die Konten verbunden und die ersten Posts veröffentlicht sind, erscheinen hier Follower, Reichweite und Interaktionen.</p></div>`;
     return;
   }
@@ -222,7 +224,7 @@ function viewZahlen() {
   const fSeries = CHANNEL_KEYS.map((c) => ({ key: c, label: CH[c], values: dates.map((d) => D.followers(d, c) ?? null) })).filter((s) => s.values.some((v) => v != null));
 
   main.innerHTML = `
-    <div class="head"><h1>Zahlen</h1><p>Reichweite, Follower und Interaktionen über alle Plattformen. Claude holt die Werte jeden Morgen um 6:22 Uhr${D.meta?.fetched_at ? `, zuletzt am ${fmtDate(D.meta.fetched_at)}` : ''}.</p></div>
+    <div class="head"><h1>Zahlen</h1>${zahlenParts('social')}<p>Reichweite, Follower und Interaktionen über alle Plattformen. Claude holt die Werte jeden Morgen um 6:22 Uhr${D.meta?.fetched_at ? `, zuletzt am ${fmtDate(D.meta.fetched_at)}` : ''}.</p></div>
     ${missing.length ? `<div class="notice">${missing.map((m) => `<p class="small" style="margin:0 0 4px">${esc(MISSING_TEXT[m])}</p>`).join('')}</div>` : ''}
     <div class="filters" role="group" aria-label="Zeitraum">${RANGES.map(([n, l]) => `<button class="tab ${n === N ? 'on' : ''}" data-range="${n}" type="button">${l}</button>`).join('')}
       <span class="muted small">${shortDate(dates[0])} bis ${shortDate(end)}</span></div>

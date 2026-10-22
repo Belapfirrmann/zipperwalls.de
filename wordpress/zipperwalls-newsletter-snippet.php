@@ -274,6 +274,43 @@ if (!function_exists('zw_nl_container')) {
       }),
     ]);
 
+    // Nur lesen: Kennzahlen (versendet, Öffnungen, Klicks, Abmeldungen) aller Newsletter dieser Schnittstelle
+    // und die Zahl der aktiven Abonnenten je Liste. Keine Empfängerdaten, nur Summen.
+    register_rest_route('zipperwalls/v1', '/newsletter/stats', [
+      'methods' => 'GET',
+      'permission_callback' => $admin,
+      'callback' => zw_nl_rest(function () {
+        $container = zw_nl_container();
+        $statsRepo = class_exists('\MailPoet\Newsletter\Statistics\NewsletterStatisticsRepository')
+          ? $container->get(\MailPoet\Newsletter\Statistics\NewsletterStatisticsRepository::class) : null;
+        $out = [];
+        foreach (zw_nl_map() as $key => $id) {
+          $newsletter = zw_nl_find($key);
+          if (!$newsletter) {
+            continue;
+          }
+          $row = zw_nl_state($newsletter);
+          if ($statsRepo && $newsletter->getSentAt() && method_exists($statsRepo, 'getStatistics')) {
+            $st = $statsRepo->getStatistics($newsletter);
+            foreach (['sent' => 'getTotalSentCount', 'opens' => 'getOpenCount', 'clicks' => 'getClickCount', 'unsubscribes' => 'getUnsubscribeCount'] as $field => $method) {
+              $row[$field] = method_exists($st, $method) ? (int)$st->$method() : null;
+            }
+          }
+          $out[$key] = $row;
+        }
+        $lists = [];
+        if (class_exists('\MailPoet\API\API')) {
+          $api = \MailPoet\API\API::MP('v1');
+          foreach ($api->getLists() as $list) {
+            $count = method_exists($api, 'getSubscribersCount')
+              ? (int)$api->getSubscribersCount(['listId' => (int)$list['id'], 'status' => 'subscribed']) : null;
+            $lists[] = ['id' => (int)$list['id'], 'name' => $list['name'], 'subscribed' => $count];
+          }
+        }
+        return ['newsletters' => $out, 'lists' => $lists];
+      }),
+    ]);
+
     // Nur lesen: Status eines Newsletters
     register_rest_route('zipperwalls/v1', '/newsletter/status', [
       'methods' => 'GET',

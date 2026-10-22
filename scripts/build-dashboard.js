@@ -75,6 +75,7 @@ ${stripModule(read('src/newsletter-render.js'))}
 ${stripModule(read('src/bewertungen.js'))}
 ${read('dashboard/app.js')}
 ${read('dashboard/zahlen.js')}
+${read('dashboard/zahlen-shop.js')}
 ${read('dashboard/bewertungen.js')}
 ${read('dashboard/todos.js')}
 ${read('dashboard/ideen.js')}

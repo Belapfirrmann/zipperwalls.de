@@ -21,7 +21,7 @@ const PLAN_STATUS = { draft: 'Im Dashboard', approved: 'Freigegeben', scheduled:
 const PLAN_BADGE = { 'Im Dashboard': '', Entwurf: 'grey', Freigegeben: 'dark', Gepostet: 'dark', 'Teilweise gepostet': '', Fehler: '', Gestrichen: 'grey' };
 
 const WISH_OPEN = new Set(); // aufgeklappte „Verlauf mit Claude“-Boxen, bleiben beim Neuzeichnen offen
-const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], reviews: [], todos: [], ideas: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
+const S = { db: null, assets: null, comments: null, requests: {}, wishes: [], posts: [], reviews: [], todos: [], ideas: [], shop: [], newsletters: [], metrics: [], status: {}, checklist: {}, loaded: false, dirty: new Set(), pending: false, offline: false };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -1070,7 +1070,7 @@ document.addEventListener('click', (e) => {
 // ---------- Rahmen ----------
 const views = { heute: viewHeute, plan: viewPlan, freigabe: viewFreigabe, bewertungen: viewBewertungen, todos: viewTodos, ideen: viewIdeen, zahlen: viewZahlen, verbindungen: viewVerbindungen };
 // #freigabe-newsletter und #plan-newsletter sind die Newsletter-Teile von Freigabe und Plan (#newsletter: alter Link)
-const VIEW_ALIAS = { '#freigabe-newsletter': 'freigabe', '#plan-newsletter': 'plan', '#newsletter': 'plan' };
+const VIEW_ALIAS = { '#freigabe-newsletter': 'freigabe', '#plan-newsletter': 'plan', '#newsletter': 'plan', '#zahlen-shop': 'zahlen', '#zahlen-newsletter': 'zahlen' };
 const viewKey = () => VIEW_ALIAS[location.hash] || location.hash.slice(1);
 const currentView = () => (views[viewKey()] ? viewKey() : 'heute');
 
@@ -1143,7 +1143,7 @@ async function start() {
   S.assets = await claude.use('assets').catch(() => null);
   S.comments = await claude.use('comments').catch(() => null);
   const onErr = (e) => toast('Datenbank: ' + (e?.message || 'nicht erreichbar'));
-  let first = 10;
+  let first = 11;
   const ready = () => { if (--first <= 0) S.loaded = true; render(); };
   db.collection('posts').onSnapshot((snap) => { S.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('reviews').onSnapshot((snap) => { S.reviews = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
@@ -1152,6 +1152,7 @@ async function start() {
   db.collection('status').onSnapshot((snap) => { S.status = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
   db.collection('wishes').onSnapshot((snap) => { S.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })); refreshWishes(); refreshRvWishes(); ready(); }, onErr);
   db.collection('requests').onSnapshot((snap) => { S.requests = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);
+  db.collection('shop').onSnapshot((snap) => { S.shop = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('ideas').onSnapshot((snap) => { S.ideas = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('todos').onSnapshot((snap) => { S.todos = snap.docs.map((d) => ({ id: d.id, ...d.data() })); ready(); }, onErr);
   db.collection('checklist').onSnapshot((snap) => { S.checklist = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])); ready(); }, onErr);

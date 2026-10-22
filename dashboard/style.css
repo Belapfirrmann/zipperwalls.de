@@ -417,3 +417,9 @@ body.lb-open { overflow: hidden; }
   @keyframes zw-load { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
   .toast.show { animation: zw-fade .2s ease; }
 }
+
+/* Zahlen Shop: Farben der Herkunft (Facebook, Instagram, LinkedIn wie oben) */
+:root { --c-newsletter: #d9a400; --c-bio: #7a5af5; --c-google: #3f8f3f; --c-google_ads: #0f8b8d; --c-other_search: #9aa83a;
+  --c-referral: #b05fa8; --c-direct: #4B4F58; --c-admin: #808285; --c-unknown: #C9CCD0; --c-shop: #EFB800; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-newsletter: #e8b923; --c-bio: #9b85f7; --c-google: #5aa95a; --c-google_ads: #2aa8aa; --c-direct: #BFC4C9; --c-unknown: #5d6967; } }
+:root[data-theme="dark"] { --c-newsletter: #e8b923; --c-bio: #9b85f7; --c-google: #5aa95a; --c-google_ads: #2aa8aa; --c-direct: #BFC4C9; --c-unknown: #5d6967; }
