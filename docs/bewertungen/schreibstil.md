@@ -40,7 +40,7 @@ Was eure Antworten schon gut machen und was wir beibehalten:
 - **Dank an erster Stelle:** „Vielen Dank für …“, „Herzlichen Dank für …“, „Besten Dank für …“. Wechseln, nie dreimal hintereinander dasselbe.
 - **Kernsatz „Es freut uns sehr, dass …“** mit dem konkreten Lob des Kunden in eigenen Worten (Beratung, Erreichbarkeit, Lieferung, Druckqualität, einfacher Aufbau). Produktnamen nennen, wenn sie in der Bewertung stehen (Promotiontheke, Lightbox Poster, Messewand VIVA).
 - **Kurze Bestätigungssätze** wie „Genau das ist unser Anspruch.“ oder „Genau so soll es sein.“ Höchstens einer pro Antwort.
-- **Schluss nach vorn:** „Viel Erfolg damit“, „Wir wünschen Ihnen viel Erfolg bei Ihren Einsätzen“, „bis zum nächsten Mal“, bei Stammkunden „Besten Dank für Ihr Vertrauen“. Ein persönlicher Gruß passt, wenn es einen Anlass gibt („Beste Grüße in die Schweiz“).
+- **Schluss nach vorn, abwechselnd:** „Viel Erfolg damit“, „Wir wünschen Ihnen viel Erfolg bei Ihren Einsätzen“, „Bei Ihrem nächsten Projekt sind wir gern wieder für Sie da“, „Wir freuen uns auf die weitere Zusammenarbeit“, selten „bis zum nächsten Mal“, bei Stammkunden „Besten Dank für Ihr Vertrauen“. Ein persönlicher Gruß passt, wenn es einen Anlass gibt („Beste Grüße in die Schweiz“).
 - **Länge nach Bewertung:** Nur Sterne ohne Text: ein bis zwei Sätze. Kurzer Text: zwei bis drei Sätze. Ausführliche Bewertung: drei bis fünf Sätze.
 - **Höchstens ein Ausrufezeichen**, ein Smiley `:)` nur bei sehr herzlichem Lob und höchstens einmal pro Antwort.
 - **Ehrlich bei Anregungen:** Vorschläge ernst nehmen, ehrlich sagen, was damit passiert („leiten wir an unsere Lieferanten weiter“). Nur zusagen, was Zipperwalls wirklich tut.
@@ -48,6 +48,7 @@ Was eure Antworten schon gut machen und was wir beibehalten:
 Was wir gegenüber den bisherigen Antworten besser machen:
 - Antworten 5, 8 und 9 sind austauschbar („Herzlichen Dank für Ihre tolle Bewertung“). Gibt die Bewertung ein Detail her (Produkt, Beratung, Land, Stammkunde), greifen wir es auf. Steht nur eine Note da, bleibt die Antwort kurz und erfindet nichts.
 - Der Einstieg „Vielen Dank für Ihr tolles Feedback“ nicht bei jeder Antwort. Abwechseln.
+- **„Bis zum nächsten Mal“ sparsam** (Wunsch Bela und Darien, 22.10.2026): höchstens in jeder vierten Antwort und nie in zwei offenen Entwürfen gleichzeitig. Schlusssätze generell abwechseln, auch „Viel Erfolg damit“. Vor jedem neuen Entwurf die offenen Entwürfe im Dashboard auf denselben Schluss prüfen.
 - Zeichensetzung korrigieren: „Dank, dass Sie“ statt „Dank das Sie“, „Um so mehr“ zusammen als „umso mehr“, „bis zum nächsten Mal“ groß.
 - Bei echter Kritik (Mangel, Verzögerung, Fehler) zusätzlich: Bedauern, Lösungsangebot und der Kontaktweg. Dafür gibt es noch kein Beispiel, die Vorlage unten gilt.
 
