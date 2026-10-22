@@ -2619,8 +2619,14 @@ const RV_BADGE = { neu: '', Entwurf: '', Fehler: '', Freigegeben: 'dark', 'Wird 
 const RV_TONE = { positiv: 'positive Bewertung', gemischt: 'gemischte Bewertung', kritisch: 'kritische Bewertung' };
 const rvOpenCount = () => S.reviews.filter(rvIsOpen).length;
 
+// Filter: offen (inkl. freigegeben, noch nicht online), beantwortet (bei Trusted Shops veröffentlicht), alle
+const RV_FILTERS = {
+  offen: (r) => rvIsOpen(r) || r.status === 'Freigegeben' || r.status === 'Wird veröffentlicht',
+  beantwortet: (r) => r.status === 'Veröffentlicht',
+  alle: () => true,
+};
 function rvVisible() {
-  const list = S.reviews.filter((r) => (RV.filter === 'offen' ? rvIsOpen(r) || r.status === 'Freigegeben' || r.status === 'Wird veröffentlicht' : true));
+  const list = S.reviews.filter(RV_FILTERS[RV.filter] || RV_FILTERS.offen);
   return list.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.created_at).localeCompare(String(a.created_at)));
 }
 
@@ -2692,12 +2698,11 @@ function viewBewertungen() {
       <h1>Bewertungen</h1>
       <p>${open ? `${open} ${open === 1 ? 'Bewertung wartet' : 'Bewertungen warten'} auf Ihre Freigabe.` : 'Alles beantwortet.'}${avg ? ` Schnitt der erfassten Bewertungen: ${avg} von 5.` : ''}</p>
       <div class="tabs" role="tablist">
-        <button class="tab${RV.filter === 'offen' ? ' on' : ''}" data-rv-filter="offen" role="tab">Offen</button>
-        <button class="tab${RV.filter === 'alle' ? ' on' : ''}" data-rv-filter="alle" role="tab">Alle</button>
+        ${[['offen', 'Offen'], ['beantwortet', 'Beantwortet'], ['alle', 'Alle']].map(([k, label]) => `<button class="tab${RV.filter === k ? ' on' : ''}" data-rv-filter="${k}" role="tab">${label} (${S.reviews.filter(RV_FILTERS[k]).length})</button>`).join('')}
       </div>
     </div>
     ${list.length ? `<div class="rv-list">${list.map(rvCard).join('')}</div>`
-      : `<div class="card empty"><h2>${RV.filter === 'offen' ? 'Nichts zu tun' : 'Noch keine Bewertungen'}</h2><p style="margin-top:10px">${S.reviews.length ? 'Neue Bewertungen erscheinen hier, sobald die Routine sie bei Trusted Shops findet.' : 'Die Routine „Bewertungen“ legt neue Bewertungen von Trusted Shops mit einem Antwortvorschlag hier ab.'}</p></div>`}`;
+      : `<div class="card empty"><h2>${RV.filter === 'offen' ? 'Nichts zu tun' : RV.filter === 'beantwortet' ? 'Noch nichts beantwortet' : 'Noch keine Bewertungen'}</h2><p style="margin-top:10px">${S.reviews.length ? 'Neue Bewertungen erscheinen hier, sobald die Routine sie bei Trusted Shops findet.' : 'Die Routine „Bewertungen“ legt neue Bewertungen von Trusted Shops mit einem Antwortvorschlag hier ab.'}</p></div>`}`;
 }
 
 // Neue Antworten von Claude sofort einsetzen, auch wenn gerade getippt wird
