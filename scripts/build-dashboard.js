@@ -35,6 +35,7 @@ const html = `<title>Zipperwalls Dashboard</title>
 <style>
 ${read('dashboard/style.css')}
 ${read('dashboard/bewertungen.css')}
+${read('dashboard/todos.css')}
 </style>
 <div class="shell">
   <aside class="side">
@@ -44,6 +45,7 @@ ${read('dashboard/bewertungen.css')}
       <a href="#newsletter" data-view="newsletter">Newsletter-Plan</a>
       <a href="#freigabe" data-view="freigabe">Freigabe <span class="count" id="count-freigabe" hidden></span></a>
       <a href="#bewertungen" data-view="bewertungen">Bewertungen <span class="count" id="count-bewertungen" hidden></span></a>
+      <a href="#todos" data-view="todos">To-dos <span class="count" id="count-todos" hidden></span></a>
       <a href="#checkliste" data-view="checkliste">Abhakeliste</a>
       <a href="#zahlen" data-view="zahlen">Zahlen</a>
       <a href="#verbindungen" data-view="verbindungen">Verbindungen</a>
@@ -72,6 +74,7 @@ ${stripModule(read('src/bewertungen.js'))}
 ${read('dashboard/app.js')}
 ${read('dashboard/zahlen.js')}
 ${read('dashboard/bewertungen.js')}
+${read('dashboard/todos.js')}
 start();
 </script>
 `;
