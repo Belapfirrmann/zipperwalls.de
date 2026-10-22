@@ -1,6 +1,6 @@
 # Zipperwalls Dashboard
 
-Plan, Freigabe, Abhakeliste und Zahlen für Facebook, Instagram und LinkedIn, dazu der Newsletter-Plan (MailPoet). Läuft komplett in Claude, ohne eigenen Server.
+Plan, Freigabe, Bewertungen und Zahlen für Facebook, Instagram und LinkedIn, dazu der Newsletter-Plan (MailPoet). Läuft komplett in Claude, ohne eigenen Server.
 
 - **Dashboard**: Claude Artefakt https://claude.ai/artifact/6SheLVeDXVWVUF6ctwVTA6 (privat). Daten in der Artefakt-Datenbank, Bilder als Artefakt-Assets.
 - **Posten**: Claude Routine, stündlich. Holt freigegebene Posts und veröffentlicht sie mit `scripts/social.js`.

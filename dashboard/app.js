@@ -1056,7 +1056,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------- Rahmen ----------
-const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, bewertungen: viewBewertungen, checkliste: viewCheckliste, zahlen: viewZahlen, verbindungen: viewVerbindungen };
+const views = { plan: viewPlan, newsletter: viewNewsletter, freigabe: viewFreigabe, bewertungen: viewBewertungen, zahlen: viewZahlen, verbindungen: viewVerbindungen };
 // #freigabe-newsletter ist der Newsletter-Teil der Freigabe-Seite
 const viewKey = () => (location.hash === '#freigabe-newsletter' ? 'freigabe' : location.hash.slice(1));
 const currentView = () => (views[viewKey()] ? viewKey() : 'freigabe');
@@ -1091,7 +1091,7 @@ function render() {
   rc.textContent = rvOpen;
   const runner = S.status.runner;
   document.getElementById('runner').textContent = runner?.last_run ? `Letzter Lauf ${fmtDate(runner.last_run)}` : '';
-  const preload = ['plan', 'newsletter', 'checkliste'].includes(view);
+  const preload = ['plan', 'newsletter'].includes(view);
   const key = (location.hash || '#freigabe') + (S.loaded || preload ? '' : ':laedt');
   const fresh = key !== lastEnterKey;
   lastEnterKey = key;

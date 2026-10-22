@@ -44,7 +44,6 @@ ${read('dashboard/bewertungen.css')}
       <a href="#newsletter" data-view="newsletter">Newsletter-Plan</a>
       <a href="#freigabe" data-view="freigabe">Freigabe <span class="count" id="count-freigabe" hidden></span></a>
       <a href="#bewertungen" data-view="bewertungen">Bewertungen <span class="count" id="count-bewertungen" hidden></span></a>
-      <a href="#checkliste" data-view="checkliste">Abhakeliste</a>
       <a href="#zahlen" data-view="zahlen">Zahlen</a>
       <a href="#verbindungen" data-view="verbindungen">Verbindungen</a>
     </nav>
